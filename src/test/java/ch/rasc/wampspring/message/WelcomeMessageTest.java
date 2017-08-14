@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WelcomeMessageTest extends BaseMessageTest {
 
-	@SuppressWarnings({ "cast", "rawtypes", "unchecked" })
+	@SuppressWarnings({ "unchecked" })
 	@Test
 	public void serializeTest()
 			throws JsonParseException, JsonMappingException, IOException {
