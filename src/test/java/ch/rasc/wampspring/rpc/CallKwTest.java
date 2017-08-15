@@ -79,7 +79,8 @@ public class CallKwTest extends BaseWampTest {
 	public void testNoReturnValue() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(4L, "callService.noReturn",
-						Maps.map("arg1", "name").map("arg2", 23).getMap()));
+						Maps.map("arg1", "name").map("arg2", 23).getMap()),
+				Protocol.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(4L);
@@ -91,7 +92,8 @@ public class CallKwTest extends BaseWampTest {
 	@Test
 	public void testWrongNumberOfArguments() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(44L,
-				"callService.noReturn", Maps.map("arg1", "name").getMap()));
+				"callService.noReturn", Maps.map("arg1", "name").getMap()),
+				Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(44L);
@@ -105,7 +107,8 @@ public class CallKwTest extends BaseWampTest {
 	public void testDto() throws Exception {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
-				"callService.callWithDto", Maps.map("testDto", dto).getMap()), true);
+				"callService.callWithDto", Maps.map("testDto", dto).getMap()),
+				Protocol.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
@@ -121,7 +124,7 @@ public class CallKwTest extends BaseWampTest {
 				new CallMessage(9L, "callService.callWithDtoAndMessage",
 						Maps.map("testDto", dto)
 								.map("secondArgument", "the_second_argument").getMap()),
-				true);
+				Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
@@ -135,7 +138,8 @@ public class CallKwTest extends BaseWampTest {
 		TestDto dto = new TestDto(2, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(9L,
 				"callService.callWithDtoAndMessage", Collections.singletonList(dto),
-				Maps.map("secondArgument", "the_second_argument").getMap(), false), true);
+				Maps.map("secondArgument", "the_second_argument").getMap(), false),
+				Protocol.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);

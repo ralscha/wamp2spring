@@ -69,7 +69,8 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testEmpty() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"), true);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"),
+				Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(3L);
@@ -82,7 +83,8 @@ public class WampResultTest extends BaseWampTest {
 	@Test
 	public void testArgumentTwoKw() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(4L, "twoKw", Arrays.asList("time", "emit")), true);
+				new CallMessage(4L, "twoKw", Arrays.asList("time", "emit")),
+				Protocol.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(4L);
@@ -98,7 +100,7 @@ public class WampResultTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(5L, "mix",
 						Maps.map("amount", "123.25").map("text", "cookie").getMap()),
-				true);
+				Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);

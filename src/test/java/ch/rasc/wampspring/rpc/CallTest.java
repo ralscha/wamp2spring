@@ -103,7 +103,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testCallMessageArgument() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(5L, "callService.call"), true);
+				new CallMessage(5L, "callService.call"), Protocol.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);
@@ -115,7 +115,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testNoParams() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(6L, "callService.noParams"), true);
+				new CallMessage(6L, "callService.noParams"), Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(6L);
@@ -127,7 +127,8 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testException() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L,
-				"callService.error", Collections.singletonList("theArgument")), true);
+				"callService.error", Collections.singletonList("theArgument")),
+				Protocol.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(7L);
@@ -141,7 +142,8 @@ public class CallTest extends BaseWampTest {
 	public void testDto() throws Exception {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
-				"callService.callWithDto", Collections.singletonList(dto)), true);
+				"callService.callWithDto", Collections.singletonList(dto)),
+				Protocol.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
@@ -156,7 +158,7 @@ public class CallTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(9L, "callService.callWithDtoAndMessage",
 						Arrays.asList(dto, "the_second_argument")),
-				true);
+				Protocol.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);

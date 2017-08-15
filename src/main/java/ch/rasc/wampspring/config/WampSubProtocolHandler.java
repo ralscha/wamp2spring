@@ -68,14 +68,18 @@ public class WampSubProtocolHandler
 
 	public static final String MSGPACK_PROTOCOL = "wamp.2.msgpack";
 
+	public static final String CBOR_PROTOCOL = "wamp.2.cbor";
+
 	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
 
 	private static final List<String> supportedProtocols = Arrays.asList(MSGPACK_PROTOCOL,
-			JSON_PROTOCOL);
+			JSON_PROTOCOL, CBOR_PROTOCOL);
 
 	private final JsonFactory jsonFactory;
 
 	private final JsonFactory msgpackFactory;
+
+	private final JsonFactory cborFactory;
 
 	private final List<WampRole> roles;
 
@@ -86,9 +90,10 @@ public class WampSubProtocolHandler
 	private ApplicationEventPublisher applicationEventPublisher;
 
 	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
-			MessageChannel clientInboundChannel) {
+			JsonFactory cborFactory, MessageChannel clientInboundChannel) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
+		this.cborFactory = cborFactory;
 		this.clientInboundChannel = clientInboundChannel;
 
 		this.roles = new ArrayList<>();
@@ -125,9 +130,16 @@ public class WampSubProtocolHandler
 			}
 			else if (webSocketMessage instanceof BinaryMessage) {
 				ByteBuffer byteBuffer = ((BinaryMessage) webSocketMessage).getPayload();
-				wampMessage = WampMessage.deserialize(this.msgpackFactory,
-						byteBuffer.array());
 
+				String acceptedProtocol = session.getAcceptedProtocol();
+				if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.msgpackFactory,
+							byteBuffer.array());
+				}
+				else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.cborFactory,
+							byteBuffer.array());
+				}
 			}
 			else {
 				return;
@@ -203,11 +215,16 @@ public class WampSubProtocolHandler
 		WampMessage wampMessage = (WampMessage) message;
 		JsonFactory useFactory = this.jsonFactory;
 
-		boolean isMsgPack = session.getAcceptedProtocol()
-				.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL);
+		boolean isBinary = false;
 
-		if (isMsgPack) {
+		String acceptedProtocol = session.getAcceptedProtocol();
+		if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+			isBinary = true;
 			useFactory = this.msgpackFactory;
+		}
+		else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+			isBinary = true;
+			useFactory = this.cborFactory;
 		}
 
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -217,7 +234,7 @@ public class WampSubProtocolHandler
 			generator.writeEndArray();
 			generator.close();
 
-			if (isMsgPack) {
+			if (isBinary) {
 				session.sendMessage(new BinaryMessage(bos.toByteArray()));
 			}
 			else {

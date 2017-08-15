@@ -30,6 +30,7 @@ import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
 import com.fasterxml.jackson.core.JsonFactory;
 
+import ch.rasc.wampspring.config.WampSubProtocolHandler;
 import ch.rasc.wampspring.message.WampMessage;
 import ch.rasc.wampspring.message.WelcomeMessage;
 
@@ -40,7 +41,9 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 	private final JsonFactory jsonFactory;
 
-	protected final JsonFactory msgpackFactory;
+	private final JsonFactory msgpackFactory;
+
+	private final JsonFactory cborFactory;
 
 	private int noOfResults;
 
@@ -49,14 +52,16 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	private List<WampMessage> receivedMessages;
 
 	public CompletableFutureWebSocketHandler(JsonFactory jsonFactory,
-			JsonFactory msgpackFactory) {
-		this(1, jsonFactory, msgpackFactory);
+			JsonFactory msgpackFactory, JsonFactory cborFactory) {
+		this(1, jsonFactory, msgpackFactory, cborFactory);
 	}
 
 	public CompletableFutureWebSocketHandler(int expectedNoOfResults,
-			JsonFactory jsonFactory, JsonFactory msgpackFactory) {
+			JsonFactory jsonFactory, JsonFactory msgpackFactory,
+			JsonFactory cborFactory) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
+		this.cborFactory = cborFactory;
 		this.timeout = getTimeoutValue();
 		this.welcomeMessageFuture = new CompletableFuture<>();
 		this.reset(expectedNoOfResults);
@@ -114,8 +119,18 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message)
 			throws Exception {
 		try {
-			WampMessage wampMessage = WampMessage.deserialize(this.msgpackFactory,
-					message.getPayload().array());
+			WampMessage wampMessage = null;
+
+			String acceptedProtocol = session.getAcceptedProtocol();
+			if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+				wampMessage = WampMessage.deserialize(this.msgpackFactory,
+						message.getPayload().array());
+			}
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+				wampMessage = WampMessage.deserialize(this.cborFactory,
+						message.getPayload().array());
+			}
+
 			if (wampMessage instanceof WelcomeMessage) {
 				this.welcomeMessageFuture.complete((WelcomeMessage) wampMessage);
 			}

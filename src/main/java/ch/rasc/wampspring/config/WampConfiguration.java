@@ -44,6 +44,7 @@ import org.springframework.web.socket.server.HandshakeHandler;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 
 import ch.rasc.wampspring.WampPublisher;
 import ch.rasc.wampspring.pubsub.PubSubMessageHandler;
@@ -81,7 +82,7 @@ public class WampConfiguration {
 	@Bean
 	public WampSubProtocolHandler wampSubProtocolHandler() {
 		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(),
-				clientInboundChannel());
+				cborJsonFactory(), clientInboundChannel());
 	}
 
 	@Bean
@@ -92,6 +93,11 @@ public class WampConfiguration {
 	@Bean
 	public JsonFactory msgpackJsonFactory() {
 		return new ObjectMapper(new MessagePackFactory()).getFactory();
+	}
+
+	@Bean
+	public JsonFactory cborJsonFactory() {
+		return new ObjectMapper(new CBORFactory()).getFactory();
 	}
 
 	@Bean

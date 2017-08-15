@@ -62,7 +62,7 @@ public class ParserUtil {
 		Map<String, Object> result = new HashMap<>();
 		JsonToken token = jp.nextToken();
 		while (token != JsonToken.END_OBJECT) {
-			String key = jp.getValueAsString();
+			String key = jp.getText();
 			token = jp.nextToken();
 
 			if (token == JsonToken.START_ARRAY) {

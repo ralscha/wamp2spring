@@ -43,6 +43,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 
 import ch.rasc.wampspring.config.WampSubProtocolHandler;
 import ch.rasc.wampspring.message.HelloMessage;
@@ -54,32 +55,42 @@ import ch.rasc.wampspring.message.WampRole;
 @Ignore
 public class BaseWampTest {
 
+	public enum Protocol {
+		JSON, MSGPACK, CBOR
+	}
+
 	protected final JsonFactory jsonFactory = new MappingJsonFactory(new ObjectMapper());
 
 	protected final JsonFactory msgpackFactory = new ObjectMapper(
 			new MessagePackFactory()).getFactory();
+
+	protected final JsonFactory cborFactory = new ObjectMapper(new CBORFactory())
+			.getFactory();
 
 	@LocalServerPort
 	public int actualPort;
 
 	protected WampMessage sendWampMessage(WampMessage msg) throws InterruptedException,
 			ExecutionException, TimeoutException, IOException {
-		return sendWampMessage(msg, false);
+		return sendWampMessage(msg, Protocol.JSON);
 	}
 
-	protected WampMessage sendWampMessage(WampMessage msg, boolean isMsgPack)
+	protected WampMessage sendWampMessage(WampMessage msg, Protocol protocol)
 			throws InterruptedException, ExecutionException, TimeoutException,
 			IOException {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler(
-				this.jsonFactory, this.msgpackFactory);
+				this.jsonFactory, this.msgpackFactory, this.cborFactory);
 		WebSocketClient webSocketClient = createWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
-				.doHandshake(result, getHeaders(isMsgPack), wampEndpointUrl()).get()) {
+				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get()) {
 
 			JsonFactory useFactory = this.jsonFactory;
-			if (isMsgPack) {
+			if (protocol == Protocol.MSGPACK) {
 				useFactory = this.msgpackFactory;
+			}
+			else if (protocol == Protocol.CBOR) {
+				useFactory = this.cborFactory;
 			}
 
 			List<WampRole> roles = new ArrayList<>();
@@ -87,17 +98,17 @@ public class BaseWampTest {
 			roles.add(new WampRole("subscriber"));
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(isMsgPack, webSocketSession, useFactory, helloMessage);
+			sendMessage(protocol, webSocketSession, useFactory, helloMessage);
 
 			result.getWelcomeMessage();
 
-			sendMessage(isMsgPack, webSocketSession, useFactory, msg);
+			sendMessage(protocol, webSocketSession, useFactory, msg);
 
 			return result.getWampMessage();
 		}
 	}
 
-	private static void sendMessage(boolean isMsgPack, WebSocketSession webSocketSession,
+	private static void sendMessage(Protocol protocol, WebSocketSession webSocketSession,
 			JsonFactory useFactory, WampMessage msg) throws IOException {
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				JsonGenerator generator = useFactory.createGenerator(bos)) {
@@ -107,7 +118,7 @@ public class BaseWampTest {
 			generator.writeEndArray();
 			generator.close();
 
-			if (isMsgPack) {
+			if (protocol == Protocol.MSGPACK || protocol == Protocol.CBOR) {
 				webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
 			}
 			else {
@@ -121,16 +132,19 @@ public class BaseWampTest {
 	}
 
 	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result,
-			boolean isMsgPack) throws InterruptedException, ExecutionException {
+			Protocol protocol) throws InterruptedException, ExecutionException {
 		WebSocketClient webSocketClient = createWebSocketClient();
 		return webSocketClient
-				.doHandshake(result, getHeaders(isMsgPack), wampEndpointUrl()).get();
+				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get();
 	}
 
-	protected WebSocketHttpHeaders getHeaders(boolean isMsgPack) {
+	protected WebSocketHttpHeaders getHeaders(Protocol protocol) {
 		WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-		if (isMsgPack) {
+		if (protocol == Protocol.MSGPACK) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.MSGPACK_PROTOCOL);
+		}
+		else if (protocol == Protocol.CBOR) {
+			headers.setSecWebSocketProtocol(WampSubProtocolHandler.CBOR_PROTOCOL);
 		}
 		else {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.JSON_PROTOCOL);
