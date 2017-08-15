@@ -44,6 +44,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import ch.rasc.wampspring.config.WampSubProtocolHandler;
 import ch.rasc.wampspring.message.HelloMessage;
@@ -56,7 +57,7 @@ import ch.rasc.wampspring.message.WampRole;
 public class BaseWampTest {
 
 	public enum Protocol {
-		JSON, MSGPACK, CBOR
+		JSON, MSGPACK, CBOR, SMILE
 	}
 
 	protected final JsonFactory jsonFactory = new MappingJsonFactory(new ObjectMapper());
@@ -65,6 +66,9 @@ public class BaseWampTest {
 			new MessagePackFactory()).getFactory();
 
 	protected final JsonFactory cborFactory = new ObjectMapper(new CBORFactory())
+			.getFactory();
+
+	protected final JsonFactory smileFactory = new ObjectMapper(new SmileFactory())
 			.getFactory();
 
 	@LocalServerPort
@@ -79,7 +83,8 @@ public class BaseWampTest {
 			throws InterruptedException, ExecutionException, TimeoutException,
 			IOException {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler(
-				this.jsonFactory, this.msgpackFactory, this.cborFactory);
+				this.jsonFactory, this.msgpackFactory, this.cborFactory,
+				this.smileFactory);
 		WebSocketClient webSocketClient = createWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
@@ -140,8 +145,12 @@ public class BaseWampTest {
 
 	protected WebSocketHttpHeaders getHeaders(Protocol protocol) {
 		WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+
 		if (protocol == Protocol.MSGPACK) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.MSGPACK_PROTOCOL);
+		}
+		else if (protocol == Protocol.SMILE) {
+			headers.setSecWebSocketProtocol(WampSubProtocolHandler.SMILE_PROTOCOL);
 		}
 		else if (protocol == Protocol.CBOR) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.CBOR_PROTOCOL);

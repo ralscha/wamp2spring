@@ -45,6 +45,7 @@ import org.springframework.web.socket.server.HandshakeHandler;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import ch.rasc.wampspring.WampPublisher;
 import ch.rasc.wampspring.pubsub.PubSubMessageHandler;
@@ -82,7 +83,7 @@ public class WampConfiguration {
 	@Bean
 	public WampSubProtocolHandler wampSubProtocolHandler() {
 		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(),
-				cborJsonFactory(), clientInboundChannel());
+				cborJsonFactory(), smileJsonFactory(), clientInboundChannel());
 	}
 
 	@Bean
@@ -98,6 +99,11 @@ public class WampConfiguration {
 	@Bean
 	public JsonFactory cborJsonFactory() {
 		return new ObjectMapper(new CBORFactory()).getFactory();
+	}
+
+	@Bean
+	public JsonFactory smileJsonFactory() {
+		return new ObjectMapper(new SmileFactory()).getFactory();
 	}
 
 	@Bean
@@ -126,7 +132,7 @@ public class WampConfiguration {
 	}
 
 	protected HandshakeHandler getHandshakeHandler() {
-		return new PreferMsgpackHandshakeHandler();
+		return new PreferBinaryHandshakeHandler();
 	}
 
 	protected String getWebSocketHandlerPath() {

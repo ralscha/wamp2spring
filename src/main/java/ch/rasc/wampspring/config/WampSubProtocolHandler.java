@@ -56,13 +56,11 @@ import ch.rasc.wampspring.util.IdGenerator;
 
 /**
  * A WebSocket {@link SubProtocolHandler} for the WAMP v2 protocol.
- *
- * @author Rossen Stoyanchev
- * @author Andy Wilkinson
- * @author Ralph Schaer
  */
 public class WampSubProtocolHandler
 		implements SubProtocolHandler, ApplicationEventPublisherAware {
+
+	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
 
 	public static final String JSON_PROTOCOL = "wamp.2.json";
 
@@ -70,16 +68,18 @@ public class WampSubProtocolHandler
 
 	public static final String CBOR_PROTOCOL = "wamp.2.cbor";
 
-	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
+	public static final String SMILE_PROTOCOL = "wamp.2.smile";
 
 	private static final List<String> supportedProtocols = Arrays.asList(MSGPACK_PROTOCOL,
-			JSON_PROTOCOL, CBOR_PROTOCOL);
+			JSON_PROTOCOL, CBOR_PROTOCOL, SMILE_PROTOCOL);
 
 	private final JsonFactory jsonFactory;
 
 	private final JsonFactory msgpackFactory;
 
 	private final JsonFactory cborFactory;
+
+	private final JsonFactory smileFactory;
 
 	private final List<WampRole> roles;
 
@@ -90,10 +90,12 @@ public class WampSubProtocolHandler
 	private ApplicationEventPublisher applicationEventPublisher;
 
 	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
-			JsonFactory cborFactory, MessageChannel clientInboundChannel) {
+			JsonFactory cborFactory, JsonFactory smileFactory,
+			MessageChannel clientInboundChannel) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
 		this.cborFactory = cborFactory;
+		this.smileFactory = smileFactory;
 		this.clientInboundChannel = clientInboundChannel;
 
 		this.roles = new ArrayList<>();
@@ -134,6 +136,10 @@ public class WampSubProtocolHandler
 				String acceptedProtocol = session.getAcceptedProtocol();
 				if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 					wampMessage = WampMessage.deserialize(this.msgpackFactory,
+							byteBuffer.array());
+				}
+				else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.smileFactory,
 							byteBuffer.array());
 				}
 				else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
@@ -221,6 +227,10 @@ public class WampSubProtocolHandler
 		if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 			isBinary = true;
 			useFactory = this.msgpackFactory;
+		}
+		else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+			isBinary = true;
+			useFactory = this.smileFactory;
 		}
 		else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
 			isBinary = true;

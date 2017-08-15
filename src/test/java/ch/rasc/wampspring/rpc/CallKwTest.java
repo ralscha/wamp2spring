@@ -44,7 +44,8 @@ public class CallKwTest extends BaseWampTest {
 	@Test
 	public void testReturnValue() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(1L,
-				"callService.sum", Maps.map("a", 3).map("b", 4).getMap()));
+				"callService.sum", Maps.map("a", 3).map("b", 4).getMap()),
+				Protocol.SMILE);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(1L);
@@ -57,7 +58,8 @@ public class CallKwTest extends BaseWampTest {
 	@Test
 	public void testDifferentProcedureName() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(2L, "sum2", Maps.map("a", 11).map("b", 22).getMap()));
+				new CallMessage(2L, "sum2", Maps.map("a", 11).map("b", 22).getMap()),
+				Protocol.SMILE);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(2L);

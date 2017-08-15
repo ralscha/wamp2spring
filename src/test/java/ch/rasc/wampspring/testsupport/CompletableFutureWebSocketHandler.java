@@ -45,6 +45,8 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 	private final JsonFactory cborFactory;
 
+	private final JsonFactory smileFactory;
+
 	private int noOfResults;
 
 	private final int timeout;
@@ -52,16 +54,18 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	private List<WampMessage> receivedMessages;
 
 	public CompletableFutureWebSocketHandler(JsonFactory jsonFactory,
-			JsonFactory msgpackFactory, JsonFactory cborFactory) {
-		this(1, jsonFactory, msgpackFactory, cborFactory);
+			JsonFactory msgpackFactory, JsonFactory cborFactory,
+			JsonFactory smileFactory) {
+		this(1, jsonFactory, msgpackFactory, cborFactory, smileFactory);
 	}
 
 	public CompletableFutureWebSocketHandler(int expectedNoOfResults,
-			JsonFactory jsonFactory, JsonFactory msgpackFactory,
-			JsonFactory cborFactory) {
+			JsonFactory jsonFactory, JsonFactory msgpackFactory, JsonFactory cborFactory,
+			JsonFactory smileFactory) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
 		this.cborFactory = cborFactory;
+		this.smileFactory = smileFactory;
 		this.timeout = getTimeoutValue();
 		this.welcomeMessageFuture = new CompletableFuture<>();
 		this.reset(expectedNoOfResults);
@@ -124,6 +128,10 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 			String acceptedProtocol = session.getAcceptedProtocol();
 			if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 				wampMessage = WampMessage.deserialize(this.msgpackFactory,
+						message.getPayload().array());
+			}
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+				wampMessage = WampMessage.deserialize(this.smileFactory,
 						message.getPayload().array());
 			}
 			else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
