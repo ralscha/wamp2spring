@@ -28,10 +28,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.rasc.wamp2spring.message.WampMessage;
-import ch.rasc.wamp2spring.message.WampRole;
-import ch.rasc.wamp2spring.message.WelcomeMessage;
-
 public class WelcomeMessageTest extends BaseMessageTest {
 
 	@SuppressWarnings({ "unchecked" })

@@ -28,8 +28,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.rasc.wamp2spring.message.WampMessage;
-
 public class BaseMessageTest {
 
 	private final ObjectMapper objectMapper = new ObjectMapper();

@@ -24,9 +24,6 @@ import java.util.Collections;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 
-import ch.rasc.wamp2spring.message.ErrorMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
-
 public class ErrorMessageTest extends BaseMessageTest {
 
 	@Test

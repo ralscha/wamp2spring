@@ -23,8 +23,6 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 import ch.rasc.wamp2spring.WampError;
-import ch.rasc.wamp2spring.message.GoodbyeMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
 
 public class GoodbyeMessageTest extends BaseMessageTest {
 

@@ -22,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
-import ch.rasc.wamp2spring.message.SubscribeMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 public class SubscribeMessageTest extends BaseMessageTest {

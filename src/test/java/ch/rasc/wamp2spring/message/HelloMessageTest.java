@@ -24,10 +24,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ch.rasc.wamp2spring.message.HelloMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
-import ch.rasc.wamp2spring.message.WampRole;
-
 public class HelloMessageTest extends BaseMessageTest {
 
 	@Test

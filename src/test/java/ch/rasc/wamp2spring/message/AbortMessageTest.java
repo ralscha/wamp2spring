@@ -23,8 +23,6 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 import ch.rasc.wamp2spring.WampError;
-import ch.rasc.wamp2spring.message.AbortMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
 
 public class AbortMessageTest extends BaseMessageTest {
 

@@ -34,7 +34,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.messaging.SubscribableChannel;
 
-import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 

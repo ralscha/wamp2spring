@@ -38,7 +38,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.config.PrincipalMethodArgumentResolver;
 import ch.rasc.wamp2spring.config.WampMessageMethodArgumentResolver;
-import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 @SuppressWarnings("unused")
 public class InvocableHandlerMethodTest {

@@ -24,7 +24,6 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.annotation.WampProcedure;
-import ch.rasc.wamp2spring.rpc.WampResult;
 
 public class WampResultService {
 	private final Set<String> called = new HashSet<>();

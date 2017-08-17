@@ -22,9 +22,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
-import ch.rasc.wamp2spring.message.PublishedMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
-
 public class PublishedMessageTest extends BaseMessageTest {
 	@Test
 	public void serializeTest() {

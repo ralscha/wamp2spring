@@ -39,13 +39,6 @@ import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
-import ch.rasc.wamp2spring.pubsub.EventListenerInfo;
-import ch.rasc.wamp2spring.pubsub.MatchPolicy;
-import ch.rasc.wamp2spring.pubsub.SubscribeResult;
-import ch.rasc.wamp2spring.pubsub.Subscription;
-import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
-import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
-import ch.rasc.wamp2spring.pubsub.UnsubscribeResult;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 public class SubscriptionRegistryTest {

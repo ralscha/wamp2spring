@@ -39,6 +39,7 @@ import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils.MethodFilter;
+import org.springframework.util.StringUtils;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
@@ -57,8 +58,6 @@ import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.YieldMessage;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
-
-import org.springframework.util.StringUtils;
 
 public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 		InitializingBean, ApplicationContextAware {

@@ -25,9 +25,6 @@ import java.util.Collections;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 
-import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.message.WampMessage;
-
 public class PublishMessageTest extends BaseMessageTest {
 
 	@Test

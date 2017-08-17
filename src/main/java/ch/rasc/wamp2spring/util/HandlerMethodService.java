@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.config.PrincipalMethodArgumentResolver;
 import ch.rasc.wamp2spring.config.WampMessageMethodArgumentResolver;
+import ch.rasc.wamp2spring.config.WampSessionIdMethodArgumentResolver;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.EventMessage;
 
@@ -66,6 +67,7 @@ public class HandlerMethodService {
 		this.argumentResolvers.addResolver(new HeadersMethodArgumentResolver());
 		this.argumentResolvers.addResolver(new WampMessageMethodArgumentResolver());
 		this.argumentResolvers.addResolver(new PrincipalMethodArgumentResolver());
+		this.argumentResolvers.addResolver(new WampSessionIdMethodArgumentResolver());
 		this.argumentResolvers.addResolvers(customArgumentResolvers);
 
 		this.objectMapper = objectMapper;

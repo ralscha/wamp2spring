@@ -31,9 +31,6 @@ import ch.rasc.wamp2spring.message.UnregisterMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.message.YieldMessage;
-import ch.rasc.wamp2spring.rpc.Procedure;
-import ch.rasc.wamp2spring.rpc.ProcedureRegistry;
-import ch.rasc.wamp2spring.rpc.UnregisterResult;
 import ch.rasc.wamp2spring.rpc.ProcedureRegistry.CallProc;
 
 @SuppressWarnings("unchecked")
