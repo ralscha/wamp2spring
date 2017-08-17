@@ -321,6 +321,7 @@
 						<exclude>mvnw.cmd</exclude>
 						<exclude>mvnw</exclude>
 						<exclude>.apt_generated/**</exclude>
+						<exclude>.springBeans</exclude>
 					</excludes>
 					<strictCheck>true</strictCheck>
 				</configuration>
