@@ -15,8 +15,7 @@
  */
 package ch.rasc.wamp2spring;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -27,6 +26,7 @@ import org.springframework.messaging.MessageChannel;
 
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.PublishMessage.Builder;
+import ch.rasc.wamp2spring.util.CollectionHelper;
 import ch.rasc.wamp2spring.util.IdGenerator;
 
 @SuppressWarnings("unchecked")
@@ -43,33 +43,35 @@ public class WampPublisher {
 		this.clientInboundChannel.send(publishMessage);
 	}
 
-	public <T> void publishToAll(String topic, T argument) {
-		publish(createBuilder(topic).arguments(Collections.singletonList(argument))
+	public <T> void publishToAll(String topic, @Nullable T... arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.build());
 	}
 
-	public <T> void publishToAll(String topic, @Nullable List<T> arguments) {
-		publish(createBuilder(topic).arguments((List<Object>) arguments).build());
+	public <T> void publishToAll(String topic, @Nullable Collection<T> arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.build());
 	}
 
 	public <T> void publishToAll(String topic, @Nullable Map<String, T> arguments) {
 		publish(createBuilder(topic).arguments((Map<String, Object>) arguments).build());
 	}
 
-	public void publishToAll(String topic, @Nullable List<Object> arguments,
+	public void publishToAll(String topic, @Nullable Collection<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw) {
-		publish(createBuilder(topic).arguments(arguments).arguments(argumentsKw).build());
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.arguments(argumentsKw).build());
 	}
 
 	public <T> void publishTo(Set<Long> eligibleWampSessionIds, String topic,
-			T argument) {
-		publish(createBuilder(topic).arguments(Collections.singletonList(argument))
+			@Nullable T... arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.eligible(eligibleWampSessionIds).build());
 	}
 
 	public <T> void publishTo(Set<Long> eligibleWampSessionIds, String topic,
-			@Nullable List<T> arguments) {
-		publish(createBuilder(topic).arguments((List<Object>) arguments)
+			@Nullable Collection<T> arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.eligible(eligibleWampSessionIds).build());
 	}
 
@@ -79,15 +81,47 @@ public class WampPublisher {
 				.eligible(eligibleWampSessionIds).build());
 	}
 
+	public void publishTo(Set<Long> eligibleWampSessionIds, String topic,
+			@Nullable Collection<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.arguments(argumentsKw).eligible(eligibleWampSessionIds).build());
+	}
+
+	public <T> void publishTo(long eligibleWampSessionId, String topic,
+			@Nullable T... arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.addEligible(eligibleWampSessionId).build());
+	}
+
+	public <T> void publishTo(long eligibleWampSessionId, String topic,
+			@Nullable Collection<T> arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.addEligible(eligibleWampSessionId).build());
+	}
+
+	public <T> void publishTo(long eligibleWampSessionId, String topic,
+			@Nullable Map<String, T> arguments) {
+		publish(createBuilder(topic).arguments((Map<String, Object>) arguments)
+				.addEligible(eligibleWampSessionId).build());
+	}
+
+	public void publishTo(long eligibleWampSessionId, String topic,
+			@Nullable Collection<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.arguments(argumentsKw).addEligible(eligibleWampSessionId).build());
+	}
+
 	public <T> void publishToAllExcept(Set<Long> excludeWampSessionIds, String topic,
-			T argument) {
-		publish(createBuilder(topic).arguments(Collections.singletonList(argument))
+			@Nullable T... arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.exclude(excludeWampSessionIds).build());
 	}
 
 	public <T> void publishToAllExcept(Set<Long> excludeWampSessionIds, String topic,
-			@Nullable List<T> arguments) {
-		publish(createBuilder(topic).arguments((List<Object>) arguments)
+			@Nullable Collection<T> arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.exclude(excludeWampSessionIds).build());
 	}
 
@@ -95,6 +129,38 @@ public class WampPublisher {
 			@Nullable Map<String, T> arguments) {
 		publish(createBuilder(topic).arguments((Map<String, Object>) arguments)
 				.exclude(excludeWampSessionIds).build());
+	}
+
+	public void publishToAllExcept(Set<Long> excludeWampSessionIds, String topic,
+			@Nullable Collection<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.arguments(argumentsKw).exclude(excludeWampSessionIds).build());
+	}
+
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
+			@Nullable T... arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.addExclude(excludeWampSessionId).build());
+	}
+
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
+			@Nullable Collection<T> arguments) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.addExclude(excludeWampSessionId).build());
+	}
+
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
+			@Nullable Map<String, T> arguments) {
+		publish(createBuilder(topic).arguments((Map<String, Object>) arguments)
+				.addExclude(excludeWampSessionId).build());
+	}
+
+	public void publishToAllExcept(long excludeWampSessionId, String topic,
+			@Nullable Collection<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
+		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
+				.arguments(argumentsKw).addExclude(excludeWampSessionId).build());
 	}
 
 	private Builder createBuilder(String topic) {

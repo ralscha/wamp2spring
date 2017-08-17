@@ -17,11 +17,14 @@ package ch.rasc.wamp2spring.rpc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+
+import ch.rasc.wamp2spring.util.CollectionHelper;
 
 public class WampResult {
 
@@ -48,18 +51,17 @@ public class WampResult {
 		this(null, null);
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> WampResult(@Nullable List<T> results) {
-		this((List<Object>) results, null);
+	public <T> WampResult(@Nullable Collection<T> results) {
+		this(CollectionHelper.toList(results), null);
 	}
 
 	public WampResult(@Nullable Map<String, Object> resultsKw) {
 		this(null, resultsKw);
 	}
 
-	public WampResult(@Nullable List<Object> results,
+	public WampResult(@Nullable Collection<Object> results,
 			@Nullable Map<String, Object> resultsKw) {
-		this.results = results;
+		this.results = CollectionHelper.toList(results);
 		this.resultsKw = resultsKw;
 	}
 
@@ -86,8 +88,8 @@ public class WampResult {
 		return this.results;
 	}
 
-	public void setResults(List<Object> results) {
-		this.results = results;
+	public void setResults(@Nullable Collection<Object> results) {
+		this.results = CollectionHelper.toList(results);
 	}
 
 	@Nullable
@@ -95,7 +97,7 @@ public class WampResult {
 		return this.resultsKw;
 	}
 
-	public void setResultsKw(Map<String, Object> resultsKw) {
+	public void setResultsKw(@Nullable Map<String, Object> resultsKw) {
 		this.resultsKw = resultsKw;
 	}
 
