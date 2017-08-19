@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -42,12 +44,22 @@ public class CollectionHelper {
 
 	@SuppressWarnings("unchecked")
 	@Nullable
-	public static <T> List<Object> toList(@Nullable Collection<T> result) {
-		if (result != null) {
-			if (result instanceof List) {
-				return (List<Object>) result;
+	public static <T> List<Object> toList(@Nullable Collection<T> collection) {
+		if (collection != null) {
+			if (collection instanceof List) {
+				return (List<Object>) collection;
 			}
-			return new ArrayList<>(result);
+			return new ArrayList<>(collection);
+		}
+		return null;
+	}
+
+	public static Set<Long> toSet(Collection<Long> collection) {
+		if (collection != null) {
+			if (collection instanceof Set) {
+				return (Set<Long>) collection;
+			}
+			return new HashSet<>(collection);
 		}
 		return null;
 	}
