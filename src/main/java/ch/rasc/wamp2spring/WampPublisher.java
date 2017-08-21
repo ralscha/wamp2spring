@@ -84,7 +84,8 @@ public class WampPublisher {
 			@Nullable Collection<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw) {
 		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.arguments(argumentsKw).eligible(CollectionHelper.toSet(eligibleWampSessionIds)).build());
+				.arguments(argumentsKw)
+				.eligible(CollectionHelper.toSet(eligibleWampSessionIds)).build());
 	}
 
 	public <T> void publishTo(long eligibleWampSessionId, String topic,
@@ -112,20 +113,20 @@ public class WampPublisher {
 				.arguments(argumentsKw).addEligible(eligibleWampSessionId).build());
 	}
 
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic,
-			@Nullable T... arguments) {
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
+			String topic, @Nullable T... arguments) {
 		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
 	}
 
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic,
-			@Nullable Collection<T> arguments) {
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
+			String topic, @Nullable Collection<T> arguments) {
 		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
 				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
 	}
 
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic,
-			@Nullable Map<String, T> arguments) {
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
+			String topic, @Nullable Map<String, T> arguments) {
 		publish(createBuilder(topic).arguments((Map<String, Object>) arguments)
 				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
 	}
@@ -134,7 +135,8 @@ public class WampPublisher {
 			@Nullable Collection<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw) {
 		publish(createBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.arguments(argumentsKw).exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
+				.arguments(argumentsKw)
+				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
 	}
 
 	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
