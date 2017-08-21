@@ -15,15 +15,17 @@
  */
 package ch.rasc.wamp2spring.event;
 
-import ch.rasc.wamp2spring.message.WampMessage;
+import ch.rasc.wamp2spring.message.UnregisterMessage;
 
 public class WampProcedureUnregisteredEvent extends WampProcedureEvent {
-	public WampProcedureUnregisteredEvent(WampMessage wampMessage, String procedure) {
-		super(wampMessage, procedure);
+	public WampProcedureUnregisteredEvent(UnregisterMessage unregisterMessage,
+			String procedure, long registrationId) {
+		super(unregisterMessage, procedure, registrationId);
 	}
 
-	public WampProcedureUnregisteredEvent(WampDisconnectEvent event, String procedure) {
+	public WampProcedureUnregisteredEvent(WampDisconnectEvent event, String procedure,
+			long registrationId) {
 		super(event.getWampSessionId(), event.getWebSocketSessionId(),
-				event.getPrincipal(), procedure);
+				event.getPrincipal(), procedure, registrationId);
 	}
 }

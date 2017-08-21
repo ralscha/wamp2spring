@@ -22,20 +22,29 @@ import ch.rasc.wamp2spring.message.WampMessage;
 public class WampProcedureEvent extends WampEvent {
 	private final String procedure;
 
-	public WampProcedureEvent(WampMessage wampMessage, String procedure) {
+	private final long registrationId;
+
+	public WampProcedureEvent(WampMessage wampMessage, String procedure,
+			long registrationId) {
 		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(),
 				wampMessage.getPrincipal());
 		this.procedure = procedure;
+		this.registrationId = registrationId;
 	}
 
 	public WampProcedureEvent(Long wampSessionId, String webSocketSessionId,
-			Principal principal, String procedure) {
+			Principal principal, String procedure, long registrationId) {
 		super(wampSessionId, webSocketSessionId, principal);
 		this.procedure = procedure;
+		this.registrationId = registrationId;
 	}
 
 	public String getProcedure() {
 		return this.procedure;
+	}
+
+	public long getRegistrationId() {
+		return this.registrationId;
 	}
 
 }

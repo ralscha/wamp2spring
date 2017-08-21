@@ -23,19 +23,23 @@ import ch.rasc.wamp2spring.message.ErrorMessage;
 
 class UnregisterResult {
 	private final boolean success;
+
 	private final String procedure;
+
+	private final long registrationId;
 
 	@Nullable
 	private final List<ErrorMessage> invocationErrors;
 
-	UnregisterResult(boolean success, String procedure) {
-		this(success, procedure, null);
+	UnregisterResult(boolean success, Procedure proc) {
+		this(success, proc, null);
 	}
 
-	UnregisterResult(boolean success, String procedure,
+	UnregisterResult(boolean success, Procedure proc,
 			@Nullable List<ErrorMessage> invocationErrors) {
 		this.success = success;
-		this.procedure = procedure;
+		this.procedure = proc.getProcedure();
+		this.registrationId = proc.getRegistrationId();
 		this.invocationErrors = invocationErrors;
 	}
 
@@ -45,6 +49,10 @@ class UnregisterResult {
 
 	String getProcedure() {
 		return this.procedure;
+	}
+
+	public long getRegistrationId() {
+		return this.registrationId;
 	}
 
 	@Nullable

@@ -147,12 +147,13 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 		if (message instanceof RegisterMessage) {
 			RegisterMessage registerMessage = (RegisterMessage) message;
-			long registration = this.procedureRegistry.register(registerMessage);
-			if (registration != -1) {
-				sendMessageToClient(new RegisteredMessage(registerMessage, registration));
+			long registrationId = this.procedureRegistry.register(registerMessage);
+			if (registrationId != -1) {
+				sendMessageToClient(
+						new RegisteredMessage(registerMessage, registrationId));
 
-				this.applicationContext
-						.publishEvent(new WampProcedureRegisteredEvent(registerMessage));
+				this.applicationContext.publishEvent(new WampProcedureRegisteredEvent(
+						registerMessage, registrationId));
 
 			}
 			else {
@@ -167,8 +168,9 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			if (result.isSuccess()) {
 				sendMessageToClient(new UnregisteredMessage(unregisterMessage));
 
-				this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(
-						unregisterMessage, result.getProcedure()));
+				this.applicationContext.publishEvent(
+						new WampProcedureUnregisteredEvent(unregisterMessage,
+								result.getProcedure(), result.getRegistrationId()));
 
 				for (ErrorMessage errorMessage : result.getInvocationErrors()) {
 					handleErrorMessage(errorMessage);
@@ -225,7 +227,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 		for (UnregisterResult unregisterResult : unregisterResults) {
 
 			this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(event,
-					unregisterResult.getProcedure()));
+					unregisterResult.getProcedure(),
+					unregisterResult.getRegistrationId()));
 
 			for (ErrorMessage errorMessage : unregisterResult.getInvocationErrors()) {
 				handleErrorMessage(errorMessage);

@@ -19,8 +19,9 @@ import ch.rasc.wamp2spring.message.RegisterMessage;
 
 public class WampProcedureRegisteredEvent extends WampProcedureEvent {
 
-	public WampProcedureRegisteredEvent(RegisterMessage registerMessage) {
-		super(registerMessage, registerMessage.getProcedure());
+	public WampProcedureRegisteredEvent(RegisterMessage registerMessage,
+			long registrationId) {
+		super(registerMessage, registerMessage.getProcedure(), registrationId);
 	}
 
 }

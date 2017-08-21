@@ -61,7 +61,7 @@ public class ProcedureRegistry {
 
 		if (procedure != null) {
 			Procedure proc = this.procedures.remove(procedure);
-			return new UnregisterResult(true, procedure,
+			return new UnregisterResult(true, proc,
 					createErrorsForPendingInvocations(proc));
 		}
 
@@ -84,7 +84,7 @@ public class ProcedureRegistry {
 			List<ErrorMessage> errorsForPendingInvocations = createErrorsForPendingInvocations(
 					proc);
 
-			UnregisterResult result = new UnregisterResult(true, proc.getProcedure(),
+			UnregisterResult result = new UnregisterResult(true, proc,
 					errorsForPendingInvocations);
 			unregisterResults.add(result);
 		}
