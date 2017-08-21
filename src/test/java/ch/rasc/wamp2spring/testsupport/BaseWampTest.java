@@ -82,39 +82,41 @@ public class BaseWampTest {
 	protected WampMessage sendWampMessage(WampMessage msg, Protocol protocol)
 			throws InterruptedException, ExecutionException, TimeoutException,
 			IOException {
-		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler(
-				this.jsonFactory, this.msgpackFactory, this.cborFactory,
-				this.smileFactory);
+		CompletableFutureWebSocketHandler result = createWsHandler();
 		WebSocketClient webSocketClient = createWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
 				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get()) {
-
-			JsonFactory useFactory = this.jsonFactory;
-			if (protocol == Protocol.MSGPACK) {
-				useFactory = this.msgpackFactory;
-			}
-			else if (protocol == Protocol.CBOR) {
-				useFactory = this.cborFactory;
-			}
 
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("publisher"));
 			roles.add(new WampRole("subscriber"));
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(protocol, webSocketSession, useFactory, helloMessage);
+			sendMessage(protocol, webSocketSession, helloMessage);
 
 			result.getWelcomeMessage();
 
-			sendMessage(protocol, webSocketSession, useFactory, msg);
+			sendMessage(protocol, webSocketSession, msg);
 
 			return result.getWampMessage();
 		}
 	}
 
-	private static void sendMessage(Protocol protocol, WebSocketSession webSocketSession,
-			JsonFactory useFactory, WampMessage msg) throws IOException {
+	protected void sendMessage(Protocol protocol, WebSocketSession webSocketSession,
+			WampMessage msg) throws IOException {
+
+		JsonFactory useFactory = this.jsonFactory;
+		if (protocol == Protocol.MSGPACK) {
+			useFactory = this.msgpackFactory;
+		}
+		else if (protocol == Protocol.CBOR) {
+			useFactory = this.cborFactory;
+		}
+		else if (protocol == Protocol.SMILE) {
+			useFactory = this.smileFactory;
+		}
+
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
 				JsonGenerator generator = useFactory.createGenerator(bos)) {
 			generator.writeStartArray();
@@ -123,7 +125,8 @@ public class BaseWampTest {
 			generator.writeEndArray();
 			generator.close();
 
-			if (protocol == Protocol.MSGPACK || protocol == Protocol.CBOR) {
+			if (protocol == Protocol.MSGPACK || protocol == Protocol.CBOR
+					|| protocol == Protocol.SMILE) {
 				webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
 			}
 			else {
@@ -165,6 +168,11 @@ public class BaseWampTest {
 		return UriComponentsBuilder
 				.fromUriString("ws://localhost:" + this.actualPort + "/wamp").build()
 				.encode().toUri();
+	}
+
+	protected CompletableFutureWebSocketHandler createWsHandler() {
+		return new CompletableFutureWebSocketHandler(this.jsonFactory,
+				this.msgpackFactory, this.cborFactory, this.smileFactory);
 	}
 
 }

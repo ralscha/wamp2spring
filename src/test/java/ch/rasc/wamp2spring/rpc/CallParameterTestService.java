@@ -24,6 +24,7 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Service;
 
 import ch.rasc.wamp2spring.annotation.WampProcedure;
+import ch.rasc.wamp2spring.annotation.WampSessionId;
 import ch.rasc.wamp2spring.message.CallMessage;
 
 @Service
@@ -37,11 +38,15 @@ public class CallParameterTestService {
 
 	@WampProcedure(value = "headersMethod")
 	public String headersMethod(@Headers Map<String, Object> headers) {
-
 		assertThat(headers).containsOnlyKeys("WAMP_SESSION_ID", "PRINCIPAL",
 				"WEBSOCKET_SESSION_ID", "WAMP_MESSAGE_CODE");
 
 		return "headersMethod called";
+	}
+
+	@WampProcedure(name = "sessionIdAnnotation")
+	public String sessionIdAnnotation(@WampSessionId long id) {
+		return "session id: " + id;
 	}
 
 	@WampProcedure(name = "messageMethod")

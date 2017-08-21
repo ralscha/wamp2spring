@@ -41,7 +41,7 @@ public class IdGeneratorTest {
 		AtomicLong id = new AtomicLong(0);
 		assertThat(IdGenerator.newLinearId(id)).isEqualTo(1);
 		assertThat(IdGenerator.newLinearId(id)).isEqualTo(2);
-		
+
 		id.set(IdGenerator.MAX - 1L);
 		assertThat(IdGenerator.newLinearId(id)).isEqualTo(IdGenerator.MAX);
 		assertThat(IdGenerator.newLinearId(id)).isEqualTo(1L);

@@ -17,18 +17,26 @@ package ch.rasc.wamp2spring.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.CallMessage;
+import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
+import ch.rasc.wamp2spring.message.WampRole;
+import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
+import ch.rasc.wamp2spring.testsupport.CompletableFutureWebSocketHandler;
 import ch.rasc.wamp2spring.testsupport.Maps;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
@@ -57,6 +65,32 @@ public class CallParameterTest extends BaseWampTest {
 		assertThat(result.getRequestId()).isEqualTo(2L);
 		assertThat(result.getArgumentsKw()).isNull();
 		assertThat(result.getArguments()).containsExactly("headersMethod called");
+	}
+
+	@Test
+	public void testSessionIdAnnotation() throws Exception {
+		CompletableFutureWebSocketHandler result = createWsHandler();
+
+		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.SMILE)) {
+			List<WampRole> roles = new ArrayList<>();
+			roles.add(new WampRole("caller"));
+			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			sendMessage(Protocol.SMILE, wsSession, helloMessage);
+
+			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
+
+			CallMessage callMessage = new CallMessage(22L, "sessionIdAnnotation");
+			sendMessage(Protocol.SMILE, wsSession, callMessage);
+
+			WampMessage wampResult = result.getWampMessage();
+
+			assertThat(wampResult).isInstanceOf(ResultMessage.class);
+			ResultMessage resultMessage = (ResultMessage) wampResult;
+			assertThat(resultMessage.getRequestId()).isEqualTo(22L);
+			assertThat(resultMessage.getArgumentsKw()).isNull();
+			assertThat(resultMessage.getArguments())
+					.containsExactly("session id: " + welcomeMessage.getSessionId());
+		}
 	}
 
 	@Test
