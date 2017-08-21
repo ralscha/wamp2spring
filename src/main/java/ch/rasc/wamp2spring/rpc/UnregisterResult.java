@@ -31,15 +31,21 @@ class UnregisterResult {
 	@Nullable
 	private final List<ErrorMessage> invocationErrors;
 
-	UnregisterResult(boolean success, Procedure proc) {
+	UnregisterResult(boolean success, @Nullable Procedure proc) {
 		this(success, proc, null);
 	}
 
-	UnregisterResult(boolean success, Procedure proc,
+	UnregisterResult(boolean success, @Nullable Procedure proc,
 			@Nullable List<ErrorMessage> invocationErrors) {
 		this.success = success;
-		this.procedure = proc.getProcedure();
-		this.registrationId = proc.getRegistrationId();
+		if (proc != null) {
+			this.procedure = proc.getProcedure();
+			this.registrationId = proc.getRegistrationId();
+		}
+		else {
+			this.procedure = null;
+			this.registrationId = -1;
+		}
 		this.invocationErrors = invocationErrors;
 	}
 
