@@ -21,11 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
@@ -69,7 +68,7 @@ public class CallParameterTest extends BaseWampTest {
 
 	@Test
 	public void testSessionIdAnnotation() throws Exception {
-		CompletableFutureWebSocketHandler result = createWsHandler();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
 		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.SMILE)) {
 			List<WampRole> roles = new ArrayList<>();
@@ -116,8 +115,7 @@ public class CallParameterTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly("mix");
 	}
 
-	@Configuration
-	@EnableAutoConfiguration
+	@SpringBootApplication
 	@EnableWamp
 	static class Config {
 

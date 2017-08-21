@@ -23,12 +23,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingJsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import ch.rasc.wamp2spring.config.WampSubProtocolHandler;
 import ch.rasc.wamp2spring.message.WampMessage;
@@ -53,19 +58,15 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 	private List<WampMessage> receivedMessages;
 
-	public CompletableFutureWebSocketHandler(JsonFactory jsonFactory,
-			JsonFactory msgpackFactory, JsonFactory cborFactory,
-			JsonFactory smileFactory) {
-		this(1, jsonFactory, msgpackFactory, cborFactory, smileFactory);
+	public CompletableFutureWebSocketHandler() {
+		this(1);
 	}
 
-	public CompletableFutureWebSocketHandler(int expectedNoOfResults,
-			JsonFactory jsonFactory, JsonFactory msgpackFactory, JsonFactory cborFactory,
-			JsonFactory smileFactory) {
-		this.jsonFactory = jsonFactory;
-		this.msgpackFactory = msgpackFactory;
-		this.cborFactory = cborFactory;
-		this.smileFactory = smileFactory;
+	public CompletableFutureWebSocketHandler(int expectedNoOfResults) {
+		this.jsonFactory = new MappingJsonFactory(new ObjectMapper());
+		this.msgpackFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
+		this.cborFactory = new ObjectMapper(new CBORFactory()).getFactory();
+		this.smileFactory = new ObjectMapper(new SmileFactory()).getFactory();
 		this.timeout = getTimeoutValue();
 		this.welcomeMessageFuture = new CompletableFuture<>();
 		this.reset(expectedNoOfResults);
@@ -170,5 +171,14 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	public WelcomeMessage getWelcomeMessage()
 			throws InterruptedException, ExecutionException, TimeoutException {
 		return this.welcomeMessageFuture.get(this.timeout, TimeUnit.SECONDS);
+	}
+
+	public void waitAFewSeconds() {
+		try {
+			TimeUnit.SECONDS.sleep(getTimeoutValue());
+		}
+		catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

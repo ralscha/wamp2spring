@@ -82,8 +82,8 @@ public class BaseWampTest {
 	protected WampMessage sendWampMessage(WampMessage msg, Protocol protocol)
 			throws InterruptedException, ExecutionException, TimeoutException,
 			IOException {
-		CompletableFutureWebSocketHandler result = createWsHandler();
-		WebSocketClient webSocketClient = createWebSocketClient();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
+		WebSocketClient webSocketClient = new StandardWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
 				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get()) {
@@ -135,13 +135,9 @@ public class BaseWampTest {
 		}
 	}
 
-	protected WebSocketClient createWebSocketClient() {
-		return new StandardWebSocketClient();
-	}
-
 	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result,
 			Protocol protocol) throws InterruptedException, ExecutionException {
-		WebSocketClient webSocketClient = createWebSocketClient();
+		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		return webSocketClient
 				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get();
 	}
@@ -168,11 +164,6 @@ public class BaseWampTest {
 		return UriComponentsBuilder
 				.fromUriString("ws://localhost:" + this.actualPort + "/wamp").build()
 				.encode().toUri();
-	}
-
-	protected CompletableFutureWebSocketHandler createWsHandler() {
-		return new CompletableFutureWebSocketHandler(this.jsonFactory,
-				this.msgpackFactory, this.cborFactory, this.smileFactory);
 	}
 
 }

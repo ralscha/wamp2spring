@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +58,7 @@ public class EventsTest extends BaseWampTest {
 	@Test
 	public void testSessionEstablishedEvent() throws Exception {
 
-		CompletableFutureWebSocketHandler result = createWsHandler();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
 		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.CBOR)) {
 			List<WampRole> roles = new ArrayList<>();
@@ -68,7 +67,7 @@ public class EventsTest extends BaseWampTest {
 			sendMessage(Protocol.CBOR, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 
 			assertThat(this.eventsBean.getMethodCounter())
 					.containsOnlyKeys("sessionEstablished");
@@ -88,7 +87,7 @@ public class EventsTest extends BaseWampTest {
 
 	@Test
 	public void testSessionDisconnectedEvent() throws Exception {
-		CompletableFutureWebSocketHandler result = createWsHandler();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
 		WelcomeMessage welcomeMessage;
 		try (WebSocketSession wsSession = startWebSocketSession(result,
@@ -100,7 +99,7 @@ public class EventsTest extends BaseWampTest {
 			welcomeMessage = result.getWelcomeMessage();
 		}
 
-		TimeUnit.SECONDS.sleep(1);
+		result.waitAFewSeconds();
 
 		assertThat(this.eventsBean.getMethodCounter())
 				.containsOnlyKeys("sessionEstablished", "disconnected");
@@ -128,7 +127,7 @@ public class EventsTest extends BaseWampTest {
 	@Test
 	public void testProcedureEvents() throws Exception {
 
-		CompletableFutureWebSocketHandler result = createWsHandler();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
 		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
@@ -142,7 +141,7 @@ public class EventsTest extends BaseWampTest {
 			RegisteredMessage registeredMessage = (RegisteredMessage) result
 					.getWampMessage();
 
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter())
 					.containsOnlyKeys("sessionEstablished", "procedureRegistered");
 
@@ -177,7 +176,7 @@ public class EventsTest extends BaseWampTest {
 			result.reset();
 
 			result.getWampMessage();
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter())
 					.containsOnlyKeys("procedureUnregistered");
 			events = this.eventsBean.getMethodCounter().get("procedureUnregistered");
@@ -197,7 +196,7 @@ public class EventsTest extends BaseWampTest {
 
 	@Test
 	public void testSubscriptionEvents() throws Exception {
-		CompletableFutureWebSocketHandler result = createWsHandler();
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
 		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
@@ -211,7 +210,7 @@ public class EventsTest extends BaseWampTest {
 			SubscribedMessage subscribedMessage = (SubscribedMessage) result
 					.getWampMessage();
 
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys(
 					"sessionEstablished", "subscriptionCreated", "subscribed");
 
@@ -250,7 +249,7 @@ public class EventsTest extends BaseWampTest {
 			subscribeMessage = new SubscribeMessage(1, "topic");
 			sendMessage(Protocol.JSON, wsSession, subscribeMessage);
 			subscribedMessage = (SubscribedMessage) result.getWampMessage();
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("subscribed");
 			events = this.eventsBean.getMethodCounter().get("subscribed");
 			assertThat(events).hasSize(1);
@@ -273,7 +272,7 @@ public class EventsTest extends BaseWampTest {
 					subscribedMessage.getSubscriptionId());
 			sendMessage(Protocol.JSON, wsSession, unsubscribeMessage);
 			result.getWampMessage();
-			TimeUnit.SECONDS.sleep(1);
+			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter())
 					.containsOnlyKeys("unsubscribed", "subscriptionDeleted");
 			events = this.eventsBean.getMethodCounter().get("unsubscribed");
