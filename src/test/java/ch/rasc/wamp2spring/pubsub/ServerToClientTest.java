@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.pubsub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -161,6 +162,229 @@ public class ServerToClientTest extends BaseWampTest {
 			map.put("name", "name");
 			assertThat(eventMessage.getArguments()).containsExactly(map);
 			assertThat(eventMessage.getArgumentsKw()).isNull();
+		}
+	}
+
+	@Test
+	public void testPrefix() throws Exception {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+			wc1.connect(wampEndpointUrl());
+			wc2.connect(wampEndpointUrl());
+
+			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(
+					new SubscribeMessage(1, "news", MatchPolicy.PREFIX));
+			wc2.sendMessageWithResult(new SubscribeMessage(1, "news", MatchPolicy.EXACT));
+
+			this.serverToClientService.getWampPublisher().publishToAll("news.business",
+					"argument");
+			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isEqualTo("news.business");
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly("argument");
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishToAll("news.sport",
+					"bike");
+			eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isEqualTo("news.sport");
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly("bike");
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishToAll("new.world",
+					"eclipse");
+			wc1.waitForNothing();
+			wc2.waitForNothing();
+		}
+	}
+
+	@Test
+	public void testWildcard() throws Exception {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+			wc1.connect(wampEndpointUrl());
+			wc2.connect(wampEndpointUrl());
+
+			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(
+					new SubscribeMessage(1, "crud..create", MatchPolicy.WILDCARD));
+			wc2.sendMessageWithResult(
+					new SubscribeMessage(1, "crud..create", MatchPolicy.EXACT));
+
+			this.serverToClientService.getWampPublisher().publishToAll("crud.user.create",
+					1);
+			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isEqualTo("crud.user.create");
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly(1);
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher()
+					.publishToAll("crud.company.create", "tower");
+			eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isEqualTo("crud.company.create");
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly("tower");
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishToAll("crud.user.update",
+					"2");
+			wc1.waitForNothing();
+			wc2.waitForNothing();
+		}
+	}
+
+	@Test
+	public void testEligible() throws Exception {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+			wc1.connect(wampEndpointUrl());
+			wc2.connect(wampEndpointUrl());
+
+			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
+			SubscribedMessage subscribedMessage1 = wc1
+					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage2 = wc2
+					.sendMessageWithResult(subscribeMessage);
+
+			this.serverToClientService.getWampPublisher()
+					.publishTo(wc1.getWampSessionId(), "topic", 1, 2, 3);
+			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isNull();
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly(1, 2, 3);
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher()
+					.publishTo(wc2.getWampSessionId(), "topic", 5);
+			EventMessage eventMessage2 = (EventMessage) wc2.getWampMessage();
+			assertThat(eventMessage2.getSubscriptionId())
+					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage2.getTopic()).isNull();
+			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.getArguments()).containsExactly(5);
+			assertThat(eventMessage2.getArgumentsKw()).isNull();
+			wc1.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishTo(
+					Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()),
+					"topic", 6);
+			eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isNull();
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).containsExactly(6);
+			assertThat(eventMessage1.getArgumentsKw()).isNull();
+
+			eventMessage2 = (EventMessage) wc2.getWampMessage();
+			assertThat(eventMessage2.getSubscriptionId())
+					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage2.getTopic()).isNull();
+			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.getArguments()).containsExactly(6);
+			assertThat(eventMessage2.getArgumentsKw()).isNull();
+
+			this.serverToClientService.getWampPublisher().publishTo(Arrays.asList(-1L),
+					"topic", 7);
+			wc1.waitForNothing();
+			wc2.waitForNothing();
+		}
+	}
+
+	@Test
+	public void testExclude() throws Exception {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+			wc1.connect(wampEndpointUrl());
+			wc2.connect(wampEndpointUrl());
+
+			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
+			SubscribedMessage subscribedMessage1 = wc1
+					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage2 = wc2
+					.sendMessageWithResult(subscribeMessage);
+
+			this.serverToClientService.getWampPublisher().publishToAllExcept(
+					wc2.getWampSessionId(), "topic", Collections.singletonMap("id", 111));
+			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isNull();
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).isEmpty();
+			assertThat(eventMessage1.getArgumentsKw())
+					.containsOnly(MapEntry.entry("id", 111));
+			wc2.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishToAllExcept(
+					wc1.getWampSessionId(), "topic", Collections.singletonMap("id", 112));
+			EventMessage eventMessage2 = (EventMessage) wc2.getWampMessage();
+			assertThat(eventMessage2.getSubscriptionId())
+					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage2.getTopic()).isNull();
+			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.getArguments()).isEmpty();
+			assertThat(eventMessage2.getArgumentsKw())
+					.containsOnly(MapEntry.entry("id", 112));
+			wc1.waitForNothing();
+
+			this.serverToClientService.getWampPublisher().publishToAllExcept(
+					Arrays.asList(-1L), "topic", Collections.singletonMap("id", 113));
+			eventMessage1 = (EventMessage) wc1.getWampMessage();
+			assertThat(eventMessage1.getSubscriptionId())
+					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage1.getTopic()).isNull();
+			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.getArguments()).isEmpty();
+			assertThat(eventMessage1.getArgumentsKw())
+					.containsOnly(MapEntry.entry("id", 113));
+
+			eventMessage2 = (EventMessage) wc2.getWampMessage();
+			assertThat(eventMessage2.getSubscriptionId())
+					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
+			assertThat(eventMessage2.getTopic()).isNull();
+			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.getArguments()).isEmpty();
+			assertThat(eventMessage2.getArgumentsKw())
+					.containsOnly(MapEntry.entry("id", 113));
+
+			this.serverToClientService.getWampPublisher().publishToAllExcept(
+					Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()),
+					"topic", Collections.singletonMap("id", 114));
+			wc1.waitForNothing();
+			wc2.waitForNothing();
 		}
 	}
 
