@@ -20,7 +20,7 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 |pattern_based_subscription   |Prefix- and wildcard matching policies for subscriptions. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
 
 
-**Fallback**
+**Fallback**   
 Currently *wamp2spring* does not implement a fallback solution when peers cannot establish 
 a WebSocket connection. [autobahn-js](https://github.com/crossbario/autobahn-js) implements a fallback with long polling. 
 You find the description about the protocol in the specification ([Section 14.5.3.3](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.5.3.3)).
