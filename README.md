@@ -4,7 +4,7 @@
 *wamp2spring* is a Java implementation of the [WAMP specification](http://wamp-proto.org/spec/) built on top of the WebSocket support of Spring 5.   
 WAMP is a WebSocket subprotocol that provides two application messaging patterns: Remote Procedure Calls and Publish / Subscribe. 
 
-## Support
+## Implementation
 *wamp2spring* implements the Basic Profile, but it does not support multiple realms in one application. 
 Every connection, registration and subscription exists in the same realm and *wamp2spring* ignores the realm 
 parameter of the HELLO message.
@@ -18,6 +18,14 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 |publisher_exclusion          |exclude_me option in the PUBLISH message. By default the publisher is excluded from receiving the EVENT message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.2)                                               |
 |publisher_identification     |disclose_me option in the PUBLISH message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.3)                                               |
 |pattern_based_subscription   |Prefix- and wildcard matching policies for subscriptions. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
+
+
+**Fallback**
+Currently *wamp2spring* does not implement a fallback solution when peers cannot establish 
+a WebSocket connection. [autobahn-js](https://github.com/crossbario/autobahn-js) implements a fallback with long polling. 
+You find the description about the protocol in the specification ([Section 14.5.3.3](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.5.3.3)).
+So far I don't have a need for a fallback solution because WebSocket works fine especially when it's sent over TLS connections.
+But when there is a need I will try to add this fallback solution. Pull requests are always welcome.
 
 
 ## Quickstart
@@ -54,7 +62,7 @@ Until then a project can reference SNAPSHOT releases from the Sonatype repositor
 You find a collection of example applications in the [wamp2spring-demo](https://github.com/ralscha/wamp2spring-demo) GitHub repository.
 
 
-## TODO: Things to do before the release
+## Things to do before the release
   * Write documentation
   * Write more tests
   * Write more example applications
