@@ -11,14 +11,13 @@ parameter of the HELLO message.
 
 Additionally *wamp2spring* implements a few features from the Advanced Profile:
 
-
 |Feature                      |Remark                                                                                                                                                    |
 |:----------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|
-|caller_identification        |[Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.3.5)                                               |
-|subscriber_blackwhite_listing|[Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.1). **Only eligible and exclude are implemented**|
-|publisher_exclusion          |[Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.2)                                               |
-|publisher_identification     |[Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.3)                                               |
-|pattern_based_subscription   |[Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
+|caller_identification        |disclose_me option in the CALL message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.3.5)                                               |
+|subscriber_blackwhite_listing|Exclude and include receivers with their WAMP session id. *Only eligible and exclude options are implemented.* [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.1).|
+|publisher_exclusion          |exclude_me option in the PUBLISH message. By default the publisher is excluded from receiving the EVENT message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.2)                                               |
+|publisher_identification     |disclose_me option in the PUBLISH message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.3)                                               |
+|pattern_based_subscription   |Prefix- and wildcard matching policies for subscriptions. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
 
 
 ## Quickstart
