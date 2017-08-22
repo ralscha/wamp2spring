@@ -29,26 +29,26 @@ The released version of the library will be hosted on the Central Maven Reposito
 Until then a project can reference SNAPSHOT releases from the Sonatype repository
 
 ```
-	<dependency>
-		<groupId>ch.rasc</groupId>
-		<artifactId>wamp2spring</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
-	</dependency>
+<dependency>
+  <groupId>ch.rasc</groupId>
+  <artifactId>wamp2spring</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+</dependency>
 		
-	<repositories>
-		...
-		<repository>
-			<id>sonatype</id>
-			<name>sonatype</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>		
+<repositories>
+  ...
+  <repository>
+    <id>sonatype</id>
+    <name>sonatype</name>
+    <url>https://oss.sonatype.org/content/groups/public</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+    <releases>
+      <enabled>true</enabled>
+    </releases>
+  </repository>
+</repositories>		
 ```
 
 ## Example applications
@@ -70,7 +70,7 @@ You find a collection of example applications in the [wamp2spring-demo](https://
 
 ## More links
   * [WAMP Homepage](http://wamp-proto.org/)
-  * Other WAMP Java implementations
+  * Other Java WAMP implementations
      * [jawampa](https://github.com/Matthias247/jawampa)
      * [autobahn-java](https://github.com/crossbario/autobahn-java)     
   * [WAMP libraries and routers](http://wamp-proto.org/implementations/)
