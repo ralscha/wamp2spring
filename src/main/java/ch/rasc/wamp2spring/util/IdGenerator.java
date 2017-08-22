@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 public class IdGenerator {
 
-	public static final long MIN = 0L;
+	public static final long MIN = 1L;
 	public static final long MAX = 9007199254740992L;
 
 	/**
