@@ -21,10 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
@@ -70,16 +71,16 @@ public class CallParameterTest extends BaseWampTest {
 	public void testSessionIdAnnotation() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.SMILE)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.SMILE)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(Protocol.SMILE, wsSession, helloMessage);
+			sendMessage(DataFormat.SMILE, wsSession, helloMessage);
 
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
 			CallMessage callMessage = new CallMessage(22L, "sessionIdAnnotation");
-			sendMessage(Protocol.SMILE, wsSession, callMessage);
+			sendMessage(DataFormat.SMILE, wsSession, callMessage);
 
 			WampMessage wampResult = result.getWampMessage();
 
@@ -115,7 +116,8 @@ public class CallParameterTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly("mix");
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 

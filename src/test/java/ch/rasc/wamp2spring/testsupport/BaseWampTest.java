@@ -56,7 +56,7 @@ import ch.rasc.wamp2spring.message.WampRole;
 @Ignore
 public class BaseWampTest {
 
-	public enum Protocol {
+	public enum DataFormat {
 		JSON, MSGPACK, CBOR, SMILE
 	}
 
@@ -76,44 +76,44 @@ public class BaseWampTest {
 
 	protected WampMessage sendWampMessage(WampMessage msg) throws InterruptedException,
 			ExecutionException, TimeoutException, IOException {
-		return sendWampMessage(msg, Protocol.JSON);
+		return sendWampMessage(msg, DataFormat.JSON);
 	}
 
-	protected WampMessage sendWampMessage(WampMessage msg, Protocol protocol)
+	protected WampMessage sendWampMessage(WampMessage msg, DataFormat dataFormat)
 			throws InterruptedException, ExecutionException, TimeoutException,
 			IOException {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
-				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get()) {
+				.doHandshake(result, getHeaders(dataFormat), wampEndpointUrl()).get()) {
 
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("publisher"));
 			roles.add(new WampRole("subscriber"));
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(protocol, webSocketSession, helloMessage);
+			sendMessage(dataFormat, webSocketSession, helloMessage);
 
 			result.getWelcomeMessage();
 
-			sendMessage(protocol, webSocketSession, msg);
+			sendMessage(dataFormat, webSocketSession, msg);
 
 			return result.getWampMessage();
 		}
 	}
 
-	protected void sendMessage(Protocol protocol, WebSocketSession webSocketSession,
+	protected void sendMessage(DataFormat dataFormat, WebSocketSession webSocketSession,
 			WampMessage msg) throws IOException {
 
 		JsonFactory useFactory = this.jsonFactory;
-		if (protocol == Protocol.MSGPACK) {
+		if (dataFormat == DataFormat.MSGPACK) {
 			useFactory = this.msgpackFactory;
 		}
-		else if (protocol == Protocol.CBOR) {
+		else if (dataFormat == DataFormat.CBOR) {
 			useFactory = this.cborFactory;
 		}
-		else if (protocol == Protocol.SMILE) {
+		else if (dataFormat == DataFormat.SMILE) {
 			useFactory = this.smileFactory;
 		}
 
@@ -125,8 +125,8 @@ public class BaseWampTest {
 			generator.writeEndArray();
 			generator.close();
 
-			if (protocol == Protocol.MSGPACK || protocol == Protocol.CBOR
-					|| protocol == Protocol.SMILE) {
+			if (dataFormat == DataFormat.MSGPACK || dataFormat == DataFormat.CBOR
+					|| dataFormat == DataFormat.SMILE) {
 				webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
 			}
 			else {
@@ -136,22 +136,22 @@ public class BaseWampTest {
 	}
 
 	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result,
-			Protocol protocol) throws InterruptedException, ExecutionException {
+			DataFormat dataFormat) throws InterruptedException, ExecutionException {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		return webSocketClient
-				.doHandshake(result, getHeaders(protocol), wampEndpointUrl()).get();
+				.doHandshake(result, getHeaders(dataFormat), wampEndpointUrl()).get();
 	}
 
-	protected WebSocketHttpHeaders getHeaders(Protocol protocol) {
+	protected WebSocketHttpHeaders getHeaders(DataFormat dataFormat) {
 		WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
 
-		if (protocol == Protocol.MSGPACK) {
+		if (dataFormat == DataFormat.MSGPACK) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.MSGPACK_PROTOCOL);
 		}
-		else if (protocol == Protocol.SMILE) {
+		else if (dataFormat == DataFormat.SMILE) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.SMILE_PROTOCOL);
 		}
-		else if (protocol == Protocol.CBOR) {
+		else if (dataFormat == DataFormat.CBOR) {
 			headers.setSecWebSocketProtocol(WampSubProtocolHandler.CBOR_PROTOCOL);
 		}
 		else {

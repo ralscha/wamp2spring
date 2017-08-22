@@ -22,10 +22,11 @@ import java.util.Arrays;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.CallMessage;
@@ -70,7 +71,7 @@ public class WampResultTest extends BaseWampTest {
 	@Test
 	public void testEmpty() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"),
-				Protocol.MSGPACK);
+				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(3L);
@@ -84,7 +85,7 @@ public class WampResultTest extends BaseWampTest {
 	public void testArgumentTwoKw() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(4L, "twoKw", Arrays.asList("time", "emit")),
-				Protocol.CBOR);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(4L);
@@ -100,7 +101,7 @@ public class WampResultTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(5L, "mix",
 						Maps.map("amount", "123.25").map("text", "cookie").getMap()),
-				Protocol.MSGPACK);
+				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);
@@ -154,7 +155,8 @@ public class WampResultTest extends BaseWampTest {
 		assertThat(this.wampResultService.isCalled("toDtoKw")).isTrue();
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 

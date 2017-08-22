@@ -22,10 +22,11 @@ import java.util.Collections;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.CallMessage;
@@ -103,7 +104,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testCallMessageArgument() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(5L, "callService.call"), Protocol.JSON);
+				new CallMessage(5L, "callService.call"), DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);
@@ -115,7 +116,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testNoParams() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(6L, "callService.noParams"), Protocol.MSGPACK);
+				new CallMessage(6L, "callService.noParams"), DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(6L);
@@ -128,7 +129,7 @@ public class CallTest extends BaseWampTest {
 	public void testException() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L,
 				"callService.error", Collections.singletonList("theArgument")),
-				Protocol.CBOR);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(7L);
@@ -143,7 +144,7 @@ public class CallTest extends BaseWampTest {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
 				"callService.callWithDto", Collections.singletonList(dto)),
-				Protocol.MSGPACK);
+				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
@@ -158,7 +159,7 @@ public class CallTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(9L, "callService.callWithDtoAndMessage",
 						Arrays.asList(dto, "the_second_argument")),
-				Protocol.JSON);
+				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
@@ -167,7 +168,8 @@ public class CallTest extends BaseWampTest {
 		assertThat(this.callService.isCalled("callWithDtoAndMessage")).isTrue();
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 

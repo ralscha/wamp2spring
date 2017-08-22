@@ -21,10 +21,11 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.PublishMessage;
@@ -33,15 +34,15 @@ import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ClientToServer.Config.class)
-public class ClientToServer extends BaseWampTest {
+		classes = ClientToServerTest.Config.class)
+public class ClientToServerTest extends BaseWampTest {
 
 	@Autowired
 	private ClientToServerService clientToServerService;
 
 	@Test
 	public void testDefaultListener() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(1L,
@@ -55,7 +56,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testValueListener() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(2L, "sum2")
@@ -69,7 +70,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testTopicListener() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(3L, "sum3")
@@ -83,7 +84,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testMessageArgument() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(4L,
@@ -98,7 +99,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testNoArguments() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(5L,
@@ -112,7 +113,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testError() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(6L,
@@ -126,7 +127,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testDto() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			TestDto testDto = new TestDto(1, "Hi");
@@ -141,7 +142,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testDtoAndMessage() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			TestDto testDto = new TestDto(2, "Hi");
@@ -159,7 +160,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testPrefix() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(9L,
@@ -187,7 +188,7 @@ public class ClientToServer extends BaseWampTest {
 
 	@Test
 	public void testWildcard() throws Exception {
-		try (WampClient wc = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(9L,
@@ -216,7 +217,8 @@ public class ClientToServer extends BaseWampTest {
 		}
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 		@Bean

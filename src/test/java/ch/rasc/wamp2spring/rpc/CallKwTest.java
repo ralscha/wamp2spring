@@ -21,10 +21,11 @@ import java.util.Collections;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.CallMessage;
@@ -45,7 +46,7 @@ public class CallKwTest extends BaseWampTest {
 	public void testReturnValue() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(1L,
 				"callService.sum", Maps.map("a", 3).map("b", 4).getMap()),
-				Protocol.SMILE);
+				DataFormat.SMILE);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(1L);
@@ -59,7 +60,7 @@ public class CallKwTest extends BaseWampTest {
 	public void testDifferentProcedureName() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(2L, "sum2", Maps.map("a", 11).map("b", 22).getMap()),
-				Protocol.SMILE);
+				DataFormat.SMILE);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(2L);
@@ -82,7 +83,7 @@ public class CallKwTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(4L, "callService.noReturn",
 						Maps.map("arg1", "name").map("arg2", 23).getMap()),
-				Protocol.CBOR);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(4L);
@@ -95,7 +96,7 @@ public class CallKwTest extends BaseWampTest {
 	public void testWrongNumberOfArguments() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(44L,
 				"callService.noReturn", Maps.map("arg1", "name").getMap()),
-				Protocol.MSGPACK);
+				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(44L);
@@ -110,7 +111,7 @@ public class CallKwTest extends BaseWampTest {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
 				"callService.callWithDto", Maps.map("testDto", dto).getMap()),
-				Protocol.CBOR);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
@@ -126,7 +127,7 @@ public class CallKwTest extends BaseWampTest {
 				new CallMessage(9L, "callService.callWithDtoAndMessage",
 						Maps.map("testDto", dto)
 								.map("secondArgument", "the_second_argument").getMap()),
-				Protocol.MSGPACK);
+				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
@@ -141,7 +142,7 @@ public class CallKwTest extends BaseWampTest {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(9L,
 				"callService.callWithDtoAndMessage", Collections.singletonList(dto),
 				Maps.map("secondArgument", "the_second_argument").getMap(), false),
-				Protocol.CBOR);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
@@ -150,7 +151,8 @@ public class CallKwTest extends BaseWampTest {
 		assertThat(this.callService.isCalled("callWithDtoAndMessage")).isTrue();
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 

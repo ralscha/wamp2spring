@@ -23,10 +23,11 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
@@ -60,11 +61,11 @@ public class EventsTest extends BaseWampTest {
 
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.CBOR)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.CBOR)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(Protocol.CBOR, wsSession, helloMessage);
+			sendMessage(DataFormat.CBOR, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
 			result.waitAFewSeconds();
@@ -91,11 +92,11 @@ public class EventsTest extends BaseWampTest {
 
 		WelcomeMessage welcomeMessage;
 		try (WebSocketSession wsSession = startWebSocketSession(result,
-				Protocol.MSGPACK)) {
+				DataFormat.MSGPACK)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(Protocol.MSGPACK, wsSession, helloMessage);
+			sendMessage(DataFormat.MSGPACK, wsSession, helloMessage);
 			welcomeMessage = result.getWelcomeMessage();
 		}
 
@@ -129,15 +130,15 @@ public class EventsTest extends BaseWampTest {
 
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.JSON)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(Protocol.JSON, wsSession, helloMessage);
+			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
 			RegisterMessage registerMessage = new RegisterMessage(1, "procedure");
-			sendMessage(Protocol.JSON, wsSession, registerMessage);
+			sendMessage(DataFormat.JSON, wsSession, registerMessage);
 			RegisteredMessage registeredMessage = (RegisteredMessage) result
 					.getWampMessage();
 
@@ -172,7 +173,7 @@ public class EventsTest extends BaseWampTest {
 
 			UnregisterMessage unregisterMessage = new UnregisterMessage(33,
 					registeredMessage.getRegistrationId());
-			sendMessage(Protocol.JSON, wsSession, unregisterMessage);
+			sendMessage(DataFormat.JSON, wsSession, unregisterMessage);
 			result.reset();
 
 			result.getWampMessage();
@@ -198,15 +199,15 @@ public class EventsTest extends BaseWampTest {
 	public void testSubscriptionEvents() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, Protocol.JSON)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
-			sendMessage(Protocol.JSON, wsSession, helloMessage);
+			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
-			sendMessage(Protocol.JSON, wsSession, subscribeMessage);
+			sendMessage(DataFormat.JSON, wsSession, subscribeMessage);
 			SubscribedMessage subscribedMessage = (SubscribedMessage) result
 					.getWampMessage();
 
@@ -247,7 +248,7 @@ public class EventsTest extends BaseWampTest {
 			this.eventsBean.resetCounter();
 			result.reset();
 			subscribeMessage = new SubscribeMessage(1, "topic");
-			sendMessage(Protocol.JSON, wsSession, subscribeMessage);
+			sendMessage(DataFormat.JSON, wsSession, subscribeMessage);
 			subscribedMessage = (SubscribedMessage) result.getWampMessage();
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("subscribed");
@@ -270,7 +271,7 @@ public class EventsTest extends BaseWampTest {
 			result.reset();
 			UnsubscribeMessage unsubscribeMessage = new UnsubscribeMessage(11,
 					subscribedMessage.getSubscriptionId());
-			sendMessage(Protocol.JSON, wsSession, unsubscribeMessage);
+			sendMessage(DataFormat.JSON, wsSession, unsubscribeMessage);
 			result.getWampMessage();
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter())
@@ -305,7 +306,8 @@ public class EventsTest extends BaseWampTest {
 		}
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 		@Bean

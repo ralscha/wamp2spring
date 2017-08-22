@@ -17,6 +17,7 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +30,8 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+
+import ch.rasc.wamp2spring.util.CollectionHelper;
 
 /**
  * [PUBLISH, Request|id, Options|dict, Topic|uri]
@@ -133,13 +136,14 @@ public class PublishMessage extends WampMessage {
 			return this;
 		}
 
-		public Builder arguments(@Nullable List<Object> args) {
-			this.arguments = args;
+		public <T> Builder arguments(@Nullable Collection<T> args) {
+			this.arguments = CollectionHelper.toList(args);
 			return this;
 		}
 
-		public Builder arguments(@Nullable Map<String, Object> argsKw) {
-			this.argumentsKw = argsKw;
+		@SuppressWarnings("unchecked")
+		public <T> Builder arguments(@Nullable Map<String, T> argsKw) {
+			this.argumentsKw = (Map<String, Object>) argsKw;
 			return this;
 		}
 
@@ -159,13 +163,13 @@ public class PublishMessage extends WampMessage {
 			return this;
 		}
 
-		public Builder exclude(Set<Long> excludeWampSessionIds) {
+		public Builder exclude(Collection<Long> excludeWampSessionIds) {
 			this.exclude = excludeWampSessionIds.stream().map(l -> (Number) l)
 					.collect(Collectors.toSet());
 			return this;
 		}
 
-		public Builder eligible(Set<Long> eligibleWampSessionIds) {
+		public Builder eligible(Collection<Long> eligibleWampSessionIds) {
 			this.eligible = eligibleWampSessionIds.stream().map(l -> (Number) l)
 					.collect(Collectors.toSet());
 			return this;

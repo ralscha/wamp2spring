@@ -19,9 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
 import ch.rasc.wamp2spring.message.EventMessage;
@@ -33,13 +34,13 @@ import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ClientToClient.Config.class)
-public class ClientToClient extends BaseWampTest {
+		classes = ClientToClientTest.Config.class)
+public class ClientToClientTest extends BaseWampTest {
 
 	@Test
 	public void testNoArgs() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -68,8 +69,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testOneArgs() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -98,8 +99,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testMultipleArgs() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -129,8 +130,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testArgsKw() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -162,8 +163,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testNotExcludeMe() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -201,8 +202,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testDiscloseMe() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -231,8 +232,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testAcknowledge() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -264,10 +265,10 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testExclude() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK);
-				WampClient wc3 = new WampClient(Protocol.CBOR);
-				WampClient wc4 = new WampClient(Protocol.SMILE)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
+				WampClient wc3 = new WampClient(DataFormat.CBOR);
+				WampClient wc4 = new WampClient(DataFormat.SMILE)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -338,10 +339,10 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testEligible() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK);
-				WampClient wc3 = new WampClient(Protocol.CBOR);
-				WampClient wc4 = new WampClient(Protocol.SMILE)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
+				WampClient wc3 = new WampClient(DataFormat.CBOR);
+				WampClient wc4 = new WampClient(DataFormat.SMILE)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -385,8 +386,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testPrefix() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -440,8 +441,8 @@ public class ClientToClient extends BaseWampTest {
 
 	@Test
 	public void testWildcard() throws Exception {
-		try (WampClient wc1 = new WampClient(Protocol.JSON);
-				WampClient wc2 = new WampClient(Protocol.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON);
+				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
@@ -504,7 +505,8 @@ public class ClientToClient extends BaseWampTest {
 		}
 	}
 
-	@SpringBootApplication
+	@Configuration
+	@EnableAutoConfiguration
 	@EnableWamp
 	static class Config {
 		// nothing here

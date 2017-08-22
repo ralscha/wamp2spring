@@ -46,7 +46,7 @@ import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
-import ch.rasc.wamp2spring.testsupport.BaseWampTest.Protocol;
+import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
 
 public class WampClient implements AutoCloseable {
 	private final CompletableFutureWebSocketHandler result;
@@ -61,12 +61,12 @@ public class WampClient implements AutoCloseable {
 
 	private final WebSocketHttpHeaders headers;
 
-	public WampClient(Protocol protocol) {
-		this.isBinary = protocol != Protocol.JSON;
+	public WampClient(DataFormat dataFormat) {
+		this.isBinary = dataFormat != DataFormat.JSON;
 		this.result = new CompletableFutureWebSocketHandler();
 		this.headers = new WebSocketHttpHeaders();
 
-		switch (protocol) {
+		switch (dataFormat) {
 		case CBOR:
 			this.jsonFactory = new ObjectMapper(new CBORFactory()).getFactory();
 			this.headers.setSecWebSocketProtocol(WampSubProtocolHandler.CBOR_PROTOCOL);
