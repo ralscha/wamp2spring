@@ -21,8 +21,8 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 
 
 **Fallback**   
-Currently *wamp2spring* does not implement a fallback solution when peers cannot establish 
-a WebSocket connection. [autobahn-js](https://github.com/crossbario/autobahn-js) implements a fallback with long polling. 
+Currently *wamp2spring* does not support a fallback solution when peers cannot establish 
+WebSocket connections. [autobahn-js](https://github.com/crossbario/autobahn-js) implements a fallback with long polling. 
 You find the description about the protocol in the specification ([Section 14.5.3.3](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.5.3.3)).
 So far I don't have a need for a fallback solution because WebSocket works fine especially when it's sent over TLS connections.
 But when there is a need I will try to add this fallback solution. Pull requests are always welcome.
