@@ -61,7 +61,8 @@ public class EventsTest extends BaseWampTest {
 
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.CBOR)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result,
+				DataFormat.CBOR)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
@@ -130,7 +131,8 @@ public class EventsTest extends BaseWampTest {
 
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result,
+				DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
@@ -199,7 +201,8 @@ public class EventsTest extends BaseWampTest {
 	public void testSubscriptionEvents() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result,
+				DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);

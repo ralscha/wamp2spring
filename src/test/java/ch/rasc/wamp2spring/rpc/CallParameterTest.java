@@ -71,7 +71,8 @@ public class CallParameterTest extends BaseWampTest {
 	public void testSessionIdAnnotation() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.SMILE)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result,
+				DataFormat.SMILE)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
