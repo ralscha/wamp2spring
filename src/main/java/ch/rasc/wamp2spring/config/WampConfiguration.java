@@ -15,7 +15,6 @@
  */
 package ch.rasc.wamp2spring.config;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -35,14 +34,11 @@ import org.springframework.messaging.handler.invocation.HandlerMethodArgumentRes
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.ServletWebSocketHandlerRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
-import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 import org.springframework.web.socket.messaging.SubProtocolWebSocketHandler;
 import org.springframework.web.socket.server.HandshakeHandler;
 
@@ -68,9 +64,6 @@ public class WampConfiguration {
 	private ConversionService internalConversionService;
 
 	private final List<WampConfigurer> configurers = new ArrayList<>();
-
-	@Nullable
-	private WebSocketTransportRegistration transportRegistration;
 
 	@Autowired(required = false)
 	public void setConfigurers(List<WampConfigurer> configurers) {
@@ -130,12 +123,12 @@ public class WampConfiguration {
 	protected void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		SubProtocolWebSocketHandler subProtocolWebSocketHandler = subProtocolWebSocketHandler();
 
-		Integer sendTimeLimit = readTransportField("sendTimeLimit");
-		Integer sendBufferSizeLimit = readTransportField("sendBufferSizeLimit");
-
+		Integer sendTimeLimit = getSendTimeLimit();
 		if (sendTimeLimit != null) {
 			subProtocolWebSocketHandler.setSendTimeLimit(sendTimeLimit);
 		}
+
+		Integer sendBufferSizeLimit = getSendBufferSizeLimit();
 		if (sendBufferSizeLimit != null) {
 			subProtocolWebSocketHandler.setSendBufferSizeLimit(sendBufferSizeLimit);
 		}
@@ -145,26 +138,19 @@ public class WampConfiguration {
 				getWebSocketHandlerPath());
 
 		registration.setHandshakeHandler(getHandshakeHandler());
+
+		for (WampConfigurer wc : this.configurers) {
+			wc.configureWebSocketHandlerRegistration(registration);
+		}
 	}
 
 	protected WebSocketHandler decorateWebSocketHandler(WebSocketHandler handler) {
-		List<WebSocketHandlerDecoratorFactory> decoratorFactories = readTransportField(
-				"decoratorFactories");
-
 		WebSocketHandler decoratedHandler = handler;
-		for (WebSocketHandlerDecoratorFactory factory : decoratorFactories) {
-			decoratedHandler = factory.decorate(decoratedHandler);
+		for (WampConfigurer wc : this.configurers) {
+			decoratedHandler = wc.decorateWebSocketHandler(decoratedHandler);
 		}
+
 		return decoratedHandler;
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T> T readTransportField(String fieldName) {
-		Field field = ReflectionUtils.findField(WebSocketTransportRegistration.class,
-				fieldName);
-		ReflectionUtils.makeAccessible(field);
-
-		return (T) ReflectionUtils.getField(field, getTransportRegistration());
 	}
 
 	protected HandshakeHandler getHandshakeHandler() {
@@ -175,19 +161,12 @@ public class WampConfiguration {
 		return "/wamp";
 	}
 
-	private final WebSocketTransportRegistration getTransportRegistration() {
-		if (this.transportRegistration == null) {
-			this.transportRegistration = new WebSocketTransportRegistration();
-			configureWebSocketTransport(this.transportRegistration);
-		}
-		return this.transportRegistration;
+	protected Integer getSendTimeLimit() {
+		return null;
 	}
 
-	protected void configureWebSocketTransport(
-			WebSocketTransportRegistration registration) {
-		for (WampConfigurer wc : this.configurers) {
-			wc.configureWebSocketTransport(registration);
-		}
+	protected Integer getSendBufferSizeLimit() {
+		return null;
 	}
 
 	@Bean
@@ -264,13 +243,6 @@ public class WampConfiguration {
 
 		return new HandlerMethodService(conversionService(), argumentResolvers,
 				new ObjectMapper(), applicationContext);
-	}
-
-	public void addArgumentResolvers(
-			List<HandlerMethodArgumentResolver> argumentResolvers) {
-		for (WampConfigurer wc : this.configurers) {
-			wc.addArgumentResolvers(argumentResolvers);
-		}
 	}
 
 	protected ConversionService conversionService() {

@@ -19,7 +19,8 @@ import java.util.List;
 
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.support.AbstractMessageChannel;
-import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
 
 @SuppressWarnings("unused")
 public interface WampConfigurer {
@@ -43,11 +44,12 @@ public interface WampConfigurer {
 		// nothing here
 	}
 
-	/*
-	 * Configure the WebSocket handler registration for the wamp endpoint
-	 */
-	default void configureWebSocketTransport(
-			WebSocketTransportRegistration registration) {
+	default WebSocketHandler decorateWebSocketHandler(WebSocketHandler webSocketHandler) {
+		return webSocketHandler;
+	}
+
+	default void configureWebSocketHandlerRegistration(
+			WebSocketHandlerRegistration registration) {
 		// nothing here
 	}
 
