@@ -133,6 +133,8 @@ public class EventsTest extends BaseWampTest {
 
 		try (WebSocketSession wsSession = startWebSocketSession(result,
 				DataFormat.JSON)) {
+			this.eventsBean.getMethodCounter().clear();
+			
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
