@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +28,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.config.EnableWamp;
@@ -47,6 +48,7 @@ import ch.rasc.wamp2spring.testsupport.CompletableFutureWebSocketHandler;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
 		classes = EventsTest.Config.class)
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class EventsTest extends BaseWampTest {
 
 	@Autowired
@@ -55,12 +57,6 @@ public class EventsTest extends BaseWampTest {
 	@Before
 	public void setup() {
 		this.eventsBean.resetCounter();
-		try {
-			TimeUnit.SECONDS.sleep(4);
-		}
-		catch (InterruptedException e) {
-			// nothing here
-		}
 	}
 
 	@Test
