@@ -39,10 +39,6 @@ public class WampRole {
 		this.features.add(feature);
 	}
 
-	public void removeFeature(String feature) {
-		this.features.remove(feature);
-	}
-
 	public boolean hasFeatures() {
 		return !this.features.isEmpty();
 	}

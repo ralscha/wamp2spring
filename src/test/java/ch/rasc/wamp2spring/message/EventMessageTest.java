@@ -31,24 +31,26 @@ public class EventMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		EventMessage eventMessage = new EventMessage(1, 2, null, null, null, null);
+		EventMessage eventMessage = new EventMessage(1, 2, null, null, false, null, null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).isNull();
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		String json = serializeToJson(eventMessage);
 		assertThat(json).isEqualTo("[36,1,2,{}]");
 
-		eventMessage = new EventMessage(1, 2, null, null,
+		eventMessage = new EventMessage(1, 2, null, null, false,
 				Collections.singletonList("Hello, world!"), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(eventMessage);
@@ -57,13 +59,14 @@ public class EventMessageTest extends BaseMessageTest {
 		Map<String, Object> argumentsKw = new HashMap<>();
 		argumentsKw.put("firstname", "John");
 		argumentsKw.put("surname", "Doe");
-		eventMessage = new EventMessage(1, 2, null, null, Arrays.asList("johnny"),
+		eventMessage = new EventMessage(1, 2, null, null, false, Arrays.asList("johnny"),
 				argumentsKw);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("johnny");
 		assertThat(eventMessage.getArgumentsKw()).containsExactly(
 				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
@@ -71,12 +74,13 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(json).isEqualTo(
 				"[36,1,2,{},[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
-		eventMessage = new EventMessage(1, 2, null, null, null, argumentsKw);
+		eventMessage = new EventMessage(1, 2, null, null, false, null, argumentsKw);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).isNull();
 		assertThat(eventMessage.getArgumentsKw()).containsExactly(
 				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
@@ -84,30 +88,45 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(json)
 				.isEqualTo("[36,1,2,{},[],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
-		eventMessage = new EventMessage(1, 2, "topic", null,
+		eventMessage = new EventMessage(1, 2, "topic", null, false,
 				Collections.singletonList(42), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isEqualTo("topic");
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly(42);
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(eventMessage);
 		assertThat(json).isEqualTo("[36,1,2,{\"topic\":\"topic\"},[42]]");
 
-		eventMessage = new EventMessage(1, 2, "topic", 123, Collections.singletonList(42),
-				null);
+		eventMessage = new EventMessage(1, 2, "topic", 123, false,
+				Collections.singletonList(42), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
 		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isEqualTo("topic");
 		assertThat(eventMessage.getPublisher()).isEqualTo(123);
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly(42);
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(eventMessage);
 		assertThat(json)
 				.isEqualTo("[36,1,2,{\"topic\":\"topic\",\"publisher\":123},[42]]");
+		
+		eventMessage = new EventMessage(1, 2, null, null, true,
+				Collections.singletonList(43), null);
+		assertThat(eventMessage.getCode()).isEqualTo(36);
+		assertThat(eventMessage.getSubscriptionId()).isEqualTo(1);
+		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
+		assertThat(eventMessage.getTopic()).isNull();
+		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isTrue();
+		assertThat(eventMessage.getArguments()).containsExactly(43);
+		assertThat(eventMessage.getArgumentsKw()).isNull();
+		json = serializeToJson(eventMessage);
+		assertThat(json).isEqualTo("[36,1,2,{\"retained\":true},[43]]");		
 	}
 
 	@Test
@@ -120,6 +139,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).isNull();
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -131,6 +151,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -142,6 +163,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).isEmpty();
 		assertThat(eventMessage.getArgumentsKw()).containsExactly(
 				MapEntry.entry("color", "orange"),
@@ -155,6 +177,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isNull();
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("a", "b");
 		assertThat(eventMessage.getArgumentsKw()).containsExactly(
 				MapEntry.entry("color", "orange"),
@@ -168,6 +191,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isEqualTo("the_topic");
 		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -179,8 +203,33 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isEqualTo("the_topic");
 		assertThat(eventMessage.getPublisher()).isEqualTo(1234);
+		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
+		
+		json = "[36, 5512315355, 4429313566, {\"retained\":false}, [\"Not Retained\"]]";
+		eventMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+		assertThat(eventMessage.getCode()).isEqualTo(36);
+		assertThat(eventMessage.getSubscriptionId()).isEqualTo(5512315355L);
+		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
+		assertThat(eventMessage.getTopic()).isNull();
+		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isFalse();
+		assertThat(eventMessage.getArguments()).containsExactly("Not Retained");
+		assertThat(eventMessage.getArgumentsKw()).isNull();
+		
+		json = "[36, 5512315355, 4429313566, {\"retained\":true}, [\"Retained\"]]";
+		eventMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+		assertThat(eventMessage.getCode()).isEqualTo(36);
+		assertThat(eventMessage.getSubscriptionId()).isEqualTo(5512315355L);
+		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
+		assertThat(eventMessage.getTopic()).isNull();
+		assertThat(eventMessage.getPublisher()).isNull();
+		assertThat(eventMessage.isRetained()).isTrue();
+		assertThat(eventMessage.getArguments()).containsExactly("Retained");
+		assertThat(eventMessage.getArgumentsKw()).isNull();		
 	}
 
 }

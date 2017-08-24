@@ -38,6 +38,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).isNull();
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -54,6 +55,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly("abc", 23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -70,6 +72,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).isNull();
 		assertThat(publishMessage.getArgumentsKw())
@@ -87,11 +90,29 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isTrue();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(publishMessage);
 		assertThat(json).isEqualTo("[16,2,{\"disclose_me\":true},\"event\",[23]]");
+
+		publishMessage = PublishMessage.builder(2, "event").retain()
+				.arguments(Arrays.asList(23)).build();
+		assertThat(publishMessage.getCode()).isEqualTo(16);
+		assertThat(publishMessage.getRequestId()).isEqualTo(2);
+		assertThat(publishMessage.getTopic()).isEqualTo("event");
+		assertThat(publishMessage.getEligible()).isNull();
+		assertThat(publishMessage.getExclude()).isNull();
+		assertThat(publishMessage.isAcknowledge()).isFalse();
+		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isTrue();
+		assertThat(publishMessage.isExcludeMe()).isTrue();
+		assertThat(publishMessage.getArguments()).containsExactly(23);
+		assertThat(publishMessage.getArgumentsKw()).isNull();
+		json = serializeToJson(publishMessage);
+		assertThat(json).isEqualTo(
+				"[16,2,{\"retain\":true},\"event\",[23]]");
 
 		publishMessage = PublishMessage.builder(2, "event").notExcludeMe().acknowledge()
 				.arguments(Arrays.asList(23)).build();
@@ -102,6 +123,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isTrue();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isFalse();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -118,6 +140,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).containsOnly(7891255L, 1245751L);
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -135,6 +158,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).containsOnly(7891255, 1245751);
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw())
@@ -157,6 +181,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).isNull();
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -171,6 +196,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -186,6 +212,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).isEmpty();
 		assertThat(publishMessage.getArgumentsKw()).containsExactly(
@@ -202,6 +229,22 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isTrue();
+		assertThat(publishMessage.isRetain()).isFalse();
+		assertThat(publishMessage.isExcludeMe()).isTrue();
+		assertThat(publishMessage.getArguments()).containsExactly(23);
+		assertThat(publishMessage.getArgumentsKw()).isNull();
+
+		json = "[16, 523412, {\"retain\": true}, \"com.myapp.mytopic\", [23]]";
+		publishMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+		assertThat(publishMessage.getCode()).isEqualTo(16);
+		assertThat(publishMessage.getRequestId()).isEqualTo(523412L);
+		assertThat(publishMessage.getTopic()).isEqualTo("com.myapp.mytopic");
+		assertThat(publishMessage.getEligible()).isNull();
+		assertThat(publishMessage.getExclude()).isNull();
+		assertThat(publishMessage.isAcknowledge()).isFalse();
+		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isTrue();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -216,6 +259,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).isNull();
 		assertThat(publishMessage.isAcknowledge()).isTrue();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isFalse();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
@@ -230,6 +274,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getExclude()).containsOnly(7891255, 1245751);
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
+		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();

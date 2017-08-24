@@ -60,6 +60,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).isNull();
 			assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -90,6 +91,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).containsExactly("the argument");
 			assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -120,6 +122,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).containsExactly("one", "two",
 					"three");
 			assertThat(eventMessage.getArgumentsKw()).isNull();
@@ -152,6 +155,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).isEmpty();
 			assertThat(eventMessage.getArgumentsKw()).containsOnly(
 					MapEntry.entry("one", 1), MapEntry.entry("two", 2),
@@ -184,6 +188,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).isEmpty();
 			assertThat(eventMessage.getArgumentsKw())
 					.containsOnly(MapEntry.entry("one", 1));
@@ -194,6 +199,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).isEmpty();
 			assertThat(eventMessage.getArgumentsKw())
 					.containsOnly(MapEntry.entry("one", 1));
@@ -223,6 +229,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isEqualTo(wc2.getWampSessionId());
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).containsOnly("here");
 			assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -253,6 +260,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
+			assertThat(eventMessage.isRetained()).isFalse();
 			assertThat(eventMessage.getArguments()).containsOnly("here");
 			assertThat(eventMessage.getArgumentsKw()).isNull();
 
@@ -294,6 +302,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArguments()).containsOnly("one", "two");
 			assertThat(eventMessage1.getArgumentsKw()).isNull();
 
@@ -303,6 +312,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.isRetained()).isFalse();
 			assertThat(eventMessage2.getArguments()).containsOnly("one", "two");
 			assertThat(eventMessage2.getArgumentsKw()).isNull();
 
@@ -312,6 +322,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage3.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage3.getTopic()).isNull();
 			assertThat(eventMessage3.getPublisher()).isNull();
+			assertThat(eventMessage3.isRetained()).isFalse();
 			assertThat(eventMessage3.getArguments()).containsOnly("one", "two");
 			assertThat(eventMessage3.getArgumentsKw()).isNull();
 
@@ -328,6 +339,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
+			assertThat(eventMessage2.isRetained()).isFalse();
 			assertThat(eventMessage2.getArguments()).containsOnly("three");
 			assertThat(eventMessage2.getArgumentsKw()).isNull();
 
@@ -367,6 +379,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArguments()).containsOnly("four");
 			assertThat(eventMessage1.getArgumentsKw()).isNull();
 
@@ -376,6 +389,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage3.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage3.getTopic()).isNull();
 			assertThat(eventMessage3.getPublisher()).isNull();
+			assertThat(eventMessage3.isRetained()).isFalse();
 			assertThat(eventMessage3.getArguments()).containsOnly("four");
 			assertThat(eventMessage3.getArgumentsKw()).isNull();
 
@@ -408,6 +422,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("news.world");
 			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArguments()).containsExactly("test");
 			assertThat(eventMessage1.getArgumentsKw())
 					.containsOnly(MapEntry.entry("test", 1012));
@@ -424,6 +439,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("news.business");
 			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArguments()).containsExactly("company");
 			assertThat(eventMessage1.getArgumentsKw())
 					.containsOnly(MapEntry.entry("test", 1013));
@@ -465,6 +481,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("crud.user.create");
 			assertThat(eventMessage1.getPublisher()).isNull();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArguments()).isEmpty();
 			assertThat(eventMessage1.getArgumentsKw()).containsOnly(
 					MapEntry.entry("id", 11), MapEntry.entry("username", "joe"));
@@ -483,6 +500,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getTopic()).isEqualTo("crud.company.create");
 			assertThat(eventMessage1.getPublisher()).isNull();
 			assertThat(eventMessage1.getArguments()).isEmpty();
+			assertThat(eventMessage1.isRetained()).isFalse();
 			assertThat(eventMessage1.getArgumentsKw()).containsOnly(
 					MapEntry.entry("id", 12), MapEntry.entry("name", "solar inc."));
 
@@ -493,6 +511,7 @@ public class ClientToClientTest extends BaseWampTest {
 			assertThat(eventMessage2.getTopic()).isEqualTo("crud.company.create");
 			assertThat(eventMessage2.getPublisher()).isNull();
 			assertThat(eventMessage2.getArguments()).isEmpty();
+			assertThat(eventMessage2.isRetained()).isFalse();
 			assertThat(eventMessage2.getArgumentsKw()).containsOnly(
 					MapEntry.entry("id", 12), MapEntry.entry("name", "solar inc."));
 

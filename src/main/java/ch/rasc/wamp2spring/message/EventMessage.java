@@ -46,6 +46,8 @@ public class EventMessage extends WampMessage {
 	@Nullable
 	private final Number publisher;
 
+	private final boolean retained;
+
 	@Nullable
 	private final List<Object> arguments;
 
@@ -53,22 +55,23 @@ public class EventMessage extends WampMessage {
 	private final Map<String, Object> argumentsKw;
 
 	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic,
-			@Nullable Number publisher, @Nullable List<Object> arguments,
-			@Nullable Map<String, Object> argumentsKw) {
+			@Nullable Number publisher, boolean retained,
+			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.subscriptionId = subscriptionId;
 		this.publicationId = publicationId;
 		this.topic = topic;
 		this.publisher = publisher;
+		this.retained = retained;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
 	}
 
 	public EventMessage(@Nullable String receiverWebSocketSessionId, long subscription,
 			long publication, @Nullable String topic, @Nullable Number publisher,
-			PublishMessage publishMessage) {
-		this(subscription, publication, topic, publisher, publishMessage.getArguments(),
-				publishMessage.getArgumentsKw());
+			boolean retained, PublishMessage publishMessage) {
+		this(subscription, publication, topic, publisher, retained,
+				publishMessage.getArguments(), publishMessage.getArgumentsKw());
 
 		if (receiverWebSocketSessionId != null) {
 			setReceiverWebSocketSessionId(receiverWebSocketSessionId);
@@ -85,10 +88,15 @@ public class EventMessage extends WampMessage {
 		jp.nextToken();
 		String topic = null;
 		Number publisher = null;
+		boolean retained = false;
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			topic = (String) details.get("topic");
 			publisher = (Number) details.get("publisher");
+
+			if (details.containsKey("retained")) {
+				retained = (boolean) details.get("retained");
+			}
 		}
 
 		List<Object> arguments = null;
@@ -103,8 +111,8 @@ public class EventMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new EventMessage(subscription, publication, topic, publisher, arguments,
-				argumentsKw);
+		return new EventMessage(subscription, publication, topic, publisher, retained,
+				arguments, argumentsKw);
 	}
 
 	@Override
@@ -119,6 +127,9 @@ public class EventMessage extends WampMessage {
 		}
 		if (this.publisher != null) {
 			generator.writeNumberField("publisher", this.publisher.longValue());
+		}
+		if (this.retained) {
+			generator.writeBooleanField("retained", this.retained);
 		}
 		generator.writeEndObject();
 
@@ -155,6 +166,10 @@ public class EventMessage extends WampMessage {
 		return this.publisher;
 	}
 
+	public boolean isRetained() {
+		return this.retained;
+	}
+
 	@Nullable
 	public List<Object> getArguments() {
 		return this.arguments;
@@ -169,8 +184,8 @@ public class EventMessage extends WampMessage {
 	public String toString() {
 		return "EventMessage [subscriptionId=" + this.subscriptionId + ", publicationId="
 				+ this.publicationId + ", topic=" + this.topic + ", publisher="
-				+ this.publisher + ", arguments=" + this.arguments + ", argumentsKw="
-				+ this.argumentsKw + "]";
+				+ this.publisher + ", retained=" + this.retained + ", arguments="
+				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

@@ -108,6 +108,7 @@ public class WampSubProtocolHandler
 		broker.addFeature("publisher_exclusion");
 		broker.addFeature("publisher_identification");
 		broker.addFeature("pattern_based_subscription");
+		broker.addFeature("event_retention");
 		this.roles.add(broker);
 	}
 

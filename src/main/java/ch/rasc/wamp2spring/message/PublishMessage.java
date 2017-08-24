@@ -52,6 +52,8 @@ public class PublishMessage extends WampMessage {
 
 	private final boolean discloseMe;
 
+	private final boolean retain;
+
 	private final String topic;
 
 	@Nullable
@@ -68,8 +70,8 @@ public class PublishMessage extends WampMessage {
 
 	private PublishMessage(long requestId, String topic, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean acknowledge,
-			boolean excludeMe, boolean discloseMe, @Nullable Set<Number> exclude,
-			@Nullable Set<Number> eligible) {
+			boolean excludeMe, boolean discloseMe, boolean retain,
+			@Nullable Set<Number> exclude, @Nullable Set<Number> eligible) {
 		super(CODE);
 		this.requestId = requestId;
 		this.topic = topic;
@@ -78,6 +80,7 @@ public class PublishMessage extends WampMessage {
 		this.acknowledge = acknowledge;
 		this.excludeMe = excludeMe;
 		this.discloseMe = discloseMe;
+		this.retain = retain;
 		this.exclude = exclude;
 		this.eligible = eligible;
 	}
@@ -85,7 +88,7 @@ public class PublishMessage extends WampMessage {
 	PublishMessage(Builder builder) {
 		this(builder.request, builder.topic, builder.arguments, builder.argumentsKw,
 				builder.acknowledge, builder.excludeMe, builder.discloseMe,
-				builder.exclude, builder.eligible);
+				builder.retain, builder.exclude, builder.eligible);
 	}
 
 	public static Builder builder(long request, String topic) {
@@ -102,6 +105,8 @@ public class PublishMessage extends WampMessage {
 		boolean discloseMe;
 
 		boolean acknowledge;
+
+		boolean retain;
 
 		@Nullable
 		List<Object> arguments;
@@ -133,6 +138,11 @@ public class PublishMessage extends WampMessage {
 
 		public Builder acknowledge() {
 			this.acknowledge = true;
+			return this;
+		}
+
+		public Builder retain() {
+			this.retain = true;
 			return this;
 		}
 
@@ -204,6 +214,7 @@ public class PublishMessage extends WampMessage {
 		boolean acknowledge = false;
 		boolean excludeMe = true;
 		boolean discloseMe = false;
+		boolean retain = false;
 		Set<Number> exclude = null;
 		Set<Number> eligible = null;
 		jp.nextToken();
@@ -219,6 +230,10 @@ public class PublishMessage extends WampMessage {
 
 			if (options.containsKey("disclose_me")) {
 				discloseMe = (boolean) options.get("disclose_me");
+			}
+
+			if (options.containsKey("retain")) {
+				retain = (boolean) options.get("retain");
 			}
 
 			if (options.containsKey("exclude")) {
@@ -246,7 +261,7 @@ public class PublishMessage extends WampMessage {
 		}
 
 		return new PublishMessage(request, topic, arguments, argumentsKw, acknowledge,
-				excludeMe, discloseMe, exclude, eligible);
+				excludeMe, discloseMe, retain, exclude, eligible);
 	}
 
 	@Override
@@ -265,6 +280,10 @@ public class PublishMessage extends WampMessage {
 
 		if (this.discloseMe) {
 			generator.writeBooleanField("disclose_me", this.discloseMe);
+		}
+
+		if (this.retain) {
+			generator.writeBooleanField("retain", this.retain);
 		}
 
 		if (this.exclude != null) {
@@ -309,6 +328,10 @@ public class PublishMessage extends WampMessage {
 		return this.discloseMe;
 	}
 
+	public boolean isRetain() {
+		return this.retain;
+	}
+
 	public String getTopic() {
 		return this.topic;
 	}
@@ -337,9 +360,10 @@ public class PublishMessage extends WampMessage {
 	public String toString() {
 		return "PublishMessage [requestId=" + this.requestId + ", acknowledge="
 				+ this.acknowledge + ", excludeMe=" + this.excludeMe + ", discloseMe="
-				+ this.discloseMe + ", topic=" + this.topic + ", exclude=" + this.exclude
-				+ ", eligible=" + this.eligible + ", arguments=" + this.arguments
-				+ ", argumentsKw=" + this.argumentsKw + "]";
+				+ this.discloseMe + ", retain=" + this.retain + ", topic=" + this.topic
+				+ ", exclude=" + this.exclude + ", eligible=" + this.eligible
+				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw
+				+ "]";
 	}
 
 }

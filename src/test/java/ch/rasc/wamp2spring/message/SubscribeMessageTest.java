@@ -29,12 +29,13 @@ public class SubscribeMessageTest extends BaseMessageTest {
 	@Test
 	public void serializeTest() {
 		SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic",
-				MatchPolicy.PREFIX);
+				MatchPolicy.PREFIX, false);
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(1);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
+		assertThat(subscribeMessage.isGet_retained()).isFalse();
 
 		String json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,1,{\"match\":\"prefix\"},\"topic\"]");
@@ -44,9 +45,31 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGet_retained()).isFalse();
 
 		json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,2,{},\"topic2\"]");
+
+		subscribeMessage = new SubscribeMessage(2, "topic2", true);
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGet_retained()).isTrue();
+
+		json = serializeToJson(subscribeMessage);
+		assertThat(json).isEqualTo("[32,2,{\"get_retained\":true},\"topic2\"]");
+
+		subscribeMessage = new SubscribeMessage(2, "topic2", MatchPolicy.WILDCARD, true);
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
+		assertThat(subscribeMessage.isGet_retained()).isTrue();
+
+		json = serializeToJson(subscribeMessage);
+		assertThat(json).isEqualTo(
+				"[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]");
 	}
 
 	@Test
@@ -60,6 +83,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(1);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
+		assertThat(subscribeMessage.isGet_retained()).isFalse();
 
 		json = "[32,2,{},\"topic2\"]";
 		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
@@ -69,6 +93,37 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGet_retained()).isFalse();
+
+		json = "[32,2,{\"get_retained\":false},\"topic2\"]";
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGet_retained()).isFalse();
+
+		json = "[32,2,{\"get_retained\":true},\"topic2\"]";
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGet_retained()).isTrue();
+
+		json = "[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]";
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
+
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
+		assertThat(subscribeMessage.isGet_retained()).isTrue();
 	}
 
 }

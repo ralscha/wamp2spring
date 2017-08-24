@@ -18,7 +18,9 @@ package ch.rasc.wamp2spring.pubsub;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,6 +78,8 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 	private ApplicationContext applicationContext;
 
 	private final HandlerMethodService handlerMethodService;
+
+	private final Map<String, PublishMessage> eventRetention = new ConcurrentHashMap<>();
 
 	public PubSubMessageHandler(SubscribableChannel clientInboundChannel,
 			MessageChannel clientOutboundChannel,
@@ -149,6 +153,10 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 					result.getSubscription().getSubscriptionId()));
 
 			sendSubscriptionEvents(result, subscribeMessage);
+
+			if (subscribeMessage.isGet_retained()) {
+				handleRetentionRequest(subscribeMessage, result.getSubscription());
+			}
 		}
 		else if (message instanceof UnsubscribeMessage) {
 			UnsubscribeMessage unsubscribeMessage = (UnsubscribeMessage) message;
@@ -167,6 +175,11 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 		else if (message instanceof PublishMessage) {
 			PublishMessage publishMessage = (PublishMessage) message;
+
+			if (publishMessage.isRetain()) {
+				this.eventRetention.put(publishMessage.getTopic(), publishMessage);
+			}
+
 			long publicationId = IdGenerator.newRandomId(null);
 			handlePublishMessage(publishMessage, publicationId);
 
@@ -175,6 +188,55 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 			}
 		}
 
+	}
+
+	private void handleRetentionRequest(SubscribeMessage subscribeMessage,
+			Subscription subscription) {
+		Subscriber subscriber = new Subscriber(subscribeMessage.getWebSocketSessionId(),
+				subscribeMessage.getWampSessionId());
+		if (subscribeMessage.getMatchPolicy() == MatchPolicy.EXACT) {
+			PublishMessage publishMessage = this.eventRetention
+					.get(subscribeMessage.getTopic());
+			if (publishMessage != null) {
+				publishRetentionEvent(subscription, subscriber, publishMessage);
+			}
+		}
+		else if (subscribeMessage.getMatchPolicy() == MatchPolicy.PREFIX) {
+			this.eventRetention.forEach((topic, publishMessage) -> {
+				if (topic.startsWith(subscribeMessage.getTopic())) {
+					publishRetentionEvent(subscription, subscriber, publishMessage);
+				}
+			});
+		}
+		else if (subscribeMessage.getMatchPolicy() == MatchPolicy.WILDCARD) {
+			this.eventRetention.forEach((topic, publishMessage) -> {
+				String[] components = topic.split("\\.");
+				if (subscription.matchWildcard(components)) {
+					publishRetentionEvent(subscription, subscriber, publishMessage);
+				}
+			});
+		}
+
+	}
+
+	private void publishRetentionEvent(Subscription subscription, Subscriber subscriber,
+			PublishMessage publishMessage) {
+		String topic = null;
+		Long publisher = null;
+		if (subscription.getMatchPolicy() != MatchPolicy.EXACT) {
+			topic = publishMessage.getTopic();
+		}
+		if (publishMessage.isDiscloseMe()) {
+			publisher = publishMessage.getWampSessionId();
+		}
+
+		if (isEligible(publishMessage, subscriber)) {
+			EventMessage eventMessage = new EventMessage(
+					subscriber.getWebSocketSessionId(), subscription.getSubscriptionId(),
+					IdGenerator.newRandomId(null), topic, publisher, true,
+					publishMessage);
+			sendMessageToClient(eventMessage);
+		}
 	}
 
 	@EventListener
@@ -247,7 +309,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 						EventMessage eventMessage = new EventMessage(
 								subscriber.getWebSocketSessionId(),
 								subscription.getSubscriptionId(), publicationId, topic,
-								publisher, publishMessage);
+								publisher, false, publishMessage);
 						sendMessageToClient(eventMessage);
 					}
 				}
@@ -265,7 +327,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				if (eventListenerHandlerMethods != null) {
 
 					EventMessage eventMessage = new EventMessage(null, -1, publicationId,
-							publishMessage.getTopic(), null, publishMessage);
+							topic, null, false, publishMessage);
 
 					for (InvocableHandlerMethod handlerMethod : eventListenerHandlerMethods) {
 						try {
