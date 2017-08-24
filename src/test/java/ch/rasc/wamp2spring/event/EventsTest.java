@@ -56,7 +56,7 @@ public class EventsTest extends BaseWampTest {
 	public void setup() {
 		this.eventsBean.resetCounter();
 		try {
-			TimeUnit.SECONDS.sleep(2);
+			TimeUnit.SECONDS.sleep(4);
 		}
 		catch (InterruptedException e) {
 			// nothing here
