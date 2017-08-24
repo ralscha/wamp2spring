@@ -86,17 +86,17 @@ public class PublishMessage extends WampMessage {
 	}
 
 	PublishMessage(Builder builder) {
-		this(builder.request, builder.topic, builder.arguments, builder.argumentsKw,
+		this(builder.requestId, builder.topic, builder.arguments, builder.argumentsKw,
 				builder.acknowledge, builder.excludeMe, builder.discloseMe,
 				builder.retain, builder.exclude, builder.eligible);
 	}
 
-	public static Builder builder(long request, String topic) {
-		return new Builder(request, topic);
+	public static Builder builder(long requestId, String topic) {
+		return new Builder(requestId, topic);
 	}
 
 	public static class Builder {
-		long request;
+		long requestId;
 
 		boolean excludeMe;
 
@@ -120,8 +120,8 @@ public class PublishMessage extends WampMessage {
 		@Nullable
 		Set<Number> eligible;
 
-		public Builder(long request, String topic) {
-			this.request = request;
+		public Builder(long requestId, String topic) {
+			this.requestId = requestId;
 			this.topic = topic;
 			this.excludeMe = true;
 		}
