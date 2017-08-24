@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,12 @@ public class EventsTest extends BaseWampTest {
 	@Before
 	public void setup() {
 		this.eventsBean.resetCounter();
+		try {
+			TimeUnit.SECONDS.sleep(2);
+		}
+		catch (InterruptedException e) {
+			// nothing here
+		}
 	}
 
 	@Test
@@ -133,8 +140,6 @@ public class EventsTest extends BaseWampTest {
 
 		try (WebSocketSession wsSession = startWebSocketSession(result,
 				DataFormat.JSON)) {
-			this.eventsBean.getMethodCounter().clear();
-			
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
