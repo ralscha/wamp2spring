@@ -20,7 +20,7 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 |pattern_based_subscription   |Prefix- and wildcard matching policies for subscriptions. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
 |event_retention              |[Specification](https://github.com/wamp-proto/wamp-proto/blob/da34d9bd833beeb6f9cc8bc89faf8138d710aa78/rfc/text/advanced/ap_pubsub_event_retention.md)|
 
-**Dataformats**
+**Dataformats**   
 *wamp2spring* supports JSON (wamp.2.json) and MessagePack (wamp.2.msgpack) required by the Basic Profile. In addition it
 supports [CBOR](http://cbor.io/) (wamp.2.cbor) and [SMILE](https://en.wikipedia.org/wiki/Smile_(data_interchange_format)) (wamp.2.smile).
 
