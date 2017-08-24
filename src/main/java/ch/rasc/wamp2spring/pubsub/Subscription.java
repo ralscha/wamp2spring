@@ -107,4 +107,18 @@ class Subscription {
 		return this.eventListenerHandlerMethods;
 	}
 
+	boolean matchWildcard(String[] components) {
+		if (this.wildcardComponents != null
+				&& components.length == this.wildcardComponents.length) {
+			for (int i = 0; i < components.length; i++) {
+				String wc = this.wildcardComponents[i];
+				if (wc.length() > 0 && !components[i].equals(wc)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
 }

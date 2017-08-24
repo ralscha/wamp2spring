@@ -38,8 +38,6 @@ class Subscriber {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (int) (this.wampSessionId ^ this.wampSessionId >>> 32);
-		result = prime * result + (this.webSocketSessionId == null ? 0
-				: this.webSocketSessionId.hashCode());
 		return result;
 	}
 
@@ -56,14 +54,6 @@ class Subscriber {
 		}
 		Subscriber other = (Subscriber) obj;
 		if (this.wampSessionId != other.wampSessionId) {
-			return false;
-		}
-		if (this.webSocketSessionId == null) {
-			if (other.webSocketSessionId != null) {
-				return false;
-			}
-		}
-		else if (!this.webSocketSessionId.equals(other.webSocketSessionId)) {
 			return false;
 		}
 		return true;

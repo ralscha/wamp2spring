@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
@@ -40,6 +43,9 @@ public class SubscriptionRegistry {
 			MatchPolicy.class);
 
 	private final Map<Long, Subscription> subscriptionsById = new ConcurrentHashMap<>();
+
+	private final LoadingCache<String, Set<Subscription>> subscriptionsCache = Caffeine
+			.newBuilder().maximumSize(512).build(key -> internalFindSubscriptions(key));
 
 	private final Object monitor = new Object();
 
@@ -61,12 +67,16 @@ public class SubscriptionRegistry {
 		Subscription subscription = subscriptionMap.get(subscribeMessage.getTopic());
 		if (subscription == null) {
 			synchronized (this.monitor) {
-				long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
-				subscription = new Subscription(subscribeMessage.getTopic(),
-						subscribeMessage.getMatchPolicy(), subscriptionId);
-				subscriptionMap.put(subscription.getTopic(), subscription);
-				this.subscriptionsById.put(subscriptionId, subscription);
-				created = true;
+				subscription = subscriptionMap.get(subscribeMessage.getTopic());
+				if (subscription == null) {
+					long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
+					subscription = new Subscription(subscribeMessage.getTopic(),
+							subscribeMessage.getMatchPolicy(), subscriptionId);
+					subscriptionMap.put(subscription.getTopic(), subscription);
+					this.subscriptionsById.put(subscriptionId, subscription);
+					created = true;
+					invalidateCacheEntries(subscription);
+				}
 			}
 		}
 		Subscriber subscriber = new Subscriber(subscribeMessage.getWebSocketSessionId(),
@@ -82,21 +92,21 @@ public class SubscriptionRegistry {
 			Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch
 					.get(eventListener.getMatch());
 			for (String topic : eventListener.getTopic()) {
-				Subscription subscription = subscriptionMap.get(topic);
 				synchronized (this.monitor) {
+					Subscription subscription = subscriptionMap.get(topic);
 					if (subscription == null) {
 						long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
 						subscription = new Subscription(topic, eventListener.getMatch(),
 								subscriptionId);
 						subscriptionMap.put(subscription.getTopic(), subscription);
 						this.subscriptionsById.put(subscriptionId, subscription);
+						invalidateCacheEntries(subscription);
 					}
 					subscription.addEventListenerHandlerMethod(
 							eventListener.getHandlerMethod());
 				}
 			}
 		}
-
 	}
 
 	UnsubscribeResult unsubscribe(UnsubscribeMessage message) {
@@ -104,7 +114,6 @@ public class SubscriptionRegistry {
 				.get(message.getSubscriptionId());
 
 		if (subscription != null) {
-
 			Subscriber subscriber = new Subscriber(message.getWebSocketSessionId(),
 					message.getWampSessionId());
 
@@ -112,12 +121,11 @@ public class SubscriptionRegistry {
 				if (subscription.removeSubscriber(subscriber)) {
 					boolean deleted = false;
 					if (!subscription.hasSubscribers()) {
-
 						this.subscriptionsByMatch.get(subscription.getMatchPolicy())
 								.remove(subscription.getTopic());
 						this.subscriptionsById.remove(subscription.getSubscriptionId());
 						deleted = true;
-
+						invalidateCacheEntries(subscription);
 					}
 					return new UnsubscribeResult(message.getWampSessionId(), subscription,
 							deleted);
@@ -147,6 +155,7 @@ public class SubscriptionRegistry {
 							this.subscriptionsById
 									.remove(subscription.getSubscriptionId());
 							deleted = true;
+							invalidateCacheEntries(subscription);
 						}
 
 						results.add(new UnsubscribeResult(wampSessionId, subscription,
@@ -160,7 +169,10 @@ public class SubscriptionRegistry {
 	}
 
 	Set<Subscription> findSubscriptions(String topic) {
+		return this.subscriptionsCache.get(topic);
+	}
 
+	private Set<Subscription> internalFindSubscriptions(String topic) {
 		Set<Subscription> subscriptions = new HashSet<>();
 
 		Subscription exactSubscription = this.subscriptionsByMatch.get(MatchPolicy.EXACT)
@@ -179,30 +191,31 @@ public class SubscriptionRegistry {
 
 		Map<String, Subscription> wildcardSubscriptionMap = this.subscriptionsByMatch
 				.get(MatchPolicy.WILDCARD);
+
 		String[] components = topic.split("\\.");
 		for (Subscription wildcardSubscription : wildcardSubscriptionMap.values()) {
-			boolean matched = true;
-			String[] wildcardComponents = wildcardSubscription.getWildcardComponents();
-			if (wildcardComponents != null
-					&& components.length == wildcardComponents.length) {
-				for (int i = 0; i < components.length; i++) {
-					String wc = wildcardComponents[i];
-					if (wc.length() > 0 && !components[i].equals(wc)) {
-						matched = false;
-						break;
-					}
-				}
-			}
-			else {
-				matched = false;
-			}
-
-			if (matched) {
+			if (wildcardSubscription.matchWildcard(components)) {
 				subscriptions.add(wildcardSubscription);
 			}
 		}
 
 		return subscriptions;
+	}
+
+	private void invalidateCacheEntries(Subscription subscription) {
+		if (subscription.getMatchPolicy() == MatchPolicy.EXACT) {
+			this.subscriptionsCache.invalidate(subscription.getTopic());
+		}
+		else if (subscription.getMatchPolicy() == MatchPolicy.PREFIX) {
+			this.subscriptionsCache.asMap().keySet()
+					.removeIf(key -> key.startsWith(subscription.getTopic()));
+		}
+		else if (subscription.getMatchPolicy() == MatchPolicy.WILDCARD) {
+			this.subscriptionsCache.asMap().keySet().removeIf(key -> {
+				String[] components = key.split("\\.");
+				return subscription.matchWildcard(components);
+			});
+		}
 	}
 
 	// wamp.subscription.list

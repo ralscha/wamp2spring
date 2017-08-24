@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.messaging.handler.HandlerMethod;
+import org.springframework.util.StopWatch;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
@@ -555,6 +556,103 @@ public class SubscriptionRegistryTest {
 	}
 
 	@Test
+	public void manyRegistryQueries() {
+		Random random = new Random();
+
+		String[] topics = { "help", "com.myapp..userevent", "com.myapp.topic.emergency" };
+		MatchPolicy[] matchPolicy = { MatchPolicy.EXACT, MatchPolicy.WILDCARD,
+				MatchPolicy.PREFIX };
+
+		List<UnsubscribeMessage> unsubs = new ArrayList<>();
+		List<Integer> ixs = new ArrayList<>();
+
+		RegistryAssert ra = new RegistryAssert();
+		for (int i = 0; i < 2_000; i++) {
+			int ix = random.nextInt(3);
+			SubscribeMessage subscribeMessage = new SubscribeMessage(i + 1, topics[ix],
+					matchPolicy[ix]);
+			subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
+					Long.valueOf(500_000 + i));
+			subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "ws" + i);
+
+			SubscribeResult result = this.subscriptionRegistry
+					.subscribe(subscribeMessage);
+
+			ra.addSubscriber(matchPolicy[ix], topics[ix],
+					result.getSubscription().getSubscriptionId(),
+					Long.valueOf(500_000 + i));
+
+			ixs.add(ix);
+			UnsubscribeMessage unsubscribeMessage = new UnsubscribeMessage(700_000 + i,
+					result.getSubscription().getSubscriptionId());
+			unsubscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
+					Long.valueOf(500_000 + i));
+			unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
+					"ws" + i);
+			unsubs.add(unsubscribeMessage);
+		}
+
+		StopWatch sw = new StopWatch();
+		sw.start();
+		for (int i = 0; i < 100_000; i++) {
+			assertThat(this.subscriptionRegistry.getMatchSubscriptions("help"))
+					.containsExactly(ra.subscriptionId(topics[0], matchPolicy[0]));
+			assertThat(this.subscriptionRegistry.hasSubscribers("help")).isTrue();
+			assertThat(this.subscriptionRegistry.getMatchSubscriptions("helpa"))
+					.isEmpty();
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.foo.userevent")).containsExactly(
+							ra.subscriptionId(topics[1], matchPolicy[1]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.bar.userevent")).containsExactly(
+							ra.subscriptionId(topics[1], matchPolicy[1]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.a12.userevent")).containsExactly(
+							ra.subscriptionId(topics[1], matchPolicy[1]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.foo.userevent.bar")).isEmpty();
+			assertThat(
+					this.subscriptionRegistry.getMatchSubscriptions("com.myapp.foo.user"))
+							.isEmpty();
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp2.foo.userevent")).isEmpty();
+
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.topic.emergency.11"))
+							.containsExactly(
+									ra.subscriptionId(topics[2], matchPolicy[2]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.topic.emergency-low"))
+							.containsExactly(
+									ra.subscriptionId(topics[2], matchPolicy[2]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.topic.emergency.category.severe"))
+							.containsExactly(
+									ra.subscriptionId(topics[2], matchPolicy[2]));
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.topic.emergency")).containsExactly(
+							ra.subscriptionId(topics[2], matchPolicy[2]));
+
+			assertThat(this.subscriptionRegistry
+					.getMatchSubscriptions("com.myapp.topic.emerge")).isEmpty();
+		}
+		sw.stop();
+		System.out.println(sw.prettyPrint());
+
+		int c = 0;
+		for (Integer ix : ixs) {
+			UnsubscribeMessage unsubMessage = unsubs.get(c);
+			ra.removeSubscriber(matchPolicy[ix], topics[ix],
+					unsubMessage.getSubscriptionId(), unsubMessage.getWampSessionId());
+			this.subscriptionRegistry.unsubscribe(unsubMessage);
+			c++;
+
+			assertRegistry(ra);
+		}
+
+	}
+
+	@Test
 	public void testManyExactTopics() {
 		RegistryAssert ra = new RegistryAssert();
 		for (int i = 0; i < 10_000; i++) {
@@ -820,6 +918,20 @@ public class SubscriptionRegistryTest {
 					.computeIfAbsent(subscriptionId, k -> new HashSet<>());
 			if (subscriberId != null) {
 				subs.add(subscriberId);
+			}
+		}
+
+		void removeSubscriber(MatchPolicy match, String topic, long subscriptionId,
+				Long subscriberId) {
+			Set<Long> subs = this.registry.computeIfAbsent(match, k -> new HashMap<>())
+					.computeIfAbsent(topic, k -> new HashMap<>())
+					.computeIfAbsent(subscriptionId, k -> new HashSet<>());
+			if (subscriberId != null) {
+				subs.remove(subscriberId);
+				if (subs.isEmpty()) {
+					this.registry.computeIfAbsent(match, k -> new HashMap<>())
+							.remove(topic);
+				}
 			}
 		}
 
