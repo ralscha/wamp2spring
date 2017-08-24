@@ -119,7 +119,9 @@ public class RetentionTest extends BaseWampTest {
 			assertThat(publishedMessage.getRequestId())
 					.isEqualTo(publishMessage.getRequestId());
 			publicationId = publishedMessage.getPublicationId();
-
+			
+			TimeUnit.SECONDS.sleep(2);
+			
 			wc4.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(4, "humidity", true);
 			wc4.getResult().reset(2);
