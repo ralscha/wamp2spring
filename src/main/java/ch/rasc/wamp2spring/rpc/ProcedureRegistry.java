@@ -47,8 +47,7 @@ public class ProcedureRegistry {
 			long registrationId = IdGenerator.newLinearId(lastRegistration);
 			this.registrations.put(registrationId, registerMessage.getProcedure());
 
-			Procedure procedure = new Procedure(registerMessage.getProcedure(),
-					registerMessage.getWebSocketSessionId(), registrationId);
+			Procedure procedure = new Procedure(registerMessage, registrationId);
 			this.procedures.put(registerMessage.getProcedure(), procedure);
 			return registrationId;
 		}

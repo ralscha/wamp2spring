@@ -36,7 +36,7 @@ public class SubscribeMessage extends WampMessage {
 
 	private final String topic;
 
-	private final boolean get_retained;
+	private final boolean getRetained;
 
 	public SubscribeMessage(long requestId, String topic) {
 		this(requestId, topic, MatchPolicy.EXACT, false);
@@ -49,14 +49,14 @@ public class SubscribeMessage extends WampMessage {
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match) {
 		this(requestId, topic, match, false);
 	}
-	
+
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match,
-			boolean get_retained) {
+			boolean getRetained) {
 		super(CODE);
 		this.requestId = requestId;
 		this.matchPolicy = match;
 		this.topic = topic;
-		this.get_retained = get_retained;
+		this.getRetained = getRetained;
 	}
 
 	public static SubscribeMessage deserialize(JsonParser jp) throws IOException {
@@ -66,7 +66,7 @@ public class SubscribeMessage extends WampMessage {
 		MatchPolicy match = MatchPolicy.EXACT;
 
 		jp.nextToken();
-		boolean get_retained = false;
+		boolean getRetained = false;
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
 			String extValue = (String) options.get("match");
@@ -77,14 +77,14 @@ public class SubscribeMessage extends WampMessage {
 				}
 			}
 			if (options.containsKey("get_retained")) {
-				get_retained = (boolean) options.get("get_retained");
+				getRetained = (boolean) options.get("get_retained");
 			}
 		}
 
 		jp.nextToken();
 		String topic = jp.getValueAsString();
 
-		return new SubscribeMessage(request, topic, match, get_retained);
+		return new SubscribeMessage(request, topic, match, getRetained);
 	}
 
 	@Override
@@ -96,8 +96,8 @@ public class SubscribeMessage extends WampMessage {
 		if (this.matchPolicy != MatchPolicy.EXACT) {
 			generator.writeStringField("match", this.matchPolicy.getExternalValue());
 		}
-		if (this.get_retained) {
-			generator.writeBooleanField("get_retained", this.get_retained);
+		if (this.getRetained) {
+			generator.writeBooleanField("get_retained", this.getRetained);
 		}
 		generator.writeEndObject();
 
@@ -116,15 +116,15 @@ public class SubscribeMessage extends WampMessage {
 		return this.topic;
 	}
 
-	public boolean isGet_retained() {
-		return this.get_retained;
+	public boolean isGetRetained() {
+		return this.getRetained;
 	}
 
 	@Override
 	public String toString() {
 		return "SubscribeMessage [requestId=" + this.requestId + ", matchPolicy="
-				+ this.matchPolicy + ", topic=" + this.topic + ", get_retained="
-				+ this.get_retained + "]";
+				+ this.matchPolicy + ", topic=" + this.topic + ", getRetained="
+				+ this.getRetained + "]";
 	}
 
 }

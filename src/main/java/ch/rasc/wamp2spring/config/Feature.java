@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring;
+package ch.rasc.wamp2spring.config;
 
-public enum WampError {
-
-	NO_SUCH_PROCEDURE("wamp.error.no_such_procedure"),
-	PROCEDURE_ALREADY_EXISTS("wamp.error.procedure_already_exists"),
-	NO_SUCH_REGISTRATION("wamp.error.no_such_registration"),
-	NO_SUCH_SUBSCRIPTION("wamp.error.no_such_subscription"),
-	GOODBYE_AND_OUT("wamp.error.goodbye_and_out"),
-	NETWORK_FAILURE("wamp.error.network_failure"),
-	INVALID_ARGUMENT("wamp.error.invalid_argument"),
-	NOT_AUTHORIZED("wamp.error.not_authorized"),
-	OPTION_NOT_ALLOWED("wamp.error.option_not_allowed"),
-	DISCLOSE_ME_DISALLOWED("wamp.error.option_disallowed.disclose_me");
+public enum Feature {
+	DEALER("dealer"), BROKER("broker"),
+	DEALER_CALLER_IDENTIFICATION("caller_identification"),
+	BROKER_SUBSCRIBER_BLACKWHITE_LISTING("subscriber_blackwhite_listing"),
+	BROKER_PUBLISHER_EXCLUSION("publisher_exclusion"),
+	BROKER_PUBLISHER_IDENTIFICATION("publisher_identification"),
+	BROKER_PATTERN_BASED_SUBSCRIPTION("pattern_based_subscription"),
+	BROKER_EVENT_RETENTION("event_retention");
 
 	private final String externalValue;
 
-	private WampError(String externalValue) {
+	private Feature(String externalValue) {
 		this.externalValue = externalValue;
 	}
 

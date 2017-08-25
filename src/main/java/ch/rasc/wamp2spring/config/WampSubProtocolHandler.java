@@ -99,17 +99,22 @@ public class WampSubProtocolHandler
 		this.clientInboundChannel = clientInboundChannel;
 
 		this.roles = new ArrayList<>();
-		WampRole dealer = new WampRole("dealer");
-		dealer.addFeature("caller_identification");
-		this.roles.add(dealer);
 
-		WampRole broker = new WampRole("broker");
-		broker.addFeature("subscriber_blackwhite_listing");
-		broker.addFeature("publisher_exclusion");
-		broker.addFeature("publisher_identification");
-		broker.addFeature("pattern_based_subscription");
-		broker.addFeature("event_retention");
-		this.roles.add(broker);
+		if (Features.isEnabled(Feature.DEALER)) {
+			WampRole dealer = new WampRole(Feature.DEALER.getExternalValue());
+			for (Feature feature : Features.enabledDealerFeatures()) {
+				dealer.addFeature(feature.getExternalValue());
+			}
+			this.roles.add(dealer);
+		}
+
+		if (Features.isEnabled(Feature.BROKER)) {
+			WampRole broker = new WampRole(Feature.BROKER.getExternalValue());
+			for (Feature feature : Features.enabledBrokerFeatures()) {
+				broker.addFeature(feature.getExternalValue());
+			}
+			this.roles.add(broker);
+		}
 	}
 
 	@Override

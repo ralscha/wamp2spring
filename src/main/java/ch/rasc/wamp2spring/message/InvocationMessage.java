@@ -68,7 +68,9 @@ public class InvocationMessage extends WampMessage {
 
 	public InvocationMessage(Procedure procedure, CallMessage callMessage) {
 		this(IdGenerator.newLinearId(lastRequest), procedure.getRegistrationId(),
-				callMessage.isDiscloseMe() ? callMessage.getWampSessionId() : null,
+				procedure.isDiscloseCaller() || callMessage.isDiscloseMe()
+						? callMessage.getWampSessionId()
+						: null,
 				callMessage.getArguments(), callMessage.getArgumentsKw());
 		setReceiverWebSocketSessionId(procedure.getWebSocketSessionId());
 	}

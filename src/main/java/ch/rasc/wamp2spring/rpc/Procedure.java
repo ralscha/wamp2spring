@@ -18,15 +18,30 @@ package ch.rasc.wamp2spring.rpc;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ch.rasc.wamp2spring.config.Feature;
+import ch.rasc.wamp2spring.config.Features;
+import ch.rasc.wamp2spring.message.RegisterMessage;
+
 public class Procedure {
 	private final String procedure;
+
 	private final String webSocketSessionId;
+
+	private final boolean discloseCaller;
+
 	private final long registrationId;
+
 	private final Set<Long> pendingInvocations;
 
-	public Procedure(String procedure, String webSocketSessionId, long registrationId) {
-		this.procedure = procedure;
-		this.webSocketSessionId = webSocketSessionId;
+	public Procedure(RegisterMessage registerMessage, long registrationId) {
+		this.procedure = registerMessage.getProcedure();
+		this.webSocketSessionId = registerMessage.getWebSocketSessionId();
+		if (Features.isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
+			this.discloseCaller = registerMessage.isDiscloseCaller();
+		}
+		else {
+			this.discloseCaller = false;
+		}
 		this.registrationId = registrationId;
 		this.pendingInvocations = ConcurrentHashMap.newKeySet();
 	}
@@ -55,11 +70,16 @@ public class Procedure {
 		return this.pendingInvocations;
 	}
 
+	public boolean isDiscloseCaller() {
+		return this.discloseCaller;
+	}
+
 	@Override
 	public String toString() {
 		return "Procedure [procedure=" + this.procedure + ", webSocketSessionId="
-				+ this.webSocketSessionId + ", registrationId=" + this.registrationId
-				+ ", pendingInvocations=" + this.pendingInvocations + "]";
+				+ this.webSocketSessionId + ", discloseCaller=" + this.discloseCaller
+				+ ", registrationId=" + this.registrationId + ", pendingInvocations="
+				+ this.pendingInvocations + "]";
 	}
 
 }

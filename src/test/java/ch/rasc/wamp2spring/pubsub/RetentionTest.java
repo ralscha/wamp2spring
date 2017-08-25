@@ -32,6 +32,8 @@ import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.config.EnableWamp;
+import ch.rasc.wamp2spring.config.EventStore;
+import ch.rasc.wamp2spring.config.MemoryEventStore;
 import ch.rasc.wamp2spring.message.EventMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.PublishedMessage;
@@ -119,9 +121,9 @@ public class RetentionTest extends BaseWampTest {
 			assertThat(publishedMessage.getRequestId())
 					.isEqualTo(publishMessage.getRequestId());
 			publicationId = publishedMessage.getPublicationId();
-			
+
 			TimeUnit.SECONDS.sleep(2);
-			
+
 			wc4.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(4, "humidity", true);
 			wc4.getResult().reset(2);
@@ -555,6 +557,18 @@ public class RetentionTest extends BaseWampTest {
 		@Bean
 		public RetentionService retentionTest(WampPublisher wampPublisher) {
 			return new RetentionService(wampPublisher);
+		}
+
+		@Bean
+		public EventStore eventStore() {
+			return new MemoryEventStore() {
+
+				@Override
+				public void retain(PublishMessage publishMessage) {
+					this.eventRetention.put(publishMessage.getTopic(), publishMessage);
+				}
+
+			};
 		}
 	}
 

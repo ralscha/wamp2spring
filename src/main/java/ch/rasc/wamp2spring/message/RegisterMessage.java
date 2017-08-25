@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -31,23 +32,36 @@ public class RegisterMessage extends WampMessage {
 
 	private final String procedure;
 
+	private final boolean discloseCaller;
+
 	public RegisterMessage(long requestId, String procedure) {
+		this(requestId, procedure, false);
+	}
+
+	public RegisterMessage(long requestId, String procedure, boolean discloseCaller) {
 		super(CODE);
 		this.requestId = requestId;
 		this.procedure = procedure;
+		this.discloseCaller = discloseCaller;
 	}
 
 	public static RegisterMessage deserialize(JsonParser jp) throws IOException {
 		jp.nextToken();
 		long request = jp.getLongValue();
 
+		boolean discloseCaller = false;
 		jp.nextToken();
-		ParserUtil.readObject(jp);
+		Map<String, Object> options = ParserUtil.readObject(jp);
+		if (options != null) {
+			if (options.containsKey("disclose_caller")) {
+				discloseCaller = (boolean) options.get("disclose_caller");
+			}
+		}
 
 		jp.nextToken();
 		String procedure = jp.getValueAsString();
 
-		return new RegisterMessage(request, procedure);
+		return new RegisterMessage(request, procedure, discloseCaller);
 	}
 
 	@Override
@@ -56,6 +70,9 @@ public class RegisterMessage extends WampMessage {
 		generator.writeNumber(this.requestId);
 
 		generator.writeStartObject();
+		if (this.discloseCaller) {
+			generator.writeBooleanField("disclose_caller", this.discloseCaller);
+		}
 		generator.writeEndObject();
 
 		generator.writeString(this.procedure);
@@ -70,10 +87,14 @@ public class RegisterMessage extends WampMessage {
 		return this.procedure;
 	}
 
+	public boolean isDiscloseCaller() {
+		return this.discloseCaller;
+	}
+
 	@Override
 	public String toString() {
 		return "RegisterMessage [requestId=" + this.requestId + ", procedure="
-				+ this.procedure + "]";
+				+ this.procedure + ", discloseCaller=" + this.discloseCaller + "]";
 	}
 
 }

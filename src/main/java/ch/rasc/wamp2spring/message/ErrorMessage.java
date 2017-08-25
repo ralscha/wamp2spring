@@ -67,10 +67,22 @@ public class ErrorMessage extends WampMessage {
 		setReceiver(callMessage);
 	}
 
+	public ErrorMessage(SubscribeMessage subscribeMessage, WampError error) {
+		this(subscribeMessage.getCode(), subscribeMessage.getRequestId(),
+				error.getExternalValue(), null, null);
+		setReceiver(subscribeMessage);
+	}
+
 	public ErrorMessage(UnsubscribeMessage unsubscribeMessage, WampError error) {
 		this(unsubscribeMessage.getCode(), unsubscribeMessage.getRequestId(),
 				error.getExternalValue(), null, null);
 		setReceiver(unsubscribeMessage);
+	}
+
+	public ErrorMessage(PublishMessage publishMessage, WampError error) {
+		this(publishMessage.getCode(), publishMessage.getRequestId(),
+				error.getExternalValue(), null, null);
+		setReceiver(publishMessage);
 	}
 
 	public ErrorMessage(RegisterMessage registerMessage, WampError error) {

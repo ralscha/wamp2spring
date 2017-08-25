@@ -28,5 +28,5 @@ import org.springframework.context.annotation.Import;
 @Documented
 @Import(WampConfiguration.class)
 public @interface EnableWamp {
-	// nothing here
+	Feature[] disable() default {};
 }

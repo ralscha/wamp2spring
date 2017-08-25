@@ -114,7 +114,7 @@ public class EventMessageTest extends BaseMessageTest {
 		json = serializeToJson(eventMessage);
 		assertThat(json)
 				.isEqualTo("[36,1,2,{\"topic\":\"topic\",\"publisher\":123},[42]]");
-		
+
 		eventMessage = new EventMessage(1, 2, null, null, true,
 				Collections.singletonList(43), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
@@ -126,7 +126,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getArguments()).containsExactly(43);
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(eventMessage);
-		assertThat(json).isEqualTo("[36,1,2,{\"retained\":true},[43]]");		
+		assertThat(json).isEqualTo("[36,1,2,{\"retained\":true},[43]]");
 	}
 
 	@Test
@@ -206,7 +206,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
-		
+
 		json = "[36, 5512315355, 4429313566, {\"retained\":false}, [\"Not Retained\"]]";
 		eventMessage = WampMessage.deserialize(getJsonFactory(),
 				json.getBytes(StandardCharsets.UTF_8));
@@ -218,7 +218,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly("Not Retained");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
-		
+
 		json = "[36, 5512315355, 4429313566, {\"retained\":true}, [\"Retained\"]]";
 		eventMessage = WampMessage.deserialize(getJsonFactory(),
 				json.getBytes(StandardCharsets.UTF_8));
@@ -229,7 +229,7 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublisher()).isNull();
 		assertThat(eventMessage.isRetained()).isTrue();
 		assertThat(eventMessage.getArguments()).containsExactly("Retained");
-		assertThat(eventMessage.getArgumentsKw()).isNull();		
+		assertThat(eventMessage.getArgumentsKw()).isNull();
 	}
 
 }

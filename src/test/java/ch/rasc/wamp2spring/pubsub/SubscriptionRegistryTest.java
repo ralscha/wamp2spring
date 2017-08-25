@@ -89,7 +89,6 @@ public class SubscriptionRegistryTest {
 		assertThat(result.getSubscription().getEventListenerHandlerMethods()).isNull();
 		assertThat(result.getSubscription().getSubscribers()).hasSize(1);
 		assertThat(result.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(result.getSubscription().getWildcardComponents()).isNull();
 		assertThat(result.isCreated()).isTrue();
 
 		RegistryAssert ra = new RegistryAssert();
@@ -133,7 +132,6 @@ public class SubscriptionRegistryTest {
 		assertThat(uresult.getSubscription().getSubscriptionId())
 				.isEqualTo(result.getSubscription().getSubscriptionId());
 		assertThat(uresult.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(uresult.getSubscription().getWildcardComponents()).isNull();
 		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
@@ -181,7 +179,6 @@ public class SubscriptionRegistryTest {
 		assertThat(uresult.getSubscription().getSubscriptionId())
 				.isEqualTo(result1.getSubscription().getSubscriptionId());
 		assertThat(uresult.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(uresult.getSubscription().getWildcardComponents()).isNull();
 		assertThat(uresult.getSubscription().getSubscribers()).hasSize(1);
 
 		ra = new RegistryAssert();
@@ -230,7 +227,6 @@ public class SubscriptionRegistryTest {
 				.isEqualTo(result.getSubscription().getSubscriptionId());
 		assertThat(uresult.getSubscription().getTopic())
 				.isEqualTo("com.myapp.topic.emergency");
-		assertThat(uresult.getSubscription().getWildcardComponents()).isNull();
 		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
@@ -279,8 +275,6 @@ public class SubscriptionRegistryTest {
 				.isEqualTo(result.getSubscription().getSubscriptionId());
 		assertThat(uresult.getSubscription().getTopic())
 				.isEqualTo("com.myapp..userevent");
-		assertThat(uresult.getSubscription().getWildcardComponents())
-				.containsExactly("com", "myapp", "", "userevent");
 		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
@@ -332,7 +326,6 @@ public class SubscriptionRegistryTest {
 		assertThat(result1.getSubscription().getEventListenerHandlerMethods()).isNull();
 		assertThat(result1.getSubscription().getSubscribers()).hasSize(1);
 		assertThat(result1.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(result1.getSubscription().getWildcardComponents()).isNull();
 		assertThat(result1.isCreated()).isTrue();
 
 		subscribeMessage = new SubscribeMessage(2, "topic");
@@ -347,7 +340,6 @@ public class SubscriptionRegistryTest {
 		assertThat(result2.getSubscription().getEventListenerHandlerMethods()).isNull();
 		assertThat(result2.getSubscription().getSubscribers()).hasSize(2);
 		assertThat(result2.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(result2.getSubscription().getWildcardComponents()).isNull();
 		assertThat(result2.isCreated()).isFalse();
 
 		RegistryAssert ra = new RegistryAssert();

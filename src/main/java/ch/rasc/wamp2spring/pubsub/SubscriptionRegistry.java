@@ -32,6 +32,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.config.TopicMatch;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
@@ -184,17 +185,16 @@ public class SubscriptionRegistry {
 		Map<String, Subscription> prefixSubscriptionMap = this.subscriptionsByMatch
 				.get(MatchPolicy.PREFIX);
 		for (Subscription prefixSubscription : prefixSubscriptionMap.values()) {
-			if (topic.startsWith(prefixSubscription.getTopic())) {
+			if (prefixSubscription.getTopicMatch().matches(topic)) {
 				subscriptions.add(prefixSubscription);
 			}
 		}
 
 		Map<String, Subscription> wildcardSubscriptionMap = this.subscriptionsByMatch
 				.get(MatchPolicy.WILDCARD);
-
 		String[] components = topic.split("\\.");
 		for (Subscription wildcardSubscription : wildcardSubscriptionMap.values()) {
-			if (wildcardSubscription.matchWildcard(components)) {
+			if (wildcardSubscription.getTopicMatch().matchesWildcard(components)) {
 				subscriptions.add(wildcardSubscription);
 			}
 		}
@@ -206,15 +206,9 @@ public class SubscriptionRegistry {
 		if (subscription.getMatchPolicy() == MatchPolicy.EXACT) {
 			this.subscriptionsCache.invalidate(subscription.getTopic());
 		}
-		else if (subscription.getMatchPolicy() == MatchPolicy.PREFIX) {
-			this.subscriptionsCache.asMap().keySet()
-					.removeIf(key -> key.startsWith(subscription.getTopic()));
-		}
-		else if (subscription.getMatchPolicy() == MatchPolicy.WILDCARD) {
-			this.subscriptionsCache.asMap().keySet().removeIf(key -> {
-				String[] components = key.split("\\.");
-				return subscription.matchWildcard(components);
-			});
+		else {
+			TopicMatch topicMatch = subscription.getTopicMatch();
+			this.subscriptionsCache.asMap().keySet().removeIf(topicMatch::matches);
 		}
 	}
 

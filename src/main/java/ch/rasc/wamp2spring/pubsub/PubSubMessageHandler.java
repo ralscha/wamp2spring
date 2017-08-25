@@ -18,9 +18,7 @@ package ch.rasc.wamp2spring.pubsub;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +38,11 @@ import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils.MethodFilter;
 
+import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.annotation.WampListener;
+import ch.rasc.wamp2spring.config.EventStore;
+import ch.rasc.wamp2spring.config.Feature;
+import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampSubscriptionCreatedEvent;
 import ch.rasc.wamp2spring.event.WampSubscriptionDeletedEvent;
@@ -79,16 +81,17 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 	private final HandlerMethodService handlerMethodService;
 
-	private final Map<String, PublishMessage> eventRetention = new ConcurrentHashMap<>();
+	private final EventStore eventStore;
 
 	public PubSubMessageHandler(SubscribableChannel clientInboundChannel,
 			MessageChannel clientOutboundChannel,
 			SubscriptionRegistry subscriptionRegistry,
-			HandlerMethodService handlerMethodService) {
+			HandlerMethodService handlerMethodService, EventStore eventStore) {
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.subscriptionRegistry = subscriptionRegistry;
 		this.handlerMethodService = handlerMethodService;
+		this.eventStore = eventStore;
 	}
 
 	public void setAutoStartup(boolean autoStartup) {
@@ -147,6 +150,14 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 		if (message instanceof SubscribeMessage) {
 			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
+
+			if (Features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
+					&& subscribeMessage.getMatchPolicy() != MatchPolicy.EXACT) {
+				sendMessageToClient(
+						new ErrorMessage(subscribeMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+
 			SubscribeResult result = this.subscriptionRegistry
 					.subscribe(subscribeMessage);
 			sendMessageToClient(new SubscribedMessage(subscribeMessage,
@@ -154,7 +165,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 			sendSubscriptionEvents(result, subscribeMessage);
 
-			if (subscribeMessage.isGet_retained()) {
+			if (subscribeMessage.isGetRetained()) {
 				handleRetentionRequest(subscribeMessage, result.getSubscription());
 			}
 		}
@@ -175,9 +186,13 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 		else if (message instanceof PublishMessage) {
 			PublishMessage publishMessage = (PublishMessage) message;
-
-			if (publishMessage.isRetain()) {
-				this.eventRetention.put(publishMessage.getTopic(), publishMessage);
+			if (publishMessage.isDiscloseMe()
+					&& Features.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
+				if (publishMessage.getWebSocketSessionId() != null) {
+					sendMessageToClient(new ErrorMessage(publishMessage,
+							WampError.DISCLOSE_ME_DISALLOWED));
+				}
+				return;
 			}
 
 			long publicationId = IdGenerator.newRandomId(null);
@@ -186,37 +201,29 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 			if (publishMessage.isAcknowledge()) {
 				sendMessageToClient(new PublishedMessage(publishMessage, publicationId));
 			}
+
+			if (Features.isEnabled(Feature.BROKER_EVENT_RETENTION)
+					&& publishMessage.isRetain()) {
+				this.eventStore.retain(publishMessage);
+			}
 		}
 
 	}
 
 	private void handleRetentionRequest(SubscribeMessage subscribeMessage,
 			Subscription subscription) {
-		Subscriber subscriber = new Subscriber(subscribeMessage.getWebSocketSessionId(),
-				subscribeMessage.getWampSessionId());
-		if (subscribeMessage.getMatchPolicy() == MatchPolicy.EXACT) {
-			PublishMessage publishMessage = this.eventRetention
-					.get(subscribeMessage.getTopic());
-			if (publishMessage != null) {
-				publishRetentionEvent(subscription, subscriber, publishMessage);
+
+		List<PublishMessage> retainedMessages = this.eventStore
+				.getRetained(subscription.getTopicMatch());
+
+		if (!retainedMessages.isEmpty()) {
+			Subscriber subscriber = new Subscriber(
+					subscribeMessage.getWebSocketSessionId(),
+					subscribeMessage.getWampSessionId());
+			for (PublishMessage retainedMessage : retainedMessages) {
+				publishRetentionEvent(subscription, subscriber, retainedMessage);
 			}
 		}
-		else if (subscribeMessage.getMatchPolicy() == MatchPolicy.PREFIX) {
-			this.eventRetention.forEach((topic, publishMessage) -> {
-				if (topic.startsWith(subscribeMessage.getTopic())) {
-					publishRetentionEvent(subscription, subscriber, publishMessage);
-				}
-			});
-		}
-		else if (subscribeMessage.getMatchPolicy() == MatchPolicy.WILDCARD) {
-			this.eventRetention.forEach((topic, publishMessage) -> {
-				String[] components = topic.split("\\.");
-				if (subscription.matchWildcard(components)) {
-					publishRetentionEvent(subscription, subscriber, publishMessage);
-				}
-			});
-		}
-
 	}
 
 	private void publishRetentionEvent(Subscription subscription, Subscriber subscriber,
@@ -318,7 +325,8 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				// message was created from the WampPublisher and exclude me is set
 				// to true
 				if (publishMessage.getWebSocketSessionId() == null
-						&& publishMessage.isExcludeMe()) {
+						&& (publishMessage.isExcludeMe() || Features
+								.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION))) {
 					continue;
 				}
 
@@ -352,19 +360,23 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 		String myWebSocketSessionId = publishMessage.getWebSocketSessionId();
 
-		if (publishMessage.isExcludeMe() && myWebSocketSessionId != null
+		if ((publishMessage.isExcludeMe()
+				|| Features.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION))
+				&& myWebSocketSessionId != null
 				&& myWebSocketSessionId.equals(subscriber.getWebSocketSessionId())) {
 			return false;
 		}
 
-		if (publishMessage.getEligible() != null && !publishMessage.getEligible()
-				.contains(subscriber.getWampSessionId())) {
-			return false;
-		}
+		if (Features.isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
+			if (publishMessage.getEligible() != null && !publishMessage.getEligible()
+					.contains(subscriber.getWampSessionId())) {
+				return false;
+			}
 
-		if (publishMessage.getExclude() != null
-				&& publishMessage.getExclude().contains(subscriber.getWampSessionId())) {
-			return false;
+			if (publishMessage.getExclude() != null && publishMessage.getExclude()
+					.contains(subscriber.getWampSessionId())) {
+				return false;
+			}
 		}
 
 		return true;

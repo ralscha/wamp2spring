@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
+import ch.rasc.wamp2spring.config.TopicMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 class Subscription {
@@ -29,8 +30,7 @@ class Subscription {
 
 	private final MatchPolicy matchPolicy;
 
-	@Nullable
-	private final String wildcardComponents[];
+	private final TopicMatch topicMatch;
 
 	private final long subscriptionId;
 
@@ -46,13 +46,7 @@ class Subscription {
 
 		this.topic = topic;
 		this.matchPolicy = match;
-
-		if (match == MatchPolicy.WILDCARD) {
-			this.wildcardComponents = topic.split("\\.");
-		}
-		else {
-			this.wildcardComponents = null;
-		}
+		this.topicMatch = new TopicMatch(this.topic, this.matchPolicy);
 
 		this.subscriptionId = subscriptionId;
 		this.subscribers = ConcurrentHashMap.newKeySet();
@@ -89,9 +83,8 @@ class Subscription {
 		return this.matchPolicy;
 	}
 
-	@Nullable
-	String[] getWildcardComponents() {
-		return this.wildcardComponents;
+	public TopicMatch getTopicMatch() {
+		return this.topicMatch;
 	}
 
 	long getSubscriptionId() {
@@ -105,20 +98,6 @@ class Subscription {
 	@Nullable
 	List<InvocableHandlerMethod> getEventListenerHandlerMethods() {
 		return this.eventListenerHandlerMethods;
-	}
-
-	boolean matchWildcard(String[] components) {
-		if (this.wildcardComponents != null
-				&& components.length == this.wildcardComponents.length) {
-			for (int i = 0; i < components.length; i++) {
-				String wc = this.wildcardComponents[i];
-				if (wc.length() > 0 && !components[i].equals(wc)) {
-					return false;
-				}
-			}
-			return true;
-		}
-		return false;
 	}
 
 }

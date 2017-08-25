@@ -27,11 +27,11 @@ public class WampRole {
 		this.features = new HashSet<>();
 	}
 
-	public String getRole() {
+	String getRole() {
 		return this.role;
 	}
 
-	public Set<String> getFeatures() {
+	Set<String> getFeatures() {
 		return this.features;
 	}
 
@@ -39,7 +39,7 @@ public class WampRole {
 		this.features.add(feature);
 	}
 
-	public boolean hasFeatures() {
+	boolean hasFeatures() {
 		return !this.features.isEmpty();
 	}
 

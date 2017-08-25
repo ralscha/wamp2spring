@@ -111,8 +111,7 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(publishMessage);
-		assertThat(json).isEqualTo(
-				"[16,2,{\"retain\":true},\"event\",[23]]");
+		assertThat(json).isEqualTo("[16,2,{\"retain\":true},\"event\",[23]]");
 
 		publishMessage = PublishMessage.builder(2, "event").notExcludeMe().acknowledge()
 				.arguments(Arrays.asList(23)).build();

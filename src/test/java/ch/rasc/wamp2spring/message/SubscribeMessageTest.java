@@ -35,7 +35,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(1);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
-		assertThat(subscribeMessage.isGet_retained()).isFalse();
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		String json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,1,{\"match\":\"prefix\"},\"topic\"]");
@@ -45,7 +45,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(subscribeMessage.isGet_retained()).isFalse();
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,2,{},\"topic2\"]");
@@ -55,7 +55,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(subscribeMessage.isGet_retained()).isTrue();
+		assertThat(subscribeMessage.isGetRetained()).isTrue();
 
 		json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,2,{\"get_retained\":true},\"topic2\"]");
@@ -65,7 +65,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
-		assertThat(subscribeMessage.isGet_retained()).isTrue();
+		assertThat(subscribeMessage.isGetRetained()).isTrue();
 
 		json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo(
@@ -83,7 +83,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(1);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
-		assertThat(subscribeMessage.isGet_retained()).isFalse();
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{},\"topic2\"]";
 		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
@@ -93,7 +93,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(subscribeMessage.isGet_retained()).isFalse();
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{\"get_retained\":false},\"topic2\"]";
 		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
@@ -103,7 +103,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(subscribeMessage.isGet_retained()).isFalse();
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{\"get_retained\":true},\"topic2\"]";
 		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
@@ -113,7 +113,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(subscribeMessage.isGet_retained()).isTrue();
+		assertThat(subscribeMessage.isGetRetained()).isTrue();
 
 		json = "[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]";
 		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
@@ -123,7 +123,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
-		assertThat(subscribeMessage.isGet_retained()).isTrue();
+		assertThat(subscribeMessage.isGetRetained()).isTrue();
 	}
 
 }

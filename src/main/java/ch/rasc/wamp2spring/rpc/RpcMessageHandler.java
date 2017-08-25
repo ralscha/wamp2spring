@@ -43,6 +43,8 @@ import org.springframework.util.StringUtils;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
+import ch.rasc.wamp2spring.config.Feature;
+import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampProcedureRegisteredEvent;
 import ch.rasc.wamp2spring.event.WampProcedureUnregisteredEvent;
@@ -154,7 +156,6 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 				this.applicationContext.publishEvent(new WampProcedureRegisteredEvent(
 						registerMessage, registrationId));
-
 			}
 			else {
 				sendMessageToClient(new ErrorMessage(registerMessage,
@@ -183,6 +184,13 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 		else if (message instanceof CallMessage) {
 			CallMessage callMessage = (CallMessage) message;
+
+			if (callMessage.isDiscloseMe()
+					&& Features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
+				sendMessageToClient(
+						new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
+			}
+
 			InvocableHandlerMethod handlerMethod = this.wampMethods
 					.get(callMessage.getProcedure());
 			if (handlerMethod != null) {

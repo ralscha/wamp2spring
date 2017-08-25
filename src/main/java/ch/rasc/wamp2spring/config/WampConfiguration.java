@@ -16,7 +16,9 @@
 package ch.rasc.wamp2spring.config;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
@@ -26,7 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportAware;
+import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
@@ -55,7 +60,7 @@ import ch.rasc.wamp2spring.rpc.RpcMessageHandler;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 
 @Configuration
-public class WampConfiguration {
+public class WampConfiguration implements ImportAware {
 
 	@Nullable
 	private ServletWebSocketHandlerRegistry handlerRegistry;
@@ -69,6 +74,28 @@ public class WampConfiguration {
 	public void setConfigurers(List<WampConfigurer> configurers) {
 		if (!CollectionUtils.isEmpty(configurers)) {
 			this.configurers.addAll(configurers);
+
+			for (WampConfigurer wc : this.configurers) {
+				EnumSet<Feature> excludeFeatures = wc.disableFeatures();
+				if (excludeFeatures != null) {
+					excludeFeatures.forEach(Features::disable);
+				}
+			}
+		}
+	}
+
+	@Autowired(required = false)
+	private EventStore eventStore;
+
+	@Override
+	public void setImportMetadata(AnnotationMetadata importMetadata) {
+		Map<String, Object> attributes = AnnotationAttributes.fromMap(importMetadata
+				.getAnnotationAttributes(EnableWamp.class.getName(), false));
+		Feature[] disableFeatures = (Feature[]) attributes.get("disable");
+		if (disableFeatures != null) {
+			for (Feature disableFeature : disableFeatures) {
+				Features.disable(disableFeature);
+			}
 		}
 	}
 
@@ -214,10 +241,14 @@ public class WampConfiguration {
 
 	@Bean
 	public MessageHandler pubSubMessageHandler(ApplicationContext applicationContext) {
-		PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
-				clientInboundChannel(), clientOutboundChannel(), subscriptionRegistry(),
-				handlerMethodService(applicationContext));
-		return pubSubMessageHandler;
+		if (Features.isEnabled(Feature.BROKER)) {
+			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
+					clientInboundChannel(), clientOutboundChannel(),
+					subscriptionRegistry(), handlerMethodService(applicationContext),
+					eventStore());
+			return pubSubMessageHandler;
+		}
+		return new NoOpMessageHandler();
 	}
 
 	@Bean
@@ -227,10 +258,13 @@ public class WampConfiguration {
 
 	@Bean
 	public MessageHandler rpcMessageHandler(ApplicationContext applicationContext) {
-		RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(
-				clientInboundChannel(), clientOutboundChannel(), procedureRegistry(),
-				handlerMethodService(applicationContext));
-		return rpcMessageHandler;
+		if (Features.isEnabled(Feature.DEALER)) {
+			RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(
+					clientInboundChannel(), clientOutboundChannel(), procedureRegistry(),
+					handlerMethodService(applicationContext));
+			return rpcMessageHandler;
+		}
+		return new NoOpMessageHandler();
 	}
 
 	@Bean
@@ -250,6 +284,13 @@ public class WampConfiguration {
 			this.internalConversionService = new DefaultFormattingConversionService();
 		}
 		return this.internalConversionService;
+	}
+
+	protected EventStore eventStore() {
+		if (this.eventStore == null) {
+			this.eventStore = new MemoryEventStore();
+		}
+		return this.eventStore;
 	}
 
 	@Bean

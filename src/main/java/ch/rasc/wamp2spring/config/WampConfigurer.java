@@ -15,6 +15,7 @@
  */
 package ch.rasc.wamp2spring.config;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -51,6 +52,10 @@ public interface WampConfigurer {
 	default void configureWebSocketHandlerRegistration(
 			WebSocketHandlerRegistration registration) {
 		// nothing here
+	}
+
+	default EnumSet<Feature> disableFeatures() {
+		return EnumSet.noneOf(Feature.class);
 	}
 
 }
