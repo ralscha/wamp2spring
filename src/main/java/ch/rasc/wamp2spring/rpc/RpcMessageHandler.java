@@ -84,13 +84,16 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 	private final HandlerMethodService handlerMethodService;
 
+	private final Features features;
+
 	public RpcMessageHandler(SubscribableChannel clientInboundChannel,
 			MessageChannel clientOutboundChannel, ProcedureRegistry procedureRegistry,
-			HandlerMethodService handlerMethodService) {
+			HandlerMethodService handlerMethodService, Features features) {
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.procedureRegistry = procedureRegistry;
 		this.handlerMethodService = handlerMethodService;
+		this.features = features;
 	}
 
 	public void setAutoStartup(boolean autoStartup) {
@@ -186,7 +189,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			CallMessage callMessage = (CallMessage) message;
 
 			if (callMessage.isDiscloseMe()
-					&& Features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
+					&& this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 				sendMessageToClient(
 						new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
 			}

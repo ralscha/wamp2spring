@@ -91,7 +91,7 @@ public class WampSubProtocolHandler
 
 	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
 			JsonFactory cborFactory, JsonFactory smileFactory,
-			MessageChannel clientInboundChannel) {
+			MessageChannel clientInboundChannel, Features features) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
 		this.cborFactory = cborFactory;
@@ -100,17 +100,17 @@ public class WampSubProtocolHandler
 
 		this.roles = new ArrayList<>();
 
-		if (Features.isEnabled(Feature.DEALER)) {
+		if (features.isEnabled(Feature.DEALER)) {
 			WampRole dealer = new WampRole(Feature.DEALER.getExternalValue());
-			for (Feature feature : Features.enabledDealerFeatures()) {
+			for (Feature feature : features.enabledDealerFeatures()) {
 				dealer.addFeature(feature.getExternalValue());
 			}
 			this.roles.add(dealer);
 		}
 
-		if (Features.isEnabled(Feature.BROKER)) {
+		if (features.isEnabled(Feature.BROKER)) {
 			WampRole broker = new WampRole(Feature.BROKER.getExternalValue());
-			for (Feature feature : Features.enabledBrokerFeatures()) {
+			for (Feature feature : features.enabledBrokerFeatures()) {
 				broker.addFeature(feature.getExternalValue());
 			}
 			this.roles.add(broker);

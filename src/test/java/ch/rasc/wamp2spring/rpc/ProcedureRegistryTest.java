@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.InvocationMessage;
@@ -40,7 +41,7 @@ public class ProcedureRegistryTest {
 
 	@Before
 	public void setup() {
-		this.procedureRegistry = new ProcedureRegistry();
+		this.procedureRegistry = new ProcedureRegistry(new Features());
 	}
 
 	@Test

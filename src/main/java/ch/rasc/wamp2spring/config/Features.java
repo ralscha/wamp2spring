@@ -19,28 +19,27 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-public enum Features {
-	INSTANCE;
+public class Features {
 
 	private final EnumSet<Feature> enabledFeatures = EnumSet.allOf(Feature.class);
 
-	public static void disable(Feature feature) {
-		INSTANCE.enabledFeatures.remove(feature);
+	public void disable(Feature feature) {
+		this.enabledFeatures.remove(feature);
 	}
 
-	static EnumSet<Feature> getEnabledFeatures() {
-		return INSTANCE.enabledFeatures;
+	EnumSet<Feature> getEnabledFeatures() {
+		return this.enabledFeatures;
 	}
 
-	public static boolean isEnabled(Feature feature) {
-		return INSTANCE.enabledFeatures.contains(feature);
+	public boolean isEnabled(Feature feature) {
+		return this.enabledFeatures.contains(feature);
 	}
 
-	public static boolean isDisabled(Feature feature) {
-		return !INSTANCE.enabledFeatures.contains(feature);
+	public boolean isDisabled(Feature feature) {
+		return !this.enabledFeatures.contains(feature);
 	}
 
-	public static List<Feature> enabledDealerFeatures() {
+	public List<Feature> enabledDealerFeatures() {
 		List<Feature> dealerFeatures = new ArrayList<>();
 		if (isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 			dealerFeatures.add(Feature.DEALER_CALLER_IDENTIFICATION);
@@ -48,7 +47,7 @@ public enum Features {
 		return dealerFeatures;
 	}
 
-	public static List<Feature> enabledBrokerFeatures() {
+	public List<Feature> enabledBrokerFeatures() {
 		List<Feature> brokerFeatures = new ArrayList<>();
 		if (isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
 			brokerFeatures.add(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING);

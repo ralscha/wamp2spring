@@ -16,7 +16,6 @@
 package ch.rasc.wamp2spring.config;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -70,16 +69,15 @@ public class WampConfiguration implements ImportAware {
 
 	private final List<WampConfigurer> configurers = new ArrayList<>();
 
+	private final Features features = new Features();
+
 	@Autowired(required = false)
 	public void setConfigurers(List<WampConfigurer> configurers) {
 		if (!CollectionUtils.isEmpty(configurers)) {
 			this.configurers.addAll(configurers);
 
 			for (WampConfigurer wc : this.configurers) {
-				EnumSet<Feature> excludeFeatures = wc.disableFeatures();
-				if (excludeFeatures != null) {
-					excludeFeatures.forEach(Features::disable);
-				}
+				wc.configureFeatures(this.features);
 			}
 		}
 	}
@@ -94,7 +92,7 @@ public class WampConfiguration implements ImportAware {
 		Feature[] disableFeatures = (Feature[]) attributes.get("disable");
 		if (disableFeatures != null) {
 			for (Feature disableFeature : disableFeatures) {
-				Features.disable(disableFeature);
+				this.features.disable(disableFeature);
 			}
 		}
 	}
@@ -110,7 +108,8 @@ public class WampConfiguration implements ImportAware {
 	@Bean
 	public WampSubProtocolHandler wampSubProtocolHandler() {
 		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(),
-				cborJsonFactory(), smileJsonFactory(), clientInboundChannel());
+				cborJsonFactory(), smileJsonFactory(), clientInboundChannel(),
+				this.features);
 	}
 
 	@Bean
@@ -241,11 +240,11 @@ public class WampConfiguration implements ImportAware {
 
 	@Bean
 	public MessageHandler pubSubMessageHandler(ApplicationContext applicationContext) {
-		if (Features.isEnabled(Feature.BROKER)) {
+		if (this.features.isEnabled(Feature.BROKER)) {
 			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
 					clientInboundChannel(), clientOutboundChannel(),
 					subscriptionRegistry(), handlerMethodService(applicationContext),
-					eventStore());
+					this.features, eventStore());
 			return pubSubMessageHandler;
 		}
 		return new NoOpMessageHandler();
@@ -258,10 +257,10 @@ public class WampConfiguration implements ImportAware {
 
 	@Bean
 	public MessageHandler rpcMessageHandler(ApplicationContext applicationContext) {
-		if (Features.isEnabled(Feature.DEALER)) {
+		if (this.features.isEnabled(Feature.DEALER)) {
 			RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(
 					clientInboundChannel(), clientOutboundChannel(), procedureRegistry(),
-					handlerMethodService(applicationContext));
+					handlerMethodService(applicationContext), this.features);
 			return rpcMessageHandler;
 		}
 		return new NoOpMessageHandler();
@@ -295,7 +294,7 @@ public class WampConfiguration implements ImportAware {
 
 	@Bean
 	public ProcedureRegistry procedureRegistry() {
-		return new ProcedureRegistry();
+		return new ProcedureRegistry(this.features);
 	}
 
 	@Bean

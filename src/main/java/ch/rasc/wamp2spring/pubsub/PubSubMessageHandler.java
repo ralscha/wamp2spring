@@ -81,16 +81,20 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 	private final HandlerMethodService handlerMethodService;
 
+	private final Features features;
+
 	private final EventStore eventStore;
 
 	public PubSubMessageHandler(SubscribableChannel clientInboundChannel,
 			MessageChannel clientOutboundChannel,
 			SubscriptionRegistry subscriptionRegistry,
-			HandlerMethodService handlerMethodService, EventStore eventStore) {
+			HandlerMethodService handlerMethodService, Features features,
+			EventStore eventStore) {
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.subscriptionRegistry = subscriptionRegistry;
 		this.handlerMethodService = handlerMethodService;
+		this.features = features;
 		this.eventStore = eventStore;
 	}
 
@@ -151,7 +155,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		if (message instanceof SubscribeMessage) {
 			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
 
-			if (Features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
+			if (this.features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
 					&& subscribeMessage.getMatchPolicy() != MatchPolicy.EXACT) {
 				sendMessageToClient(
 						new ErrorMessage(subscribeMessage, WampError.OPTION_NOT_ALLOWED));
@@ -186,8 +190,8 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 		else if (message instanceof PublishMessage) {
 			PublishMessage publishMessage = (PublishMessage) message;
-			if (publishMessage.isDiscloseMe()
-					&& Features.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
+			if (publishMessage.isDiscloseMe() && this.features
+					.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
 				if (publishMessage.getWebSocketSessionId() != null) {
 					sendMessageToClient(new ErrorMessage(publishMessage,
 							WampError.DISCLOSE_ME_DISALLOWED));
@@ -202,7 +206,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				sendMessageToClient(new PublishedMessage(publishMessage, publicationId));
 			}
 
-			if (Features.isEnabled(Feature.BROKER_EVENT_RETENTION)
+			if (this.features.isEnabled(Feature.BROKER_EVENT_RETENTION)
 					&& publishMessage.isRetain()) {
 				this.eventStore.retain(publishMessage);
 			}
@@ -325,7 +329,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				// message was created from the WampPublisher and exclude me is set
 				// to true
 				if (publishMessage.getWebSocketSessionId() == null
-						&& (publishMessage.isExcludeMe() || Features
+						&& (publishMessage.isExcludeMe() || this.features
 								.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION))) {
 					continue;
 				}
@@ -355,19 +359,18 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 	}
 
-	private static boolean isEligible(PublishMessage publishMessage,
-			Subscriber subscriber) {
+	private boolean isEligible(PublishMessage publishMessage, Subscriber subscriber) {
 
 		String myWebSocketSessionId = publishMessage.getWebSocketSessionId();
 
 		if ((publishMessage.isExcludeMe()
-				|| Features.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION))
+				|| this.features.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION))
 				&& myWebSocketSessionId != null
 				&& myWebSocketSessionId.equals(subscriber.getWebSocketSessionId())) {
 			return false;
 		}
 
-		if (Features.isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
+		if (this.features.isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
 			if (publishMessage.getEligible() != null && !publishMessage.getEligible()
 					.contains(subscriber.getWampSessionId())) {
 				return false;

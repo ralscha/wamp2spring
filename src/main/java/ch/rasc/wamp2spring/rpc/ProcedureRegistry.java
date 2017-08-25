@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.config.Feature;
+import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.InvocationMessage;
@@ -38,16 +40,24 @@ public class ProcedureRegistry {
 	private final static AtomicLong lastRegistration = new AtomicLong(1L);
 
 	private final Map<String, Procedure> procedures = new ConcurrentHashMap<>();
+
 	private final Map<Long, String> registrations = new ConcurrentHashMap<>();
 
 	private final Map<Long, CallProc> pendingInvocations = new ConcurrentHashMap<>();
+
+	private final Features features;
+
+	public ProcedureRegistry(Features features) {
+		this.features = features;
+	}
 
 	synchronized long register(RegisterMessage registerMessage) {
 		if (!this.procedures.containsKey(registerMessage.getProcedure())) {
 			long registrationId = IdGenerator.newLinearId(lastRegistration);
 			this.registrations.put(registrationId, registerMessage.getProcedure());
 
-			Procedure procedure = new Procedure(registerMessage, registrationId);
+			Procedure procedure = new Procedure(registerMessage, registrationId,
+					this.features.isEnabled(Feature.DEALER_CALLER_IDENTIFICATION));
 			this.procedures.put(registerMessage.getProcedure(), procedure);
 			return registrationId;
 		}

@@ -18,8 +18,6 @@ package ch.rasc.wamp2spring.rpc;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import ch.rasc.wamp2spring.config.Feature;
-import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.message.RegisterMessage;
 
 public class Procedure {
@@ -33,10 +31,11 @@ public class Procedure {
 
 	private final Set<Long> pendingInvocations;
 
-	public Procedure(RegisterMessage registerMessage, long registrationId) {
+	public Procedure(RegisterMessage registerMessage, long registrationId,
+			boolean isDealerCallerIdentificationFeatureEnabled) {
 		this.procedure = registerMessage.getProcedure();
 		this.webSocketSessionId = registerMessage.getWebSocketSessionId();
-		if (Features.isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
+		if (isDealerCallerIdentificationFeatureEnabled) {
 			this.discloseCaller = registerMessage.isDiscloseCaller();
 		}
 		else {
