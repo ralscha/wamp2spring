@@ -76,10 +76,15 @@ public class WampConfiguration implements ImportAware {
 		if (!CollectionUtils.isEmpty(configurers)) {
 			this.configurers.addAll(configurers);
 
+			configureFeatures(this.features);
 			for (WampConfigurer wc : this.configurers) {
 				wc.configureFeatures(this.features);
 			}
 		}
+	}
+
+	protected void configureFeatures(@SuppressWarnings({ "unused", "hiding" }) Features features) {
+		// nothing here
 	}
 
 	@Autowired(required = false)
