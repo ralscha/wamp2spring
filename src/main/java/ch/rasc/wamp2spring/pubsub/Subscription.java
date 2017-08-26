@@ -26,10 +26,6 @@ import ch.rasc.wamp2spring.config.TopicMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 class Subscription {
-	private final String topic;
-
-	private final MatchPolicy matchPolicy;
-
 	private final TopicMatch topicMatch;
 
 	private final long subscriptionId;
@@ -41,12 +37,10 @@ class Subscription {
 	@Nullable
 	private List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
 
-	Subscription(String topic, MatchPolicy match, long subscriptionId) {
+	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
-		this.topic = topic;
-		this.matchPolicy = match;
-		this.topicMatch = new TopicMatch(this.topic, this.matchPolicy);
+		this.topicMatch = new TopicMatch(topic, matchPolicy);
 
 		this.subscriptionId = subscriptionId;
 		this.subscribers = ConcurrentHashMap.newKeySet();
@@ -76,11 +70,11 @@ class Subscription {
 	}
 
 	String getTopic() {
-		return this.topic;
+		return this.topicMatch.getTopic();
 	}
 
 	MatchPolicy getMatchPolicy() {
-		return this.matchPolicy;
+		return this.topicMatch.getMatchPolicy();
 	}
 
 	public TopicMatch getTopicMatch() {
