@@ -32,7 +32,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import ch.rasc.wamp2spring.WampError;
-import ch.rasc.wamp2spring.config.TopicMatch;
+import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
@@ -207,7 +207,7 @@ public class SubscriptionRegistry {
 			this.subscriptionsCache.invalidate(subscription.getTopic());
 		}
 		else {
-			TopicMatch topicMatch = subscription.getTopicMatch();
+			DestinationMatch topicMatch = subscription.getTopicMatch();
 			this.subscriptionsCache.asMap().keySet().removeIf(topicMatch::matches);
 		}
 	}

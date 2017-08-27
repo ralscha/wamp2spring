@@ -36,9 +36,9 @@ public class MemoryEventStore implements EventStore {
 	}
 
 	@Override
-	public List<PublishMessage> getRetained(TopicMatch query) {
+	public List<PublishMessage> getRetained(DestinationMatch query) {
 		if (query.getMatchPolicy() == MatchPolicy.EXACT) {
-			PublishMessage publishMessage = this.eventRetention.get(query.getTopic());
+			PublishMessage publishMessage = this.eventRetention.get(query.getDestination());
 			if (publishMessage != null) {
 				return Collections.singletonList(publishMessage);
 			}

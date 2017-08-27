@@ -22,11 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
-import ch.rasc.wamp2spring.config.TopicMatch;
+import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 class Subscription {
-	private final TopicMatch topicMatch;
+	private final DestinationMatch topicMatch;
 
 	private final long subscriptionId;
 
@@ -40,7 +40,7 @@ class Subscription {
 	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
-		this.topicMatch = new TopicMatch(topic, matchPolicy);
+		this.topicMatch = new DestinationMatch(topic, matchPolicy);
 
 		this.subscriptionId = subscriptionId;
 		this.subscribers = ConcurrentHashMap.newKeySet();
@@ -70,14 +70,14 @@ class Subscription {
 	}
 
 	String getTopic() {
-		return this.topicMatch.getTopic();
+		return this.topicMatch.getDestination();
 	}
 
 	MatchPolicy getMatchPolicy() {
 		return this.topicMatch.getMatchPolicy();
 	}
 
-	public TopicMatch getTopicMatch() {
+	public DestinationMatch getTopicMatch() {
 		return this.topicMatch;
 	}
 

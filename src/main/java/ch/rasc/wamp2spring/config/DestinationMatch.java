@@ -19,44 +19,47 @@ import javax.annotation.Nullable;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
-public class TopicMatch {
-	private final String topic;
+/**
+ * Matches a topic or a procedure
+ */
+public class DestinationMatch {
+	private final String destination;
 
 	private final MatchPolicy matchPolicy;
 
 	@Nullable
 	private final String wildcardComponents[];
 
-	public TopicMatch(String topic, MatchPolicy matchPolicy) {
-		this.topic = topic;
+	public DestinationMatch(String destination, MatchPolicy matchPolicy) {
+		this.destination = destination;
 		this.matchPolicy = matchPolicy;
 
 		if (matchPolicy == MatchPolicy.WILDCARD) {
-			this.wildcardComponents = topic.split("\\.");
+			this.wildcardComponents = destination.split("\\.");
 		}
 		else {
 			this.wildcardComponents = null;
 		}
 	}
 
-	public String getTopic() {
-		return this.topic;
+	public String getDestination() {
+		return this.destination;
 	}
 
 	public MatchPolicy getMatchPolicy() {
 		return this.matchPolicy;
 	}
 
-	public boolean matches(String queryTopic) {
+	public boolean matches(String queryDestination) {
 		if (this.matchPolicy == MatchPolicy.EXACT) {
-			return this.topic.equals(queryTopic);
+			return this.destination.equals(queryDestination);
 		}
 
 		if (this.matchPolicy == MatchPolicy.PREFIX) {
-			return queryTopic.startsWith(this.topic);
+			return queryDestination.startsWith(this.destination);
 		}
 
-		String[] components = queryTopic.split("\\.");
+		String[] components = queryDestination.split("\\.");
 		return matchesWildcard(components);
 	}
 

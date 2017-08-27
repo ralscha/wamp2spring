@@ -34,7 +34,7 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class EventMessage extends WampMessage {
 
-	static final int CODE = 36;
+	public static final int CODE = 36;
 
 	private final long subscriptionId;
 

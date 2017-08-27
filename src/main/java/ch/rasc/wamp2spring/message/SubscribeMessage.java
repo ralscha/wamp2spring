@@ -28,7 +28,7 @@ import ch.rasc.wamp2spring.pubsub.MatchPolicy;
  */
 public class SubscribeMessage extends WampMessage {
 
-	static final int CODE = 32;
+	public static final int CODE = 32;
 
 	private final long requestId;
 

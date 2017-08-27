@@ -42,7 +42,7 @@ import ch.rasc.wamp2spring.util.CollectionHelper;
  */
 public class PublishMessage extends WampMessage {
 
-	static final int CODE = 16;
+	public static final int CODE = 16;
 
 	private final long requestId;
 

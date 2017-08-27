@@ -26,7 +26,7 @@ import com.fasterxml.jackson.core.JsonParser;
  */
 public class RegisterMessage extends WampMessage {
 
-	static final int CODE = 64;
+	public static final int CODE = 64;
 
 	private final long requestId;
 

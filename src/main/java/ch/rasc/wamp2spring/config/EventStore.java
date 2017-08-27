@@ -23,6 +23,6 @@ public interface EventStore {
 
 	void retain(PublishMessage publishMessage);
 
-	List<PublishMessage> getRetained(TopicMatch query);
+	List<PublishMessage> getRetained(DestinationMatch query);
 
 }
