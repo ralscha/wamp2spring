@@ -31,6 +31,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.messaging.handler.HandlerMethod;
@@ -895,6 +897,7 @@ public class SubscriptionRegistryTest {
 			this.registry.put(MatchPolicy.PREFIX, new HashMap<>());
 		}
 
+		@Nullable
 		public Long subscriptionId(String topic, MatchPolicy policy) {
 			Map<Long, Set<Long>> map = this.registry.get(policy).get(topic);
 			if (map != null) {
@@ -927,6 +930,7 @@ public class SubscriptionRegistryTest {
 			}
 		}
 
+		@Nullable
 		public String topic(Long subscriptionId) {
 			for (MatchPolicy policy : MatchPolicy.values()) {
 				Map<String, Map<Long, Set<Long>>> map = this.registry.get(policy);

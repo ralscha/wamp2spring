@@ -24,6 +24,7 @@ import ch.rasc.wamp2spring.message.ErrorMessage;
 class UnregisterResult {
 	private final boolean success;
 
+	@Nullable
 	private final String procedure;
 
 	private final long registrationId;
@@ -53,6 +54,7 @@ class UnregisterResult {
 		return this.success;
 	}
 
+	@Nullable
 	String getProcedure() {
 		return this.procedure;
 	}

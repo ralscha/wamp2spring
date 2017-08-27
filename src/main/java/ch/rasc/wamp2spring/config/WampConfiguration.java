@@ -192,10 +192,12 @@ public class WampConfiguration implements ImportAware {
 		return "/wamp";
 	}
 
+	@Nullable
 	protected Integer getSendTimeLimit() {
 		return null;
 	}
 
+	@Nullable
 	protected Integer getSendBufferSizeLimit() {
 		return null;
 	}
