@@ -16,12 +16,18 @@
 package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 
 /**
  * [UNREGISTERED, UNREGISTER.Request|id]
+ *
+ * [UNREGISTERED, UNREGISTER.Request|id, Details|dict]
  */
 public class UnregisteredMessage extends WampMessage {
 
@@ -29,9 +35,22 @@ public class UnregisteredMessage extends WampMessage {
 
 	private final long requestId;
 
+	@Nullable
+	private final Long registrationId;
+
+	@Nullable
+	private final String reason;
+
 	public UnregisteredMessage(long requestId) {
+		this(requestId, null, null);
+	}
+
+	public UnregisteredMessage(long requestId, @Nullable Long registrationId,
+			@Nullable String reason) {
 		super(CODE);
 		this.requestId = requestId;
+		this.registrationId = registrationId;
+		this.reason = reason;
 	}
 
 	public UnregisteredMessage(UnregisterMessage unregisterMessage) {
@@ -43,22 +62,59 @@ public class UnregisteredMessage extends WampMessage {
 		jp.nextToken();
 		long request = jp.getLongValue();
 
-		return new UnregisteredMessage(request);
+		Long registrationId = null;
+		String reason = null;
+
+		JsonToken token = jp.nextToken();
+		if (token == JsonToken.START_OBJECT) {
+			Map<String, Object> details = ParserUtil.readObject(jp);
+
+			if (details.containsKey("reason")) {
+				reason = (String) details.get("reason");
+			}
+			if (details.containsKey("registration")) {
+				registrationId = ((Number) details.get("registration")).longValue();
+			}
+		}
+
+		return new UnregisteredMessage(request, registrationId, reason);
 	}
 
 	@Override
 	public void serialize(JsonGenerator generator) throws IOException {
 		generator.writeNumber(getCode());
 		generator.writeNumber(this.requestId);
+
+		if (this.registrationId != null || this.reason != null) {
+			generator.writeStartObject();
+			if (this.reason != null) {
+				generator.writeStringField("reason", this.reason);
+			}
+			if (this.registrationId != null) {
+				generator.writeNumberField("registration", this.registrationId);
+			}
+			generator.writeEndObject();
+		}
 	}
 
 	public long getRequestId() {
 		return this.requestId;
 	}
 
+	@Nullable
+	public Long getRegistrationId() {
+		return this.registrationId;
+	}
+
+	@Nullable
+	public String getReason() {
+		return this.reason;
+	}
+
 	@Override
 	public String toString() {
-		return "UnregisteredMessage [requestId=" + this.requestId + "]";
+		return "UnregisteredMessage [requestId=" + this.requestId + ", registrationId="
+				+ this.registrationId + ", reason=" + this.reason + "]";
 	}
 
 }

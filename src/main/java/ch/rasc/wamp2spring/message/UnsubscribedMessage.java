@@ -16,12 +16,18 @@
 package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 
 /**
  * [UNSUBSCRIBED, UNSUBSCRIBE.Request|id]
+ *
+ * [UNSUBSCRIBED, UNSUBSCRIBE.Request|id, Details|dict]
  */
 public class UnsubscribedMessage extends WampMessage {
 
@@ -29,9 +35,22 @@ public class UnsubscribedMessage extends WampMessage {
 
 	private final long requestId;
 
+	@Nullable
+	private final Long subscriptionId;
+
+	@Nullable
+	private final String reason;
+
 	public UnsubscribedMessage(long requestId) {
+		this(requestId, null, null);
+	}
+
+	public UnsubscribedMessage(long requestId, @Nullable Long subscriptionId,
+			@Nullable String reason) {
 		super(CODE);
 		this.requestId = requestId;
+		this.subscriptionId = subscriptionId;
+		this.reason = reason;
 	}
 
 	public UnsubscribedMessage(UnsubscribeMessage unsubscribeMessage) {
@@ -41,22 +60,61 @@ public class UnsubscribedMessage extends WampMessage {
 
 	public static UnsubscribedMessage deserialize(JsonParser jp) throws IOException {
 		jp.nextToken();
-		return new UnsubscribedMessage(jp.getLongValue());
+		long request = jp.getLongValue();
+
+		Long subscriptionId = null;
+		String reason = null;
+
+		JsonToken token = jp.nextToken();
+		if (token == JsonToken.START_OBJECT) {
+			Map<String, Object> details = ParserUtil.readObject(jp);
+
+			if (details.containsKey("reason")) {
+				reason = (String) details.get("reason");
+			}
+			if (details.containsKey("subscription")) {
+				subscriptionId = ((Number) details.get("subscription")).longValue();
+			}
+		}
+
+		return new UnsubscribedMessage(request, subscriptionId, reason);
 	}
 
 	@Override
 	public void serialize(JsonGenerator generator) throws IOException {
 		generator.writeNumber(getCode());
 		generator.writeNumber(this.requestId);
+
+		if (this.subscriptionId != null || this.reason != null) {
+			generator.writeStartObject();
+			if (this.reason != null) {
+				generator.writeStringField("reason", this.reason);
+			}
+			if (this.subscriptionId != null) {
+				generator.writeNumberField("subscription", this.subscriptionId);
+			}
+			generator.writeEndObject();
+		}
 	}
 
 	public long getRequestId() {
 		return this.requestId;
 	}
 
+	@Nullable
+	public Long getSubscriptionId() {
+		return this.subscriptionId;
+	}
+
+	@Nullable
+	public String getReason() {
+		return this.reason;
+	}
+
 	@Override
 	public String toString() {
-		return "UnsubscribedMessage [requestId=" + this.requestId + "]";
+		return "UnsubscribedMessage [requestId=" + this.requestId + ", subscriptionId="
+				+ this.subscriptionId + ", reason=" + this.reason + "]";
 	}
 
 }
