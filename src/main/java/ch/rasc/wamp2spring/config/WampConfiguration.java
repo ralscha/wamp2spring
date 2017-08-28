@@ -83,7 +83,8 @@ public class WampConfiguration implements ImportAware {
 		}
 	}
 
-	protected void configureFeatures(@SuppressWarnings({ "unused", "hiding" }) Features features) {
+	protected void configureFeatures(
+			@SuppressWarnings({ "unused", "hiding" }) Features features) {
 		// nothing here
 	}
 

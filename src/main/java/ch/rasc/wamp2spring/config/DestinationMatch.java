@@ -33,7 +33,7 @@ public class DestinationMatch {
 	public DestinationMatch(String destination) {
 		this(destination, MatchPolicy.EXACT);
 	}
-	
+
 	public DestinationMatch(String destination, MatchPolicy matchPolicy) {
 		this.destination = destination;
 		this.matchPolicy = matchPolicy;
