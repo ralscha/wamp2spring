@@ -165,24 +165,30 @@ public class WampConfiguration implements ImportAware {
 			subProtocolWebSocketHandler.setSendBufferSizeLimit(sendBufferSizeLimit);
 		}
 
-		WebSocketHandlerRegistration registration = registry.addHandler(
-				decorateWebSocketHandler(subProtocolWebSocketHandler),
+		WebSocketHandler decoratedHandler = subProtocolWebSocketHandler;
+		decoratedHandler = decorateWebSocketHandler(decoratedHandler);
+		for (WampConfigurer wc : this.configurers) {
+			decoratedHandler = wc.decorateWebSocketHandler(decoratedHandler);
+		}
+
+		WebSocketHandlerRegistration registration = registry.addHandler(decoratedHandler,
 				getWebSocketHandlerPath());
 
 		registration.setHandshakeHandler(getHandshakeHandler());
 
+		configureWebSocketHandlerRegistration(registration);
 		for (WampConfigurer wc : this.configurers) {
 			wc.configureWebSocketHandlerRegistration(registration);
 		}
 	}
 
 	protected WebSocketHandler decorateWebSocketHandler(WebSocketHandler handler) {
-		WebSocketHandler decoratedHandler = handler;
-		for (WampConfigurer wc : this.configurers) {
-			decoratedHandler = wc.decorateWebSocketHandler(decoratedHandler);
-		}
+		return handler;
+	}
 
-		return decoratedHandler;
+	protected void configureWebSocketHandlerRegistration(
+			@SuppressWarnings("unused") WebSocketHandlerRegistration registration) {
+		// nothing here
 	}
 
 	protected HandshakeHandler getHandshakeHandler() {
@@ -208,11 +214,17 @@ public class WampConfiguration implements ImportAware {
 		ExecutorSubscribableChannel executorSubscribableChannel = new ExecutorSubscribableChannel(
 				clientInboundChannelExecutor());
 
+		configureClientInboundChannel(executorSubscribableChannel);
 		for (WampConfigurer wc : this.configurers) {
 			wc.configureClientInboundChannel(executorSubscribableChannel);
 		}
 
 		return executorSubscribableChannel;
+	}
+
+	protected void configureClientInboundChannel(
+			@SuppressWarnings("unused") ExecutorSubscribableChannel executorSubscribableChannel) {
+		// nothing here
 	}
 
 	@Bean
@@ -278,12 +290,19 @@ public class WampConfiguration implements ImportAware {
 	public HandlerMethodService handlerMethodService(
 			ApplicationContext applicationContext) {
 		List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>();
+
+		addArgumentResolvers(argumentResolvers);
 		for (WampConfigurer wc : this.configurers) {
 			wc.addArgumentResolvers(argumentResolvers);
 		}
 
 		return new HandlerMethodService(conversionService(), argumentResolvers,
 				new ObjectMapper(), applicationContext);
+	}
+
+	protected void addArgumentResolvers(
+			@SuppressWarnings("unused") List<HandlerMethodArgumentResolver> argumentResolvers) {
+		// nothing here
 	}
 
 	protected ConversionService conversionService() {
