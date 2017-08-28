@@ -278,8 +278,15 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			sendMessageToClient(resultMessage);
 		}
 		catch (Exception e) {
-			sendMessageToClient(
-					new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
+			if ("org.springframework.security.access.AccessDeniedException"
+					.equals(e.getClass().getName())) {
+				sendMessageToClient(
+						new ErrorMessage(callMessage, WampError.NOT_AUTHORIZED));
+			}
+			else {
+				sendMessageToClient(
+						new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
+			}
 
 			if (this.logger.isErrorEnabled()) {
 				this.logger.error(
