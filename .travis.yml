@@ -6,7 +6,7 @@ env:
   global:
   - SONATYPE_USERNAME=ralscha23
 
-script: ./mvnw install -DskipTests=true -Dfindbugs.skip=true -Dmaven.javadoc.skip=true -B -V
+install: ./mvnw install -DskipTests=true -Dfindbugs.skip=true -Dmaven.javadoc.skip=true -B -V
   
 after_success:
 - python addsettings.py
