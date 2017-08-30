@@ -258,11 +258,28 @@ public class WampConfiguration implements ImportAware {
 		return executor;
 	}
 
+	/**
+	 * Channel from the {@link WampPublisher} to the {@link PubSubMessageHandler}
+	 */
+	@Bean
+	public SubscribableChannel brokerChannel() {
+		return new ExecutorSubscribableChannel(brokerChannelExecutor());
+	}
+
+	/**
+	 * Executor used by the {@link #brokerChannel()}. By default messages send through the
+	 * brokerChannel are processed synchronously.
+	 */
+	@Nullable
+	public Executor brokerChannelExecutor() {
+		return null;
+	}
+
 	@Bean
 	public MessageHandler pubSubMessageHandler(ApplicationContext applicationContext) {
 		if (this.features.isEnabled(Feature.BROKER)) {
 			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
-					clientInboundChannel(), clientOutboundChannel(),
+					clientInboundChannel(), brokerChannel(), clientOutboundChannel(),
 					subscriptionRegistry(), handlerMethodService(applicationContext),
 					this.features, eventStore());
 			return pubSubMessageHandler;
@@ -326,7 +343,7 @@ public class WampConfiguration implements ImportAware {
 
 	@Bean
 	public WampPublisher wampEventPublisher() {
-		return new WampPublisher(clientInboundChannel());
+		return new WampPublisher(brokerChannel());
 	}
 
 }

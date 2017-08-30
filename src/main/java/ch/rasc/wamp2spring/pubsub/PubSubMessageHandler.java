@@ -67,6 +67,8 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 
 	private final SubscribableChannel clientInboundChannel;
 
+	private final SubscribableChannel brokerChannel;
+
 	private final MessageChannel clientOutboundChannel;
 
 	private final SubscriptionRegistry subscriptionRegistry;
@@ -86,11 +88,12 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 	private final EventStore eventStore;
 
 	public PubSubMessageHandler(SubscribableChannel clientInboundChannel,
-			MessageChannel clientOutboundChannel,
+			SubscribableChannel brokerChannel, MessageChannel clientOutboundChannel,
 			SubscriptionRegistry subscriptionRegistry,
 			HandlerMethodService handlerMethodService, Features features,
 			EventStore eventStore) {
 		this.clientInboundChannel = clientInboundChannel;
+		this.brokerChannel = brokerChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.subscriptionRegistry = subscriptionRegistry;
 		this.handlerMethodService = handlerMethodService;
@@ -116,6 +119,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 	public void start() {
 		synchronized (this.lifecycleMonitor) {
 			this.clientInboundChannel.subscribe(this);
+			this.brokerChannel.subscribe(this);
 			this.running = true;
 		}
 	}
@@ -124,6 +128,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 	public void stop() {
 		synchronized (this.lifecycleMonitor) {
 			this.clientInboundChannel.unsubscribe(this);
+			this.brokerChannel.unsubscribe(this);
 			this.running = false;
 		}
 	}
