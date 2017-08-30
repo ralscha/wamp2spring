@@ -88,7 +88,7 @@ public class WampResult {
 		return this.results;
 	}
 
-	public void setResults(@Nullable Collection<Object> results) {
+	public <T> void setResults(@Nullable Collection<T> results) {
 		this.results = CollectionHelper.toList(results);
 	}
 
