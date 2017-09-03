@@ -220,28 +220,19 @@ public class PublishMessage extends WampMessage {
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
-			if (options.containsKey("acknowledge")) {
-				acknowledge = (boolean) options.get("acknowledge");
+			acknowledge = (boolean) options.getOrDefault("acknowledge", false);
+			excludeMe = (boolean) options.getOrDefault("exclude_me", true);
+			discloseMe = (boolean) options.getOrDefault("disclose_me", false);
+			retain = (boolean) options.getOrDefault("retain", false);
+
+			List<Number> excludeArray = (List<Number>) options.get("exclude");
+			if (excludeArray != null) {
+				exclude = new HashSet<>(excludeArray);
 			}
 
-			if (options.containsKey("exclude_me")) {
-				excludeMe = (boolean) options.get("exclude_me");
-			}
-
-			if (options.containsKey("disclose_me")) {
-				discloseMe = (boolean) options.get("disclose_me");
-			}
-
-			if (options.containsKey("retain")) {
-				retain = (boolean) options.get("retain");
-			}
-
-			if (options.containsKey("exclude")) {
-				exclude = new HashSet<>((List<Number>) options.get("exclude"));
-			}
-
-			if (options.containsKey("eligible")) {
-				eligible = new HashSet<>((List<Number>) options.get("eligible"));
+			List<Number> eligibleArray = (List<Number>) options.get("eligible");
+			if (eligibleArray != null) {
+				eligible = new HashSet<>(eligibleArray);
 			}
 		}
 

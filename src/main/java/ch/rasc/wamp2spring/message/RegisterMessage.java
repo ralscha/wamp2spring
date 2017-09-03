@@ -53,9 +53,7 @@ public class RegisterMessage extends WampMessage {
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
-			if (options.containsKey("disclose_caller")) {
-				discloseCaller = (boolean) options.get("disclose_caller");
-			}
+			discloseCaller = (boolean) options.getOrDefault("disclose_caller", false);
 		}
 
 		jp.nextToken();

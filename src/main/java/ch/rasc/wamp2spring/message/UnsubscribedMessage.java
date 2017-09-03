@@ -68,12 +68,11 @@ public class UnsubscribedMessage extends WampMessage {
 		JsonToken token = jp.nextToken();
 		if (token == JsonToken.START_OBJECT) {
 			Map<String, Object> details = ParserUtil.readObject(jp);
+			reason = (String) details.get("reason");
 
-			if (details.containsKey("reason")) {
-				reason = (String) details.get("reason");
-			}
-			if (details.containsKey("subscription")) {
-				subscriptionId = ((Number) details.get("subscription")).longValue();
+			Object subscriptionObj = details.get("subscription");
+			if (subscriptionObj != null) {
+				subscriptionId = ((Number) subscriptionObj).longValue();
 			}
 		}
 

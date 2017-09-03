@@ -68,12 +68,11 @@ public class UnregisteredMessage extends WampMessage {
 		JsonToken token = jp.nextToken();
 		if (token == JsonToken.START_OBJECT) {
 			Map<String, Object> details = ParserUtil.readObject(jp);
+			reason = (String) details.get("reason");
 
-			if (details.containsKey("reason")) {
-				reason = (String) details.get("reason");
-			}
-			if (details.containsKey("registration")) {
-				registrationId = ((Number) details.get("registration")).longValue();
+			Object registrationObj = details.get("registration");
+			if (registrationObj != null) {
+				registrationId = ((Number) registrationObj).longValue();
 			}
 		}
 

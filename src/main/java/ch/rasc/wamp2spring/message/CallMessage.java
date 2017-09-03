@@ -79,9 +79,7 @@ public class CallMessage extends WampMessage {
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
-			if (options.containsKey("disclose_me")) {
-				discloseMe = (boolean) options.get("disclose_me");
-			}
+			discloseMe = (boolean) options.getOrDefault("disclose_me", false);
 		}
 
 		jp.nextToken();

@@ -93,10 +93,7 @@ public class EventMessage extends WampMessage {
 		if (details != null) {
 			topic = (String) details.get("topic");
 			publisher = (Number) details.get("publisher");
-
-			if (details.containsKey("retained")) {
-				retained = (boolean) details.get("retained");
-			}
+			retained = (boolean) details.getOrDefault("retained", false);
 		}
 
 		List<Object> arguments = null;

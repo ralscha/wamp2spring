@@ -76,9 +76,7 @@ public class SubscribeMessage extends WampMessage {
 					match = MatchPolicy.EXACT;
 				}
 			}
-			if (options.containsKey("get_retained")) {
-				getRetained = (boolean) options.get("get_retained");
-			}
+			getRetained = (boolean) options.getOrDefault("get_retained", false);
 		}
 
 		jp.nextToken();
