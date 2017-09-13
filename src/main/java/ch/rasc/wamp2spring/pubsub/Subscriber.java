@@ -15,6 +15,8 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
+import javax.annotation.Nullable;
+
 class Subscriber {
 	private final String webSocketSessionId;
 
@@ -42,7 +44,7 @@ class Subscriber {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj) {
 			return true;
 		}

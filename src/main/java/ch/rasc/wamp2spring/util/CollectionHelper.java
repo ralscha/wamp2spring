@@ -54,7 +54,8 @@ public class CollectionHelper {
 		return null;
 	}
 
-	public static Set<Long> toSet(Collection<Long> collection) {
+	@Nullable
+	public static Set<Long> toSet(@Nullable Collection<Long> collection) {
 		if (collection != null) {
 			if (collection instanceof Set) {
 				return (Set<Long>) collection;

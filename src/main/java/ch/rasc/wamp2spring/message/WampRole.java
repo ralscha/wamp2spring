@@ -18,6 +18,8 @@ package ch.rasc.wamp2spring.message;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 public class WampRole {
 	private final String role;
 	private final Set<String> features;
@@ -53,7 +55,7 @@ public class WampRole {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (this == obj) {
 			return true;
 		}
