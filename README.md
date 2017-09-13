@@ -76,7 +76,7 @@ You find a collection of example applications in the [wamp2spring-demo](https://
 
 ## Changelog
 
-### 1.0.0 - September 21, 2017 (Spring 5 release date)
+### 1.0.0 - September 28, 2017 (Spring 5 release date)
   * Initial release
 
 
