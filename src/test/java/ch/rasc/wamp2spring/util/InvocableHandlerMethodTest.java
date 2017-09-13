@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.DefaultParameterNameDiscoverer;
@@ -314,7 +316,7 @@ public class InvocableHandlerMethodTest {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(@Nullable Object obj) {
 			if (this == obj) {
 				return true;
 			}
