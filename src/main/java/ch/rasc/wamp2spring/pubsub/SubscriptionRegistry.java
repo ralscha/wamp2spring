@@ -216,7 +216,11 @@ public class SubscriptionRegistry {
 		}
 	}
 
-	// wamp.subscription.list
+	/**
+	 * Returns subscription IDs listed according to matching policies.
+	 * 
+	 * @return subscription IDs grouped by matching policies
+	 */
 	public EnumMap<MatchPolicy, List<Long>> listSubscriptions() {
 		EnumMap<MatchPolicy, List<Long>> result = new EnumMap<>(MatchPolicy.class);
 
@@ -230,7 +234,14 @@ public class SubscriptionRegistry {
 		return result;
 	}
 
-	// wamp.subscription.lookup
+	/**
+	 * Returns the subscription ID (if any) managing a topic, according to the matching
+	 * policy.
+	 * 
+	 * @param topic the topic URI
+	 * @param matchPolicy the matching policy
+	 * @return the subscription id or null if no matching subscription exist
+	 */
 	@Nullable
 	public Long lookupSubscription(String topic, @Nullable MatchPolicy matchPolicy) {
 		MatchPolicy me = matchPolicy;
@@ -245,25 +256,42 @@ public class SubscriptionRegistry {
 		return null;
 	}
 
-	// wamp.subscription.match
+	/**
+	 * Returns a list of IDs of subscriptions matching a topic URI, irrespective of match
+	 * policy.
+	 * 
+	 * @param topic the topic URI
+	 * @return the list of session IDs subscribed to the topic
+	 */
 	public List<Long> getMatchSubscriptions(String topic) {
 		return findSubscriptions(topic).stream().map(Subscription::getSubscriptionId)
 				.collect(Collectors.toList());
 	}
 
-	// wamp.subscription.get
+	/**
+	 * Returns information on a particular subscription.
+	 * 
+	 * @param subscriptionId the id of the subscription
+	 * @return the detail about the requested subscription. null when the subscription
+	 * does not exist.
+	 */
 	@Nullable
-	public SubscriptionDetail getSubscription(long subscription) {
-		Subscription sub = this.subscriptionsById.get(subscription);
+	public SubscriptionDetail getSubscription(long subscriptionId) {
+		Subscription sub = this.subscriptionsById.get(subscriptionId);
 		if (sub != null) {
 			return new SubscriptionDetail(sub);
 		}
 		return null;
 	}
 
-	// wamp.subscription.list_subscribers
-	public List<Long> listSubscribers(long subscription) {
-		Subscription sub = this.subscriptionsById.get(subscription);
+	/**
+	 * Returns a list of session IDs for sessions currently attached to the subscription.
+	 * 
+	 * @param subscriptionId the id of the subscription
+	 * @return the list of session IDs attached to the subscription
+	 */
+	public List<Long> listSubscribers(long subscriptionId) {
+		Subscription sub = this.subscriptionsById.get(subscriptionId);
 		if (sub != null) {
 			return sub.getSubscribers().stream().map(Subscriber::getWampSessionId)
 					.collect(Collectors.toList());
@@ -271,16 +299,27 @@ public class SubscriptionRegistry {
 		return Collections.emptyList();
 	}
 
-	// wamp.subscription.count_subscribers
+	/**
+	 * Returns the number of sessions currently attached to the subscription.
+	 * 
+	 * @param subscriptionId the subscription id
+	 * @return the number of subscriptions or null when the subscription does not exist.
+	 */
 	@Nullable
-	public Integer countSubscribers(long subscription) {
-		Subscription sub = this.subscriptionsById.get(subscription);
+	public Integer countSubscribers(long subscriptionId) {
+		Subscription sub = this.subscriptionsById.get(subscriptionId);
 		if (sub != null) {
 			return sub.getSubscribers().size();
 		}
 		return null;
 	}
 
+	/**
+	 * Checks if a particular topic currently has attached subscriptions
+	 * 
+	 * @param topic the topic
+	 * @return true if currently sessions are attached to the topic
+	 */
 	public boolean hasSubscribers(String topic) {
 		return !getMatchSubscriptions(topic).isEmpty();
 	}

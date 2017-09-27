@@ -27,7 +27,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistra
 public interface WampConfigurer {
 
 	/**
-	 * Configure the {@link org.springframework.messaging.MessageChannel} used for
+	 * Configures the {@link org.springframework.messaging.MessageChannel} used for
 	 * incoming messages from WebSocket clients.
 	 */
 	default void configureClientInboundChannel(AbstractMessageChannel channel) {
@@ -35,7 +35,7 @@ public interface WampConfigurer {
 	}
 
 	/**
-	 * Add resolvers to support custom controller method argument types.
+	 * Adds resolvers to support custom controller method argument types.
 	 * <p>
 	 * This does not override the built-in argument resolvers.
 	 * @param argumentResolvers the resolvers to register (initially an empty list)
