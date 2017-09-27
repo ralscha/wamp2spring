@@ -22,6 +22,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Annotates a long parameter of a {@link WampProcedure} or {@link WampListener} annotated
+ * method. The library injects the WAMP session id of the user into the annotated parameter
+ * 
+ * <pre class="code">
+ * &#64;WampProcedure("connect")
+	public void connect(ChatUser user, @WampSessionId long wampSessionId) {
+ * </pre>
+ */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

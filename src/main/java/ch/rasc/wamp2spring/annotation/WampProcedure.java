@@ -24,20 +24,51 @@ import java.lang.annotation.Target;
 
 import org.springframework.core.annotation.AliasFor;
 
+import ch.rasc.wamp2spring.message.CallMessage;
+
+/**
+ * Annotation that denotes a method that is called when the Dealer receives a
+ * {@link CallMessage} and the procedure name matches the configured {@link #value()} or
+ * {@link #name()} attribute.
+ *
+ * If no procedure name is configured the method listens for the name
+ * 'beanName.methodName'
+ * <p>
+ * The method <code>feed</code> in the following example listens for {@link CallMessage}
+ * that are sent with the procedure name 'myService.feed'.
+ * <p>
+ * The method <code>fetchNews</code> is called by the library when a {@link CallMessage}
+ * with the procedure name 'fetch.news' arrives.
+ * <p>
+ * 
+ * <pre class="code">
+ * &#064;Service
+ * public class MyService {
+ *
+ * 	&#064;WampProcedure
+ * 	public List<String> feed() {
+ * 	}
+ *
+ * 	&#064;WampProcedure(&quot;fetch.news&quot;)
+ * 	public List<String> fetchNews() {
+ * 	}
+ * }
+ * </pre>
+ */
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface WampProcedure {
 
 	/**
-	 * Register the annotated method with this procedure name. If empty the default value
+	 * Register the annotated method with this procedure name. If empty the default
 	 * 'beanName.methodName' is used.
 	 */
 	@AliasFor("name")
 	String value() default "";
 
 	/**
-	 * Register the annotated method with this procedure name. If empty the default value
+	 * Register the annotated method with this procedure name. If empty the default
 	 * 'beanName.methodName' is used.
 	 */
 	@AliasFor("value")

@@ -39,7 +39,7 @@ public enum WampError {
 	}
 
 	/**
-	 * Returns the external value of the error message used for message serialization
+	 * Returns the external value of the error message used for message serialisation
 	 * @return the external value
 	 */
 	public String getExternalValue() {

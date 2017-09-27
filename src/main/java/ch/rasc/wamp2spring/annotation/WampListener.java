@@ -24,19 +24,21 @@ import java.lang.annotation.Target;
 
 import org.springframework.core.annotation.AliasFor;
 
+import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 /**
- * Annotation that denotes a method that is called when the server receives a PUBLISH
- * message and the topic matches one of the listed values of the annotation (
- * {@link #topic()}).
+ * Annotation that denotes a method that is called when the Broker receives a
+ * {@link PublishMessage} and the topic matches one of the listed values of the annotation
+ * ( {@link #topic()}).
  *
  * If no topic is provided the method listens for the topic 'beanName.methodName'
  * <p>
- * The method <code>feed</code> in the following example listens for PUBLISH messages that
- * are sent to the topic 'myService.feed'. <br>
- * The method <code>publishNews</code> is called by the library when a PUBLISH message
- * with the topic 'topic.news' arrives.
+ * The method <code>feed</code> in the following example listens for
+ * {@link PublishMessage} that are sent to the topic 'myService.feed'.
+ * <p>
+ * The method <code>publishNews</code> is called by the library when a
+ * {@link PublishMessage} with the topic 'topic.news' arrives.
  *
  * <pre class="code">
  * &#064;Service
@@ -58,14 +60,14 @@ import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 public @interface WampListener {
 
 	/**
-	 * One or more topics the method should listen on. If empty the default value
+	 * One or more topics the method should listen on. If empty the default
 	 * 'beanName.methodName' is used.
 	 */
 	@AliasFor("topic")
 	String[] value() default {};
 
 	/**
-	 * One or more topics the method should listen on. If empty the default value
+	 * One or more topics the method should listen on. If empty the default
 	 * 'beanName.methodName' is used.
 	 */
 	@AliasFor("value")
