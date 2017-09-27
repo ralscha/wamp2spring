@@ -170,7 +170,7 @@ public class WampSubProtocolHandler
 
 			if (wampMessage instanceof HelloMessage) {
 				// If this is a helloMessage sent during a running session close the
-				// websocket connection
+				// WebSocket connection
 				if (wampMessage.getWampSessionId() != null) {
 					logger.error("HelloMessage received during running session");
 					session.close(CloseStatus.PROTOCOL_ERROR);
