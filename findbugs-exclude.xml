@@ -1,0 +1,7 @@
+<FindBugsFilter>
+
+    <Match>
+        <Class name="~.*\.*Test.*"/>
+    </Match>
+   
+</FindBugsFilter>

@@ -67,13 +67,6 @@ Until then a project can reference SNAPSHOT releases from the Sonatype repositor
 You find a collection of example applications in the [wamp2spring-demo](https://github.com/ralscha/wamp2spring-demo) GitHub repository.
 
 
-## Things to do before the release
-  * Write documentation
-  * Write more tests
-  * Write more example applications
-  * Wait for the Spring 5 release
-
-
 ## Changelog
 
 ### 1.0.0 - September 28, 2017 (Spring 5 release date)

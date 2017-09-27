@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package ch.rasc.wamp2spring.config;
+package ch.rasc.wamp2spring.message;
 
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
+import org.junit.Test;
 
-public class NoOpMessageHandler implements MessageHandler {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-	@Override
-	public void handleMessage(Message<?> message) {
-		// nothing here
+public class CommonTest {
+
+	@Test
+	public void testEquals() {
+		EqualsVerifier.forClass(WampRole.class).verify();
 	}
+
 }
