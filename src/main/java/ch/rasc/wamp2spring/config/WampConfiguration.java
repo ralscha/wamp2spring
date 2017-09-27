@@ -96,10 +96,12 @@ public class WampConfiguration implements ImportAware {
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
 		Map<String, Object> attributes = AnnotationAttributes.fromMap(importMetadata
 				.getAnnotationAttributes(EnableWamp.class.getName(), false));
-		Feature[] disableFeatures = (Feature[]) attributes.get("disable");
-		if (disableFeatures != null) {
-			for (Feature disableFeature : disableFeatures) {
-				this.features.disable(disableFeature);
+		if (attributes != null) {
+			Feature[] disableFeatures = (Feature[]) attributes.get("disable");
+			if (disableFeatures != null) {
+				for (Feature disableFeature : disableFeatures) {
+					this.features.disable(disableFeature);
+				}
 			}
 		}
 	}

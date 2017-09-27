@@ -141,17 +141,31 @@ public class WampSubProtocolHandler
 				ByteBuffer byteBuffer = ((BinaryMessage) webSocketMessage).getPayload();
 
 				String acceptedProtocol = session.getAcceptedProtocol();
-				if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory,
-							byteBuffer.array());
+				if (acceptedProtocol != null) {
+					if (acceptedProtocol
+							.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+						wampMessage = WampMessage.deserialize(this.msgpackFactory,
+								byteBuffer.array());
+					}
+					else if (acceptedProtocol
+							.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+						wampMessage = WampMessage.deserialize(this.smileFactory,
+								byteBuffer.array());
+					}
+					else if (acceptedProtocol
+							.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+						wampMessage = WampMessage.deserialize(this.cborFactory,
+								byteBuffer.array());
+					}
 				}
-				else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory,
-							byteBuffer.array());
-				}
-				else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
-					wampMessage = WampMessage.deserialize(this.cborFactory,
-							byteBuffer.array());
+				else {
+					if (logger.isErrorEnabled()) {
+						logger.error(
+								"Deserialization failed because no accepted protocol "
+										+ webSocketMessage + " in session "
+										+ session.getId());
+					}
+					return;
 				}
 			}
 			else {
@@ -231,56 +245,65 @@ public class WampSubProtocolHandler
 		boolean isBinary = false;
 
 		String acceptedProtocol = session.getAcceptedProtocol();
-		if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
-			isBinary = true;
-			useFactory = this.msgpackFactory;
+		if (acceptedProtocol != null) {
+			if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+				isBinary = true;
+				useFactory = this.msgpackFactory;
+			}
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+				isBinary = true;
+				useFactory = this.smileFactory;
+			}
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+				isBinary = true;
+				useFactory = this.cborFactory;
+			}
+
+			try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+					JsonGenerator generator = useFactory.createGenerator(bos)) {
+				generator.writeStartArray();
+				wampMessage.serialize(generator);
+				generator.writeEndArray();
+				generator.close();
+
+				if (isBinary) {
+					session.sendMessage(new BinaryMessage(bos.toByteArray()));
+				}
+				else {
+					session.sendMessage(new TextMessage(bos.toByteArray()));
+				}
+
+			}
+			catch (Throwable ex) {
+				// Could be part of normal workflow (e.g. browser tab closed)
+				if (logger.isDebugEnabled()) {
+					logger.debug("Failed to send WebSocket message to client in session "
+							+ session.getId(), ex);
+				}
+
+				// Is this an outbound invocation message. In that case we need to feed
+				// back
+				// an error message
+				if (message instanceof InvocationMessage) {
+					ErrorMessage errorMessage = new ErrorMessage(
+							(InvocationMessage) message, WampError.NETWORK_FAILURE);
+					this.clientInboundChannel.send(errorMessage);
+				}
+
+				try {
+					session.close(CloseStatus.PROTOCOL_ERROR);
+				}
+				catch (IOException e) {
+					// Ignore
+				}
+
+			}
 		}
-		else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
-			isBinary = true;
-			useFactory = this.smileFactory;
-		}
-		else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
-			isBinary = true;
-			useFactory = this.cborFactory;
-		}
-
-		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				JsonGenerator generator = useFactory.createGenerator(bos)) {
-			generator.writeStartArray();
-			wampMessage.serialize(generator);
-			generator.writeEndArray();
-			generator.close();
-
-			if (isBinary) {
-				session.sendMessage(new BinaryMessage(bos.toByteArray()));
+		else {
+			if (logger.isErrorEnabled()) {
+				logger.error("Failed to send WebSocket message to client because no accepted protocol "
+						+ session.getId());
 			}
-			else {
-				session.sendMessage(new TextMessage(bos.toByteArray()));
-			}
-
-		}
-		catch (Throwable ex) {
-			// Could be part of normal workflow (e.g. browser tab closed)
-			if (logger.isDebugEnabled()) {
-				logger.debug("Failed to send WebSocket message to client in session "
-						+ session.getId(), ex);
-			}
-
-			// Is this an outbound invocation message. In that case we need to feed back
-			// an error message
-			if (message instanceof InvocationMessage) {
-				ErrorMessage errorMessage = new ErrorMessage((InvocationMessage) message,
-						WampError.NETWORK_FAILURE);
-				this.clientInboundChannel.send(errorMessage);
-			}
-
-			try {
-				session.close(CloseStatus.PROTOCOL_ERROR);
-			}
-			catch (IOException e) {
-				// Ignore
-			}
-
 		}
 	}
 

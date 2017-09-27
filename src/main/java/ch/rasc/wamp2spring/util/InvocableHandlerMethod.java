@@ -86,7 +86,8 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * {@link HandlerMethodArgumentResolver}s. The {@code providedArgs} parameter however
 	 * may supply argument values to be used directly, i.e. without argument resolution.
 	 * @param message the current message being processed
-	 * @param providedArgs "given" arguments matched by type, not resolved
+	 * @param arguments 
+	 * @param argumentsKw 
 	 * @return the raw value returned by the invoked method
 	 * @exception Exception raised if no suitable argument resolver can be found, or if
 	 * the method raised an exception
@@ -225,19 +226,22 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object convertListElements(TypeDescriptor td, Object convertedValue) {
-		if (List.class.isAssignableFrom(convertedValue.getClass()) && td.isCollection()
-				&& td.getElementTypeDescriptor() != null) {
-			Class<?> elementType = td.getElementTypeDescriptor().getType();
-
-			Collection<Object> convertedList = new ArrayList<>();
-			for (Object record : (List<Object>) convertedValue) {
-				Object convertedObject = this.objectMapper.convertValue(record,
-						elementType);
-				convertedList.add(convertedObject);
+	@Nullable
+	private Object convertListElements(TypeDescriptor td, @Nullable Object convertedValue) {
+		if (convertedValue != null) {
+			if (List.class.isAssignableFrom(convertedValue.getClass()) && td.isCollection()
+					&& td.getElementTypeDescriptor() != null) {
+				Class<?> elementType = td.getElementTypeDescriptor().getType();
+	
+				Collection<Object> convertedList = new ArrayList<>();
+				for (Object record : (List<Object>) convertedValue) {
+					Object convertedObject = this.objectMapper.convertValue(record,
+							elementType);
+					convertedList.add(convertedObject);
+				}
+				return convertedList;
+	
 			}
-			return convertedList;
-
 		}
 		return convertedValue;
 	}

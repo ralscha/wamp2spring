@@ -18,6 +18,8 @@ package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
 
+import javax.annotation.Nullable;
+
 import ch.rasc.wamp2spring.message.WampMessage;
 
 /**
@@ -38,7 +40,7 @@ public abstract class WampProcedureEvent extends WampEvent {
 	}
 
 	public WampProcedureEvent(Long wampSessionId, String webSocketSessionId,
-			Principal principal, String procedure, long registrationId) {
+			@Nullable Principal principal, String procedure, long registrationId) {
 		super(wampSessionId, webSocketSessionId, principal);
 		this.procedure = procedure;
 		this.registrationId = registrationId;

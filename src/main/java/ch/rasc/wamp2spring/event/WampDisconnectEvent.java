@@ -18,13 +18,15 @@ package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
 
+import javax.annotation.Nullable;
+
 /**
  * Event published when a client disconnect from the server.
  */
 public class WampDisconnectEvent extends WampEvent {
 
 	public WampDisconnectEvent(Long wampSessionId, String webSocketSessionId,
-			Principal principal) {
+			@Nullable Principal principal) {
 		super(wampSessionId, webSocketSessionId, principal);
 	}
 

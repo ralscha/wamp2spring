@@ -310,9 +310,10 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 		for (String beanName : this.applicationContext
 				.getBeanNamesForType(Object.class)) {
 			Class<?> handlerType = this.applicationContext.getType(beanName);
-			final Class<?> userType = ClassUtils.getUserClass(handlerType);
-
-			detectWampMethods(beanName, userType);
+			if (handlerType != null) {
+				final Class<?> userType = ClassUtils.getUserClass(handlerType);
+				detectWampMethods(beanName, userType);
+			}
 		}
 	}
 

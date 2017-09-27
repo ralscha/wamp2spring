@@ -24,6 +24,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
@@ -41,6 +43,8 @@ import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 
 public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler {
+
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	private final CompletableFuture<WelcomeMessage> welcomeMessageFuture;
 	private CompletableFuture<List<WampMessage>> messageFuture;
@@ -128,26 +132,33 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 			WampMessage wampMessage = null;
 
 			String acceptedProtocol = session.getAcceptedProtocol();
-			if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
-				wampMessage = WampMessage.deserialize(this.msgpackFactory,
-						message.getPayload().array());
-			}
-			else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
-				wampMessage = WampMessage.deserialize(this.smileFactory,
-						message.getPayload().array());
-			}
-			else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
-				wampMessage = WampMessage.deserialize(this.cborFactory,
-						message.getPayload().array());
-			}
+			if (acceptedProtocol != null) {
+				if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.msgpackFactory,
+							message.getPayload().array());
+				}
+				else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.smileFactory,
+							message.getPayload().array());
+				}
+				else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
+					wampMessage = WampMessage.deserialize(this.cborFactory,
+							message.getPayload().array());
+				}
 
-			if (wampMessage instanceof WelcomeMessage) {
-				this.welcomeMessageFuture.complete((WelcomeMessage) wampMessage);
+				if (wampMessage instanceof WelcomeMessage) {
+					this.welcomeMessageFuture.complete((WelcomeMessage) wampMessage);
+				}
+				else {
+					this.receivedMessages.add(wampMessage);
+					if (this.receivedMessages.size() == this.noOfResults) {
+						this.messageFuture.complete(this.receivedMessages);
+					}
+				}
 			}
 			else {
-				this.receivedMessages.add(wampMessage);
-				if (this.receivedMessages.size() == this.noOfResults) {
-					this.messageFuture.complete(this.receivedMessages);
+				if (this.logger.isErrorEnabled()) {
+					this.logger.error("No accepted protocol " + session.getId());
 				}
 			}
 		}
