@@ -162,8 +162,9 @@ public class BaseWampTest {
 	}
 
 	protected URI wampEndpointUrl() {
-		return UriComponentsBuilder.fromUriString("ws://localhost:/wamp").build().encode()
-				.toUri();
+		return UriComponentsBuilder
+				.fromUriString("ws://localhost:" + this.actualPort + "/wamp").build()
+				.encode().toUri();
 	}
 
 }
