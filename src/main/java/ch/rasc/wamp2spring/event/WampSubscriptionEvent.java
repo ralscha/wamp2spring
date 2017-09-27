@@ -23,7 +23,10 @@ import javax.annotation.Nullable;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 
-public class WampSubscriptionEvent extends WampEvent {
+/**
+ * Base class for the subscription events.
+ */
+public abstract class WampSubscriptionEvent extends WampEvent {
 	private final SubscriptionDetail subscriptionDetail;
 
 	public WampSubscriptionEvent(WampMessage wampMessage,
@@ -39,6 +42,9 @@ public class WampSubscriptionEvent extends WampEvent {
 		this.subscriptionDetail = subscriptionDetail;
 	}
 
+	/**
+	 * Return the detail of a Subscription
+	 */
 	public SubscriptionDetail getSubscriptionDetail() {
 		return this.subscriptionDetail;
 	}

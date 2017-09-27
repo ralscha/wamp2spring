@@ -22,9 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
+/**
+ * Memory only implementation of the {@link EventStore} interface. Used for storing
+ * retention messages. Only publishMessages comming from the internal
+ * {@link WampPublisher} are stored in the retention store.
+ */
 public class MemoryEventStore implements EventStore {
 
 	protected final Map<String, PublishMessage> eventRetention = new ConcurrentHashMap<>();

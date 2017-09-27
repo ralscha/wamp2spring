@@ -19,6 +19,10 @@ package ch.rasc.wamp2spring.event;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 
+/**
+ * Fired when a session is added to a subscription.
+ * 
+ */
 public class WampSubscriptionSubscribedEvent extends WampSubscriptionEvent {
 
 	public WampSubscriptionSubscribedEvent(WampMessage wampMessage,

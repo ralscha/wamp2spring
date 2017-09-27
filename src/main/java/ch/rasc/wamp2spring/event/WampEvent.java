@@ -20,7 +20,10 @@ import java.security.Principal;
 
 import org.springframework.lang.Nullable;
 
-public class WampEvent {
+/**
+ * Base class for the WAMP events
+ */
+public abstract class WampEvent {
 	@Nullable
 	private final Principal principal;
 
@@ -35,15 +38,28 @@ public class WampEvent {
 		this.webSocketSessionId = webSocketSessionId;
 	}
 
+	/**
+	 * Returns an unique session identifier. Created by the Spring WebSocket layer.
+	 */
 	public String getWebSocketSessionId() {
 		return this.webSocketSessionId;
 	}
 
+	/**
+	 * Return a {@link java.security.Principal} instance containing the name of the
+	 * authenticated user.
+	 * <p>
+	 * If the user has not been authenticated, the method returns <code>null</code>.
+	 */
 	@Nullable
 	public Principal getPrincipal() {
 		return this.principal;
 	}
 
+	/**
+	 * Returns the unique WAMP session identifier. There is a one-to-one relation with the
+	 * {@link #getWebSocketSessionId()}.
+	 */
 	public Long getWampSessionId() {
 		return this.wampSessionId;
 	}

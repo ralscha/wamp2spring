@@ -19,8 +19,28 @@ package ch.rasc.wamp2spring.config;
 import java.util.List;
 
 import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
+/**
+ * A {@link HandshakeHandler} implementation that prefers the SMILE data format.
+ * 
+ * You can configure this {@link HandshakeHandler} by extending the
+ * {@link WampConfiguration} and overwriting the
+ * {@link WampConfiguration#getHandshakeHandler()} method.
+ * 
+ * <pre class="code">
+ * &#64;Configuration
+ * public class Application extends WampConfiguration {
+ * 
+ *  &#64;Override
+ *  protected HandshakeHandler getHandshakeHandler() {
+ *    return new PreferSmileHandshakeHandler();
+ *  }
+ *  
+ * }
+ * </pre>
+ */
 public class PreferSmileHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override

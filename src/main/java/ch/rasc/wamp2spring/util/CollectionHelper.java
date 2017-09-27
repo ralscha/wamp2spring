@@ -26,8 +26,17 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+/**
+ * Collection helper class
+ */
 public class CollectionHelper {
 
+	/**
+	 * Converts a vararg argument to a {@link List}.
+	 * 
+	 * @param arguments variable number of instances
+	 * @return a {@link List} instance with the provided arguments
+	 */
 	@SafeVarargs
 	@Nullable
 	public static <T> List<T> toList(@Nullable T... arguments) {
@@ -43,6 +52,16 @@ public class CollectionHelper {
 		return null;
 	}
 
+	/**
+	 * Converts an arbitrary {@link Collection} to a {@link List}.
+	 * <p>
+	 * Returns the same object if the provided parameter is already an instance of
+	 * {@link List}.
+	 * 
+	 * @param collection an arbitrary instance of {@link Collection}
+	 * @return an instance of {@link List} containing all the elements of the provided
+	 * collection
+	 */
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static <T> List<Object> toList(@Nullable Collection<T> collection) {
@@ -55,6 +74,13 @@ public class CollectionHelper {
 		return null;
 	}
 
+	/**
+	 * Converts an arbitrary {@link Collection} to a {@link Set}. Removes duplicates.
+	 * 
+	 * @param collection an arbitrary instance of {@link Collection}
+	 * @return an instance of {@link Set} containing all the elements of the provided
+	 * collection.
+	 */
 	@Nullable
 	public static Set<Long> toSet(@Nullable Collection<Long> collection) {
 		if (collection != null) {

@@ -38,6 +38,9 @@ import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
 
+/**
+ * In memory subscription registry
+ */
 public class SubscriptionRegistry {
 	private final static AtomicLong lastSubscriptionId = new AtomicLong(1L);
 

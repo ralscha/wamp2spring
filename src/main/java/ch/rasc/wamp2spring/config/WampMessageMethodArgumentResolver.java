@@ -22,6 +22,10 @@ import org.springframework.messaging.handler.invocation.HandlerMethodArgumentRes
 
 import ch.rasc.wamp2spring.message.WampMessage;
 
+/**
+ * Argument resolver that handles parameters of type {@link WampMessage}
+ *
+ */
 public class WampMessageMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
 	@Override

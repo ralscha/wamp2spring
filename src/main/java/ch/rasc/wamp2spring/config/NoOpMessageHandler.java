@@ -19,6 +19,10 @@ package ch.rasc.wamp2spring.config;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 
+/**
+ * No operation implementation of the {@link MessageHandler} interface. Used for disabled
+ * {@link Features}.
+ */
 public class NoOpMessageHandler implements MessageHandler {
 
 	@Override

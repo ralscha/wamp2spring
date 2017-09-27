@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * Set of features that are currently enabled
+ */
 public class Features {
 
 	private final EnumSet<Feature> enabledFeatures = EnumSet.allOf(Feature.class);

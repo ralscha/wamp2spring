@@ -18,6 +18,9 @@ package ch.rasc.wamp2spring.event;
 
 import ch.rasc.wamp2spring.message.RegisterMessage;
 
+/**
+ * Fired when a Callee session is added to a registration.
+ */
 public class WampProcedureRegisteredEvent extends WampProcedureEvent {
 
 	public WampProcedureRegisteredEvent(RegisterMessage registerMessage,

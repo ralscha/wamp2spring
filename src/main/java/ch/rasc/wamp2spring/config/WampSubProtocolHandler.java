@@ -56,7 +56,7 @@ import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
 
 /**
- * A WebSocket {@link SubProtocolHandler} for the WAMP v2 protocol.
+ * A WebSocket {@link SubProtocolHandler} implementation for the WAMP v2 protocol.
  */
 public class WampSubProtocolHandler
 		implements SubProtocolHandler, ApplicationEventPublisherAware {

@@ -55,6 +55,12 @@ public class DestinationMatch {
 		return this.matchPolicy;
 	}
 
+	/**
+	 * Checks if a destination matches with this destination
+	 * 
+	 * @param queryDestination the destination
+	 * @return true if the destination matches
+	 */
 	public boolean matches(String queryDestination) {
 		if (this.matchPolicy == MatchPolicy.EXACT) {
 			return this.destination.equals(queryDestination);
@@ -68,6 +74,13 @@ public class DestinationMatch {
 		return matchesWildcard(components);
 	}
 
+	/**
+	 * Checks if a destination matches with this destination. Used for
+	 * MatchPolicy.WILDCARD destinations.
+	 * 
+	 * @param components the destination splitted in a String array
+	 * @return true if the destination matches
+	 */
 	public boolean matchesWildcard(String[] components) {
 		if (this.wildcardComponents != null
 				&& components.length == this.wildcardComponents.length) {

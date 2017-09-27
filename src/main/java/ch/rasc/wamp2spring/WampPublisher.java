@@ -29,6 +29,20 @@ import ch.rasc.wamp2spring.message.PublishMessage.Builder;
 import ch.rasc.wamp2spring.util.CollectionHelper;
 import ch.rasc.wamp2spring.util.IdGenerator;
 
+/**
+ * A publisher that allows the calling code to send {@link PublishMessage}s to the pbroker.
+ * The WampPublisher is by default configured as a Spring
+ * managed bean and can be autowired into any other spring bean.
+ *
+ * e.g.
+ *
+ * <pre class="code">
+ * &#064;Service
+ * public class MyService {
+ * TODO
+ * }
+ * </pre>
+ */
 @SuppressWarnings("unchecked")
 public class WampPublisher {
 	private final MessageChannel clientInboundChannel;

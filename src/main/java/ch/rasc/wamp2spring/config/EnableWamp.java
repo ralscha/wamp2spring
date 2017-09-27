@@ -24,6 +24,10 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
+/**
+ * Enables WAMP v2 support.
+ *
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented

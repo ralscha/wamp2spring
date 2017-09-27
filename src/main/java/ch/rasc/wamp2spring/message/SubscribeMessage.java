@@ -25,6 +25,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 /**
+ * A Subscriber subscribes to a topic with this message.
+ * 
  * [SUBSCRIBE, Request|id, Options|dict, Topic|uri]
  */
 public class SubscribeMessage extends WampMessage {
@@ -103,18 +105,32 @@ public class SubscribeMessage extends WampMessage {
 		generator.writeString(this.topic);
 	}
 
+	/**
+	 * Returns a random ID chosen by the Subscriber and used to correlate the Broker's
+	 * response with the request.
+	 */
 	public long getRequestId() {
 		return this.requestId;
 	}
 
+	/**
+	 * Returns the matching policy for this subscription.
+	 */
 	public MatchPolicy getMatchPolicy() {
 		return this.matchPolicy;
 	}
 
+	/**
+	 * Returns the topic the Subscriber wants to subscribe to
+	 */
 	public String getTopic() {
 		return this.topic;
 	}
 
+	/**
+	 * Returns the get_retained flag. If true the Broker sends back a retained event, when
+	 * available.
+	 */
 	public boolean isGetRetained() {
 		return this.getRetained;
 	}

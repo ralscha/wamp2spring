@@ -18,6 +18,9 @@ package ch.rasc.wamp2spring.event;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 
+/**
+ * Event published when a new WAMP session with a client is established.
+ */
 public class WampSessionEstablishedEvent extends WampEvent {
 
 	public WampSessionEstablishedEvent(WampMessage wampMessage) {

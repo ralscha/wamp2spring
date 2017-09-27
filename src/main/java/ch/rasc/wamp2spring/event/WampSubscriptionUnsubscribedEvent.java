@@ -19,6 +19,9 @@ package ch.rasc.wamp2spring.event;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 
+/**
+ * Fired when a session is removed from a subscription.
+ */
 public class WampSubscriptionUnsubscribedEvent extends WampSubscriptionEvent {
 
 	public WampSubscriptionUnsubscribedEvent(WampMessage wampMessage,

@@ -16,6 +16,9 @@
 
 package ch.rasc.wamp2spring;
 
+/**
+ * Enumeration of all possible WAMP errors
+ */
 public enum WampError {
 
 	NO_SUCH_PROCEDURE("wamp.error.no_such_procedure"),
@@ -35,6 +38,10 @@ public enum WampError {
 		this.externalValue = externalValue;
 	}
 
+	/**
+	 * Returns the external value of the error message used for message serialization
+	 * @return the external value
+	 */
 	public String getExternalValue() {
 		return this.externalValue;
 	}

@@ -16,6 +16,9 @@
 
 package ch.rasc.wamp2spring.config;
 
+/**
+ * Enumeration of all implemented features in wamp2spring
+ */
 public enum Feature {
 	DEALER("dealer"), BROKER("broker"),
 	DEALER_CALLER_IDENTIFICATION("caller_identification"),

@@ -18,6 +18,9 @@ package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
 
+/**
+ * Event published when a client disconnect from the server.
+ */
 public class WampDisconnectEvent extends WampEvent {
 
 	public WampDisconnectEvent(Long wampSessionId, String webSocketSessionId,

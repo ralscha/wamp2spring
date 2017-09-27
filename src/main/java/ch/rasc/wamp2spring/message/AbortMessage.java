@@ -27,6 +27,9 @@ import com.fasterxml.jackson.core.JsonParser;
 import ch.rasc.wamp2spring.WampError;
 
 /**
+ * Message sent from the Router and the Client when they want to abort the opening of a
+ * WAMP session.
+ * 
  * [ABORT, Details|dict, Reason|uri]
  */
 public class AbortMessage extends WampMessage {
@@ -78,11 +81,17 @@ public class AbortMessage extends WampMessage {
 		generator.writeString(this.reason);
 	}
 
+	/**
+	 * Reason for the abort in human readable form
+	 */
 	@Nullable
 	public String getMessage() {
 		return this.message;
 	}
 
+	/**
+	 * Return an URI describing the abort reason.
+	 */
 	@Nullable
 	public String getReason() {
 		return this.reason;

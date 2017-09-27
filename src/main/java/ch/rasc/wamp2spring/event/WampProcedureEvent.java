@@ -20,7 +20,11 @@ import java.security.Principal;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 
-public class WampProcedureEvent extends WampEvent {
+/**
+ * Base class for the {@link WampProcedureRegisteredEvent} and
+ * {@link WampProcedureUnregisteredEvent} event.
+ */
+public abstract class WampProcedureEvent extends WampEvent {
 	private final String procedure;
 
 	private final long registrationId;
@@ -40,10 +44,16 @@ public class WampProcedureEvent extends WampEvent {
 		this.registrationId = registrationId;
 	}
 
+	/**
+	 * Returns the URI of the procedure to be called.
+	 */
 	public String getProcedure() {
 		return this.procedure;
 	}
 
+	/**
+	 * Return the registration ID under which the procedure was registered at the Dealer.
+	 */
 	public long getRegistrationId() {
 		return this.registrationId;
 	}

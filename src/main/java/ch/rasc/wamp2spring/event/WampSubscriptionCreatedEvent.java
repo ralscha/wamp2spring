@@ -19,6 +19,14 @@ package ch.rasc.wamp2spring.event;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 
+/**
+ * Fired when a subscription is created through a subscription request for a topic which
+ * was previously without subscribers.
+ * 
+ * A {@link WampSubscriptionSubscribedEvent} is always fired after this event, since the
+ * first subscribe results in both the creation of the subscription and the addition of a
+ * session
+ */
 public class WampSubscriptionCreatedEvent extends WampSubscriptionEvent {
 
 	public WampSubscriptionCreatedEvent(WampMessage wampMessage,

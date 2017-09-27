@@ -20,10 +20,25 @@ import java.util.List;
 
 import ch.rasc.wamp2spring.message.PublishMessage;
 
+/**
+ * Interface for implementing an event store. Used for event retention.
+ * @see MemoryEventStore
+ */
 public interface EventStore {
 
+	/**
+	 * Stores an event in the store
+	 * 
+	 * @param publishMessage the event to store
+	 */
 	void retain(PublishMessage publishMessage);
 
+	/**
+	 * Returns all stored events that match the query.
+	 * 
+	 * @param query the query
+	 * @return a collection of events that match the query
+	 */
 	List<PublishMessage> getRetained(DestinationMatch query);
 
 }

@@ -22,13 +22,22 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+/**
+ * Id generator, that generates WAMP compliant identification numbers.
+ */
 public class IdGenerator {
 
 	public static final long MIN = 1L;
 	public static final long MAX = 9007199254740992L;
 
 	/**
-	 * global scope
+	 * Creates a new random generated identification number, that does not collide with an
+	 * existing ids in the provided Set.
+	 * <p>
+	 * Used for global scope messages
+	 * 
+	 * @param existingIds a collection of existing ids.
+	 * @return a new random identification number
 	 */
 	public static long newRandomId(@Nullable Set<Long> existingIds) {
 		while (true) {
@@ -45,7 +54,13 @@ public class IdGenerator {
 	}
 
 	/**
-	 * session scope and router scope ids
+	 * Creates new linear identification number from the provided parameter.
+	 * <p>
+	 * Used for session scope and router scope ids
+	 * 
+	 * @param longValue start address of the identification number. Next number will be
+	 * this value plus 1
+	 * @return new id
 	 */
 	public static long newLinearId(AtomicLong longValue) {
 		long candiateId = longValue.incrementAndGet();

@@ -27,6 +27,9 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
+/**
+ * JSON parsing helper methods
+ */
 public class ParserUtil {
 	@Nullable
 	public static List<Object> readArray(JsonParser jp) throws IOException {
