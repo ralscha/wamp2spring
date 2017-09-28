@@ -301,8 +301,9 @@ public class WampSubProtocolHandler
 		}
 		else {
 			if (logger.isErrorEnabled()) {
-				logger.error("Failed to send WebSocket message to client because no accepted protocol "
-						+ session.getId());
+				logger.error(
+						"Failed to send WebSocket message to client because no accepted protocol "
+								+ session.getId());
 			}
 		}
 	}

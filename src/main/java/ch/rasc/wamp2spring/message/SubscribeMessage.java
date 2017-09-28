@@ -26,7 +26,7 @@ import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 /**
  * A Subscriber subscribes to a topic with this message.
- * 
+ *
  * [SUBSCRIBE, Request|id, Options|dict, Topic|uri]
  */
 public class SubscribeMessage extends WampMessage {

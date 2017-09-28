@@ -39,8 +39,8 @@ public class CallParameterTestService {
 
 	@WampProcedure(value = "headersMethod")
 	public String headersMethod(@Headers Map<String, Object> headers) {
-		assertThat(headers).containsOnlyKeys("WAMP_SESSION_ID", "PRINCIPAL",
-				"WEBSOCKET_SESSION_ID", "WAMP_MESSAGE_CODE");
+		assertThat(headers).containsOnlyKeys("WAMP_SESSION_ID", "WEBSOCKET_SESSION_ID",
+				"WAMP_MESSAGE_CODE");
 
 		return "headersMethod called";
 	}
@@ -63,7 +63,7 @@ public class CallParameterTestService {
 		assertThat(param1).isEqualTo("param1");
 		assertThat(message).isNotNull();
 		assertThat(param2).isEqualTo(2);
-		assertThat(headers).hasSize(4);
+		assertThat(headers).hasSize(3);
 		assertThat(code).isEqualTo(CallMessage.CODE);
 		assertThat(param3).isEqualTo(3.3f);
 		assertThat(param4).isEqualTo("param4");

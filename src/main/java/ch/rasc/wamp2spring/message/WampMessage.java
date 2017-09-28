@@ -48,27 +48,51 @@ public abstract class WampMessage implements Message<Object> {
 		setHeader(WampMessageHeader.WAMP_MESSAGE_CODE, code);
 	}
 
+	/**
+	 * Returns the WAMP message code
+	 */
 	public int getCode() {
 		return this.code;
 	}
 
-	public void setHeader(WampMessageHeader header, Object value) {
-		this.messageHeaders.getRawHeaders().put(header.name(), value);
+	/**
+	 * Overwrites or inserts a new header into the message. Null values are ignored
+	 *
+	 * @param header the header
+	 * @param value an arbitrary value. null values are ignored
+	 */
+	public void setHeader(WampMessageHeader header, @Nullable Object value) {
+		if (value != null) {
+			this.messageHeaders.getRawHeaders().put(header.name(), value);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	public <T> T getHeader(WampMessageHeader header) {
 		return (T) this.messageHeaders.get(header.name());
 	}
 
+	/**
+	 * Returns the WebSocket session id that Spring assigns to each session.
+	 */
+	@Nullable
 	public String getWebSocketSessionId() {
 		return getHeader(WampMessageHeader.WEBSOCKET_SESSION_ID);
 	}
 
+	/**
+	 * Returns the value of the principal header
+	 */
+	@Nullable
 	public Principal getPrincipal() {
 		return getHeader(WampMessageHeader.PRINCIPAL);
 	}
 
+	/**
+	 * Returns the WAMP session id that this library assigns to each session.
+	 */
+	@Nullable
 	public Long getWampSessionId() {
 		return getHeader(WampMessageHeader.WAMP_SESSION_ID);
 	}

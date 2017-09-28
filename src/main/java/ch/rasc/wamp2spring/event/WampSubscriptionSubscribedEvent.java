@@ -21,7 +21,7 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 
 /**
  * Fired when a session is added to a subscription.
- * 
+ *
  */
 public class WampSubscriptionSubscribedEvent extends WampSubscriptionEvent {
 

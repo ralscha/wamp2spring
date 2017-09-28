@@ -28,14 +28,14 @@ public interface EventStore {
 
 	/**
 	 * Stores an event in the store
-	 * 
+	 *
 	 * @param publishMessage the event to store
 	 */
 	void retain(PublishMessage publishMessage);
 
 	/**
 	 * Returns all stored events that match the query.
-	 * 
+	 *
 	 * @param query the query
 	 * @return a collection of events that match the query
 	 */

@@ -57,7 +57,7 @@ public class DestinationMatch {
 
 	/**
 	 * Checks if a destination matches with this destination
-	 * 
+	 *
 	 * @param queryDestination the destination
 	 * @return true if the destination matches
 	 */
@@ -77,7 +77,7 @@ public class DestinationMatch {
 	/**
 	 * Checks if a destination matches with this destination. Used for
 	 * MatchPolicy.WILDCARD destinations.
-	 * 
+	 *
 	 * @param components the destination splitted in a String array
 	 * @return true if the destination matches
 	 */

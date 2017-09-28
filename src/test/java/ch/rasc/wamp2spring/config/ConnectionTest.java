@@ -15,6 +15,7 @@
  */
 package ch.rasc.wamp2spring.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.Collections;
@@ -32,7 +33,6 @@ import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
 		classes = ConnectionTest.Config.class)

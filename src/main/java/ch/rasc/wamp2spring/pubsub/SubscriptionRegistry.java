@@ -173,6 +173,7 @@ public class SubscriptionRegistry {
 		return results;
 	}
 
+	@Nullable
 	Set<Subscription> findSubscriptions(String topic) {
 		return this.subscriptionsCache.get(topic);
 	}
@@ -218,7 +219,7 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns subscription IDs listed according to matching policies.
-	 * 
+	 *
 	 * @return subscription IDs grouped by matching policies
 	 */
 	public EnumMap<MatchPolicy, List<Long>> listSubscriptions() {
@@ -237,7 +238,7 @@ public class SubscriptionRegistry {
 	/**
 	 * Returns the subscription ID (if any) managing a topic, according to the matching
 	 * policy.
-	 * 
+	 *
 	 * @param topic the topic URI
 	 * @param matchPolicy the matching policy
 	 * @return the subscription id or null if no matching subscription exist
@@ -259,7 +260,7 @@ public class SubscriptionRegistry {
 	/**
 	 * Returns a list of IDs of subscriptions matching a topic URI, irrespective of match
 	 * policy.
-	 * 
+	 *
 	 * @param topic the topic URI
 	 * @return the list of session IDs subscribed to the topic
 	 */
@@ -270,7 +271,7 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns information on a particular subscription.
-	 * 
+	 *
 	 * @param subscriptionId the id of the subscription
 	 * @return the detail about the requested subscription. null when the subscription
 	 * does not exist.
@@ -286,7 +287,7 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns a list of session IDs for sessions currently attached to the subscription.
-	 * 
+	 *
 	 * @param subscriptionId the id of the subscription
 	 * @return the list of session IDs attached to the subscription
 	 */
@@ -301,7 +302,7 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns the number of sessions currently attached to the subscription.
-	 * 
+	 *
 	 * @param subscriptionId the subscription id
 	 * @return the number of subscriptions or null when the subscription does not exist.
 	 */
@@ -316,7 +317,7 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Checks if a particular topic currently has attached subscriptions
-	 * 
+	 *
 	 * @param topic the topic
 	 * @return true if currently sessions are attached to the topic
 	 */

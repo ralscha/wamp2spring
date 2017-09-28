@@ -22,7 +22,7 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 /**
  * Fired when a subscription is created through a subscription request for a topic which
  * was previously without subscribers.
- * 
+ *
  * A {@link WampSubscriptionSubscribedEvent} is always fired after this event, since the
  * first subscribe results in both the creation of the subscription and the addition of a
  * session

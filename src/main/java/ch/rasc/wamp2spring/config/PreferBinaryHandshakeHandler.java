@@ -25,20 +25,20 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 /**
  * A {@link HandshakeHandler} implementation that prefers a binary data format in the
  * order MessagePack, Smile and CBOR.
- * 
+ *
  * You can configure this {@link HandshakeHandler} by extending the
  * {@link WampConfiguration} and overwriting the
  * {@link WampConfiguration#getHandshakeHandler()} method.
- * 
+ *
  * <pre class="code">
  * &#64;Configuration
  * public class Application extends WampConfiguration {
- * 
- *  &#64;Override
- *  protected HandshakeHandler getHandshakeHandler() {
- *    return new PreferBinaryHandshakeHandler();
- *  }
- *  
+ *
+ * 	&#64;Override
+ * 	protected HandshakeHandler getHandshakeHandler() {
+ * 		return new PreferBinaryHandshakeHandler();
+ * 	}
+ *
  * }
  * </pre>
  */

@@ -33,7 +33,7 @@ public class CollectionHelper {
 
 	/**
 	 * Converts a vararg argument to a {@link List}.
-	 * 
+	 *
 	 * @param arguments variable number of instances
 	 * @return a {@link List} instance with the provided arguments
 	 */
@@ -57,7 +57,7 @@ public class CollectionHelper {
 	 * <p>
 	 * Returns the same object if the provided parameter is already an instance of
 	 * {@link List}.
-	 * 
+	 *
 	 * @param collection an arbitrary instance of {@link Collection}
 	 * @return an instance of {@link List} containing all the elements of the provided
 	 * collection
@@ -76,7 +76,7 @@ public class CollectionHelper {
 
 	/**
 	 * Converts an arbitrary {@link Collection} to a {@link Set}. Removes duplicates.
-	 * 
+	 *
 	 * @param collection an arbitrary instance of {@link Collection}
 	 * @return an instance of {@link Set} containing all the elements of the provided
 	 * collection.

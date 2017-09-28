@@ -29,7 +29,7 @@ import ch.rasc.wamp2spring.WampError;
 /**
  * Message sent from the Router and the Client when they want to abort the opening of a
  * WAMP session.
- * 
+ *
  * [ABORT, Details|dict, Reason|uri]
  */
 public class AbortMessage extends WampMessage {

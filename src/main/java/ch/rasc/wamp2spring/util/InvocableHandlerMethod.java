@@ -26,11 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolverComposite;
@@ -86,8 +87,8 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * {@link HandlerMethodArgumentResolver}s. The {@code providedArgs} parameter however
 	 * may supply argument values to be used directly, i.e. without argument resolution.
 	 * @param message the current message being processed
-	 * @param arguments 
-	 * @param argumentsKw 
+	 * @param arguments
+	 * @param argumentsKw
 	 * @return the raw value returned by the invoked method
 	 * @exception Exception raised if no suitable argument resolver can be found, or if
 	 * the method raised an exception
@@ -163,6 +164,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		return args;
 	}
 
+	@Nullable
 	public Object convert(MethodParameter parameter, Object argument) {
 		if (argument == null) {
 			if (parameter.getParameterType().equals(Optional.class)) {
@@ -188,35 +190,36 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			}
 			catch (Exception e) {
 				// ignore this exception for collections and arrays.
-				// try to convert the value with jackson
+				// try to convert the value with Jackson
 
 				TypeFactory typeFactory = this.objectMapper.getTypeFactory();
-				if (td.isCollection()) {
+				if (td.getElementTypeDescriptor() != null) {
+					if (td.isCollection()) {
+						JavaType elemType = typeFactory
+								.constructType(td.getElementTypeDescriptor().getType());
+						TypeVariable<?>[] vars = targetClass.getTypeParameters();
+						TypeBindings bindings;
+						if (vars == null || vars.length != 1) {
+							bindings = TypeBindings.emptyBindings();
+						}
+						else {
+							bindings = TypeBindings.create(targetClass, elemType);
+						}
+						JavaType superClass = null;
+						Class<?> parent = targetClass.getSuperclass();
+						if (parent != null) {
+							superClass = TypeFactory.unknownType();
+						}
 
-					JavaType elemType = typeFactory
-							.constructType(td.getElementTypeDescriptor().getType());
-					TypeVariable<?>[] vars = targetClass.getTypeParameters();
-					TypeBindings bindings;
-					if (vars == null || vars.length != 1) {
-						bindings = TypeBindings.emptyBindings();
+						JavaType type = CollectionType.construct(targetClass, bindings,
+								superClass, null, elemType);
+						return this.objectMapper.convertValue(argument, type);
 					}
-					else {
-						bindings = TypeBindings.create(targetClass, elemType);
+					else if (td.isArray()) {
+						JavaType type = typeFactory.constructArrayType(
+								td.getElementTypeDescriptor().getType());
+						return this.objectMapper.convertValue(argument, type);
 					}
-					JavaType superClass = null;
-					Class<?> parent = targetClass.getSuperclass();
-					if (parent != null) {
-						superClass = TypeFactory.unknownType();
-					}
-
-					JavaType type = CollectionType.construct(targetClass, bindings,
-							superClass, null, elemType);
-					return this.objectMapper.convertValue(argument, type);
-				}
-				else if (td.isArray()) {
-					JavaType type = typeFactory
-							.constructArrayType(td.getElementTypeDescriptor().getType());
-					return this.objectMapper.convertValue(argument, type);
 				}
 
 				throw e;
@@ -227,12 +230,13 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 	@SuppressWarnings("unchecked")
 	@Nullable
-	private Object convertListElements(TypeDescriptor td, @Nullable Object convertedValue) {
+	private Object convertListElements(TypeDescriptor td,
+			@Nullable Object convertedValue) {
 		if (convertedValue != null) {
-			if (List.class.isAssignableFrom(convertedValue.getClass()) && td.isCollection()
-					&& td.getElementTypeDescriptor() != null) {
+			if (List.class.isAssignableFrom(convertedValue.getClass())
+					&& td.isCollection() && td.getElementTypeDescriptor() != null) {
 				Class<?> elementType = td.getElementTypeDescriptor().getType();
-	
+
 				Collection<Object> convertedList = new ArrayList<>();
 				for (Object record : (List<Object>) convertedValue) {
 					Object convertedObject = this.objectMapper.convertValue(record,
@@ -240,7 +244,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 					convertedList.add(convertedObject);
 				}
 				return convertedList;
-	
+
 			}
 		}
 		return convertedValue;

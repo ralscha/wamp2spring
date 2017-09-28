@@ -25,13 +25,53 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 /**
- * Enables WAMP v2 support.
+ * Add this annotation to any {@code @Configuration} class to enable the WAMP v2 support.
+ * A default endpoint '/wamp' will be registered.
  *
+ * <pre class="code">
+ * &#64;SpringBootApplication
+ * &#64;EnableWamp
+ * public class Application {
+ * }
+ * </pre>
+ *
+ * To configure certain aspects of the wamp2spring library you can implement the
+ * {@link WampConfigurer} interface with a &#64;Configuration class.
+ *
+ * <pre class="code">
+ * &#64;SpringBootApplication
+ * &#64;EnableWamp(disable = Feature.DEALER)
+ * public class Application implements WampConfigurer {
+ *
+ * 	&#64;Override
+ * 	public void addArgumentResolvers(
+ * 			List<HandlerMethodArgumentResolver> argumentResolvers) {
+ * 	}
+ * }
+ * </pre>
+ * <p>
+ * If your application needs more control about the wamp2spring configuration you can
+ * subclass a &#64;Configuration class from {@link WampConfiguration}. Do not add the
+ * &#64;EnableWamp annotation when you configure WAMP this way.
+ *
+ * <pre class="code">
+ * &#64;SpringBootApplication
+ * public class Application extends WampConfiguration {
+ * 	&#64;Override
+ * 	protected String getWebSocketHandlerPath() {
+ * 		return "/wampsession";
+ * 	}
+ * }
+ *
+ * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
 @Import(WampConfiguration.class)
 public @interface EnableWamp {
+	/**
+	 * Disable listed features. By default every supported feature is enabled.
+	 */
 	Feature[] disable() default {};
 }

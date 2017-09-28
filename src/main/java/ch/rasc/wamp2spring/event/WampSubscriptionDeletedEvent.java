@@ -22,7 +22,7 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 /**
  * Fired when a subscription is deleted after the last session attached to it has been
  * removed.
- * 
+ *
  * This event is always preceded by a {@link WampSubscriptionUnsubscribedEvent} event.
  */
 public class WampSubscriptionDeletedEvent extends WampSubscriptionEvent {

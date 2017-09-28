@@ -40,7 +40,7 @@ import ch.rasc.wamp2spring.message.CallMessage;
  * The method <code>fetchNews</code> is called by the library when a {@link CallMessage}
  * with the procedure name 'fetch.news' arrives.
  * <p>
- * 
+ *
  * <pre class="code">
  * &#064;Service
  * public class MyService {

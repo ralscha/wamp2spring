@@ -23,6 +23,12 @@ import org.springframework.messaging.support.AbstractMessageChannel;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
 
+/**
+ * Defines methods for configuring WAMP support.
+ *
+ * <p>
+ * Used together with {@link EnableWamp}
+ */
 @SuppressWarnings("unused")
 public interface WampConfigurer {
 
@@ -45,15 +51,40 @@ public interface WampConfigurer {
 		// nothing here
 	}
 
+	/**
+	 * Decorates a WebSocket handler
+	 */
 	default WebSocketHandler decorateWebSocketHandler(WebSocketHandler webSocketHandler) {
 		return webSocketHandler;
 	}
 
+	/**
+	 * Configures the WebSocket handler registration
+	 *
+	 * <pre class="code">
+	 * &#64;Override
+	 * public void configureWebSocketHandlerRegistration(
+	 * 		WebSocketHandlerRegistration registration) {
+	 * 	registration.setAllowedOrigins("http://localhost:8100");
+	 * }
+	 * </pre>
+	 */
 	default void configureWebSocketHandlerRegistration(
 			WebSocketHandlerRegistration registration) {
 		// nothing here
 	}
 
+	/**
+	 * Configures wamp2spring features
+	 * <p>
+	 *
+	 * <pre class="code">
+	 * &#64;Override
+	 * protected void configureFeatures(Features features) {
+	 * 	features.disable(Feature.DEALER);
+	 * }
+	 * </pre>
+	 */
 	default void configureFeatures(Features features) {
 		// nothing here
 	}
