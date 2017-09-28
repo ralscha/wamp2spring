@@ -66,9 +66,10 @@ public class WelcomeMessage extends WampMessage {
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
 					.get("roles");
-			for (String roleName : rolesMap.keySet()) {
-				WampRole wampRole = new WampRole(roleName);
-				Map<String, Boolean> features = rolesMap.get(roleName).get("features");
+			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap
+					.entrySet()) {
+				WampRole wampRole = new WampRole(entry.getKey());
+				Map<String, Boolean> features = entry.getValue().get("features");
 				if (features != null) {
 					for (String feature : features.keySet()) {
 						wampRole.addFeature(feature);
