@@ -69,17 +69,11 @@ You find a collection of example applications in the [wamp2spring-demo](https://
 
 ## Changelog
 
-### 1.0.0 - September 28, 2017 (Spring 5 release date)
-  * Initial release
+See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Changelog)
 
 
-## More links
-  * [WAMP Homepage](http://wamp-proto.org/)
-  * Other Java WAMP implementations
-     * [jawampa](https://github.com/Matthias247/jawampa)
-     * [autobahn-java](https://github.com/crossbario/autobahn-java)     
-  * [WAMP libraries and routers](http://wamp-proto.org/implementations/)
-  * [Crossbar.io the company behind the WAMP specification](http://crossbario.com/)
+## More information
+See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Links)
 
   
 ## License
