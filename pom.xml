@@ -158,7 +158,7 @@
 				<version>2.10.4</version>
 				<configuration>
 					<links>
-						<link>http://docs.spring.io/spring/docs/5.0.0.RC3/javadoc-api/</link>
+						<link>https://docs.spring.io/spring/docs/5.0.0.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalparam>-Xdoclint:none</additionalparam>
