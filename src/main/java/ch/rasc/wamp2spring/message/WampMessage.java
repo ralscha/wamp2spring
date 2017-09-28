@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;

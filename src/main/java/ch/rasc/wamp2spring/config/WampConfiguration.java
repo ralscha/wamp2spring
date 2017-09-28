@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +53,8 @@ import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import ch.rasc.wamp2spring.WampPublisher;
+import ch.rasc.wamp2spring.pubsub.EventStore;
+import ch.rasc.wamp2spring.pubsub.MemoryEventStore;
 import ch.rasc.wamp2spring.pubsub.PubSubMessageHandler;
 import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
 import ch.rasc.wamp2spring.rpc.ProcedureRegistry;

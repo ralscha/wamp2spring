@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.config.Feature;

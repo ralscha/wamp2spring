@@ -19,7 +19,7 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;

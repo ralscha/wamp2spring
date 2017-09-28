@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.rpc;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import ch.rasc.wamp2spring.message.ErrorMessage;
 

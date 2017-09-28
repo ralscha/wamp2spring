@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;

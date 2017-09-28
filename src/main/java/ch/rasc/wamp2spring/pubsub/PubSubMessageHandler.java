@@ -41,7 +41,6 @@ import org.springframework.util.ReflectionUtils.MethodFilter;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.annotation.WampListener;
-import ch.rasc.wamp2spring.config.EventStore;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;

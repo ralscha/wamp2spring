@@ -16,7 +16,7 @@
 
 package ch.rasc.wamp2spring.config;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 

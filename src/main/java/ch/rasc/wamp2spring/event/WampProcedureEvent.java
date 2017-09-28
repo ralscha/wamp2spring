@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 

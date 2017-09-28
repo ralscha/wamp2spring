@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Id generator, that generates WAMP compliant identification numbers.

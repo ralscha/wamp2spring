@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Event published when a client disconnect from the server.

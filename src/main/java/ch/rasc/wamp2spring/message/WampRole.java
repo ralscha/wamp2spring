@@ -19,7 +19,7 @@ package ch.rasc.wamp2spring.message;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public final class WampRole {
 	private final String role;

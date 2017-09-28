@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package ch.rasc.wamp2spring.config;
+package ch.rasc.wamp2spring.pubsub;
 
 import java.util.List;
 
+import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.message.PublishMessage;
 
 /**

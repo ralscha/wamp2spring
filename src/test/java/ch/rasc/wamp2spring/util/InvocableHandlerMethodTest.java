@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import org.junit.Before;
 import org.junit.Test;

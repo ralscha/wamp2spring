@@ -33,8 +33,6 @@ import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.config.EnableWamp;
-import ch.rasc.wamp2spring.config.EventStore;
-import ch.rasc.wamp2spring.config.MemoryEventStore;
 import ch.rasc.wamp2spring.message.EventMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.PublishedMessage;

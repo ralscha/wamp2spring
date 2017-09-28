@@ -16,7 +16,7 @@
 
 package ch.rasc.wamp2spring.pubsub;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 public enum MatchPolicy {
 	EXACT("exact"), PREFIX("prefix"), WILDCARD("wildcard");
