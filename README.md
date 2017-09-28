@@ -34,7 +34,7 @@ But when there is a need I will try to add this fallback solution. Pull requests
 
 
 ## Quickstart
-
+See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Quickstart)
 
 ## Maven
 The released version of the library will be hosted on the Central Maven Repository. 
