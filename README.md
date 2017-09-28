@@ -37,31 +37,7 @@ But when there is a need I will try to add this fallback solution. Pull requests
 See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Quickstart)
 
 ## Maven
-The released version of the library will be hosted on the Central Maven Repository. 
-Until then a project can reference SNAPSHOT releases from the Sonatype repository
-
-```
-<dependency>
-  <groupId>ch.rasc</groupId>
-  <artifactId>wamp2spring</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
-</dependency>
-		
-<repositories>
-  ...
-  <repository>
-    <id>sonatype</id>
-    <name>sonatype</name>
-    <url>https://oss.sonatype.org/content/groups/public</url>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-    <releases>
-      <enabled>true</enabled>
-    </releases>
-  </repository>
-</repositories>		
-```
+See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Maven)
 
 ## Example applications
 You find a collection of example applications in the [wamp2spring-demo](https://github.com/ralscha/wamp2spring-demo) GitHub repository.
