@@ -23,7 +23,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a long parameter of a {@link WampProcedure} or {@link WampListener} annotated
+ * Annotates a long parameter of a {@link WampProcedure} annotated
  * method. The library injects the WAMP session id of the user into the annotated
  * parameter
  *
