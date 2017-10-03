@@ -344,7 +344,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				if (eventListenerHandlerMethods != null) {
 
 					EventMessage eventMessage = new EventMessage(null, -1, publicationId,
-							topic, null, false, publishMessage);
+							topic, publisher, false, publishMessage);
 
 					for (InvocableHandlerMethod handlerMethod : eventListenerHandlerMethods) {
 						try {
