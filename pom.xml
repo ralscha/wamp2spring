@@ -45,7 +45,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.0.1.RELEASE</spring.version>
+		<spring.version>5.0.2.RELEASE</spring.version>
 		<jackson.version>2.9.2</jackson.version>
 	</properties>
 
@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>org.msgpack</groupId>
 			<artifactId>jackson-dataformat-msgpack</artifactId>
-			<version>0.8.13</version>
+			<version>0.8.14</version>
 		</dependency>
 
 		<dependency>
@@ -117,14 +117,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>1.5.8.RELEASE</version>
+			<version>1.5.9.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>1.5.8.RELEASE</version>
+			<version>1.5.9.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -138,7 +138,7 @@
 		<dependency>
 			<groupId>nl.jqno.equalsverifier</groupId>
 			<artifactId>equalsverifier</artifactId>
-			<version>2.3.3</version>
+			<version>2.4</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -149,7 +149,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.7</version>
+				<version>2.9</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -157,7 +157,7 @@
 				<version>2.10.4</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring/docs/5.0.1.RELEASE/javadoc-api/</link>
+						<link>https://docs.spring.io/spring/docs/5.0.2.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalparam>-Xdoclint:none</additionalparam>
@@ -203,7 +203,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.2</version>
+				<version>3.7.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -300,10 +300,10 @@
 				<configuration>
 					<header>${basedir}/header.txt</header>
 					<properties>
-						<owner>Ralph Schaer</owner>
+						
 						<year>${project.inceptionYear}</year>
 						<currentYear>2017</currentYear>
-						<email>ralphschaer@gmail.com</email>
+						
 					</properties>
 					<excludes>
 						<exclude>**/*.xml</exclude>
