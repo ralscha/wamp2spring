@@ -26,7 +26,6 @@ import org.springframework.lang.Nullable;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.web.socket.WebSocketSession;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -94,13 +93,6 @@ public abstract class WampMessage implements Message<Object> {
 	@Nullable
 	public Long getWampSessionId() {
 		return getHeader(WampMessageHeader.WAMP_SESSION_ID);
-	}
-
-	public void setWebSocketSession(WebSocketSession webSocketSession) {
-		setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSession.getId());
-		setHeader(WampMessageHeader.PRINCIPAL, webSocketSession.getPrincipal());
-		setHeader(WampMessageHeader.WAMP_SESSION_ID, webSocketSession.getAttributes()
-				.get(WampMessageHeader.WAMP_SESSION_ID.name()));
 	}
 
 	protected void setReceiver(WampMessage message) {
