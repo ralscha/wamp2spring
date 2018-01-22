@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.data.MapEntry;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -149,6 +150,7 @@ public class RetentionTest extends BaseWampTest {
 	}
 
 	@Test
+	@Ignore
 	public void testPrefix() throws Exception {
 		try (WampClient wc1 = new WampClient(DataFormat.JSON);
 				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
