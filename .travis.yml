@@ -6,7 +6,7 @@ env:
   global:
   - SONATYPE_USERNAME=ralscha23
 
-script: 
+install: 
   - chmod 700 ./mvnw
   - cd wamp2spring-core
   - ../mvnw install -Dfindbugs.skip=true -B  
@@ -22,19 +22,19 @@ script:
   - ../mvnw test -Dfindbugs.skip=true -B
 
 after_success:
-- python addsettings.py
-- cd wamp2spring-core
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
-- cd ../wamp2spring-servlet
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
-- cd ../wamp2spring-reactive
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
-- cd ../wamp2spring-security-core
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
-- cd ../wamp2spring-security-servlet
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
-- cd ../wamp2spring-session-servlet
-- ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - python addsettings.py
+  - cd wamp2spring-core
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-servlet
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-reactive
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-security-core
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-security-servlet
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-session-servlet
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
   
 cache:
   directories:
