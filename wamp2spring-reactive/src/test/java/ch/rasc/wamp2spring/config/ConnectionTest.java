@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -95,8 +96,9 @@ public class ConnectionTest extends BaseWampTest {
 			assertThat(goodbyeMessage.getMessage()).isNull();
 			assertThat(goodbyeMessage.getReason())
 					.isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
-
+			
 			try {
+				TimeUnit.SECONDS.sleep(5);
 				wc.sendMessage(
 						new PublishMessage.Builder(1L, "crud.user.create").build());
 				fail("sendMessage should fail because the connection should be closed");
