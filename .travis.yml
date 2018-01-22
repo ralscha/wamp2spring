@@ -15,7 +15,7 @@ install:
   - cd ../wamp2spring-reactive
   - ../mvnw install -Dfindbugs.skip=true -B  
   - cd ../wamp2spring-security-core
-  - ../mvnw test -Dfindbugs.skip=true -B
+  - ../mvnw install -Dfindbugs.skip=true -B
   - cd ../wamp2spring-security-servlet
   - ../mvnw test -Dfindbugs.skip=true -B
   - cd ../wamp2spring-session-servlet
