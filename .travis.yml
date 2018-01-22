@@ -22,6 +22,7 @@ install:
   - ../mvnw test -Dfindbugs.skip=true -B
 
 after_success:
+  - cd ..
   - python addsettings.py
   - cd wamp2spring-core
   - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
