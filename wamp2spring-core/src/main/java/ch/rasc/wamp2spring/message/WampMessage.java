@@ -23,7 +23,6 @@ import java.security.Principal;
 import java.util.Map;
 
 import org.springframework.lang.Nullable;
-
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 

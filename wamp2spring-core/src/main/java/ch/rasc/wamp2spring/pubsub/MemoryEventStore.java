@@ -27,8 +27,8 @@ import ch.rasc.wamp2spring.message.PublishMessage;
 
 /**
  * Memory only implementation of the {@link EventStore} interface. Used for storing
- * retention messages. Only publishMessages coming from the internal
- * {@link WampPublisher} are stored in the retention store.
+ * retention messages. Only publishMessages coming from the internal {@link WampPublisher}
+ * are stored in the retention store.
  */
 public class MemoryEventStore implements EventStore {
 

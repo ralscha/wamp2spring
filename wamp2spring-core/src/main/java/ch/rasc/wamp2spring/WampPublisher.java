@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.lang.Nullable;
-
 import org.springframework.messaging.MessageChannel;
 
 import ch.rasc.wamp2spring.message.PublishMessage;
