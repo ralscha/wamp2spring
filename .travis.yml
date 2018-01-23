@@ -18,6 +18,8 @@ install:
   - ../mvnw install -Dfindbugs.skip=true -B
   - cd ../wamp2spring-security-servlet
   - ../mvnw test -Dfindbugs.skip=true -B
+  - cd ../wamp2spring-security-reactive
+  - ../mvnw test -Dfindbugs.skip=true -B  
   - cd ../wamp2spring-session-servlet
   - ../mvnw test -Dfindbugs.skip=true -B
 
@@ -34,6 +36,8 @@ after_success:
   - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
   - cd ../wamp2spring-security-servlet
   - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - cd ../wamp2spring-security-reactive
+  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml  
   - cd ../wamp2spring-session-servlet
   - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
   

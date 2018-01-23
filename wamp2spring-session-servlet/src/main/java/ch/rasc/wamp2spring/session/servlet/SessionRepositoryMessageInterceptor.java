@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.session;
+package ch.rasc.wamp2spring.session.servlet;
 
 import java.time.Instant;
 import java.util.Map;

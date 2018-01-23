@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.reactive.config;
+package ch.rasc.wamp2spring.servlet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.web.reactive.socket.CloseStatus;
-import org.springframework.web.reactive.socket.WebSocketHandler;
-import org.springframework.web.reactive.socket.WebSocketMessage;
-import org.springframework.web.reactive.socket.WebSocketSession;
+import org.springframework.web.socket.BinaryMessage;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.messaging.SubProtocolHandler;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -50,20 +49,20 @@ import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
-import ch.rasc.wamp2spring.message.InternalCloseMessage;
 import ch.rasc.wamp2spring.message.InvocationMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-public class WampWebSocketHandler
-		implements WebSocketHandler, ApplicationEventPublisherAware {
+/**
+ * A WebSocket {@link SubProtocolHandler} implementation for the WAMP v2 protocol.
+ */
+public class WampSubProtocolHandler
+		implements SubProtocolHandler, ApplicationEventPublisherAware {
 
-	private static final Log logger = LogFactory.getLog(WampWebSocketHandler.class);
+	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
 
 	public static final String JSON_PROTOCOL = "wamp.2.json";
 
@@ -86,23 +85,19 @@ public class WampWebSocketHandler
 
 	private final List<WampRole> roles;
 
-	private final ConcurrentMap<String, Long> webSocketId2WampSessionId = new ConcurrentHashMap<>();
+	private final Set<Long> wampSessionIds = ConcurrentHashMap.newKeySet();
 
 	private final MessageChannel clientInboundChannel;
 
-	private final MessageChannel clientOutboundChannel;
-
 	private ApplicationEventPublisher applicationEventPublisher;
 
-	public WampWebSocketHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
+	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
 			JsonFactory cborFactory, JsonFactory smileFactory,
-			MessageChannel clientOutboundChannel, MessageChannel clientInboundChannel,
-			Features features) {
+			MessageChannel clientInboundChannel, Features features) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
 		this.cborFactory = cborFactory;
 		this.smileFactory = smileFactory;
-		this.clientOutboundChannel = clientOutboundChannel;
 		this.clientInboundChannel = clientInboundChannel;
 
 		this.roles = new ArrayList<>();
@@ -125,59 +120,41 @@ public class WampWebSocketHandler
 	}
 
 	@Override
-	public List<String> getSubProtocols() {
+	public List<String> getSupportedProtocols() {
 		return supportedProtocols;
 	}
 
+	/**
+	 * Handle incoming WebSocket messages from clients.
+	 */
 	@Override
-	public Mono<Void> handle(WebSocketSession session) {
-		session.receive().doFinally(sig -> {
-			Long wampSessionId = this.webSocketId2WampSessionId.get(session.getId());
-			if (wampSessionId != null) {
-				this.applicationEventPublisher.publishEvent(
-						new WampDisconnectEvent(wampSessionId, session.getId(),
-								session.getHandshakeInfo().getPrincipal().block()));
-				this.webSocketId2WampSessionId.remove(session.getId());
-			}
-			session.close(); // ?
-		}).subscribe(inMsg -> {
-			handleIncomingMessage(inMsg, session);
-		});
-
-		Publisher<Message<Object>> publisher = MessageChannelReactiveUtils
-				.toPublisher(this.clientOutboundChannel);
-		return session.send(Flux.from(publisher)
-				.filter(msg -> resolveSessionId(msg).equals(session.getId()))
-				.map(msg -> handleOutgoingMessage(msg, session)));
-	}
-
-	public void handleIncomingMessage(WebSocketMessage inMsg, WebSocketSession session) {
+	public void handleMessageFromClient(WebSocketSession session,
+			WebSocketMessage<?> webSocketMessage, MessageChannel outputChannel) {
 
 		try {
 			WampMessage wampMessage = null;
 
-			if (inMsg.getType() == WebSocketMessage.Type.TEXT) {
-				byte[] bytes = new byte[inMsg.getPayload().readableByteCount()];
-				inMsg.getPayload().read(bytes);
-
-				wampMessage = WampMessage.deserialize(this.jsonFactory, bytes);
+			if (webSocketMessage instanceof TextMessage) {
+				wampMessage = WampMessage.deserialize(this.jsonFactory,
+						((TextMessage) webSocketMessage).asBytes());
 			}
-			else if (inMsg.getType() == WebSocketMessage.Type.BINARY) {
-				ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
+			else if (webSocketMessage instanceof BinaryMessage) {
+				ByteBuffer byteBuffer = ((BinaryMessage) webSocketMessage).getPayload();
 
-				String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
+				String acceptedProtocol = session.getAcceptedProtocol();
 				if (acceptedProtocol != null) {
-					if (acceptedProtocol.equals(WampWebSocketHandler.MSGPACK_PROTOCOL)) {
+					if (acceptedProtocol
+							.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 						wampMessage = WampMessage.deserialize(this.msgpackFactory,
 								byteBuffer.array());
 					}
 					else if (acceptedProtocol
-							.equals(WampWebSocketHandler.SMILE_PROTOCOL)) {
+							.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
 						wampMessage = WampMessage.deserialize(this.smileFactory,
 								byteBuffer.array());
 					}
 					else if (acceptedProtocol
-							.equals(WampWebSocketHandler.CBOR_PROTOCOL)) {
+							.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
 						wampMessage = WampMessage.deserialize(this.cborFactory,
 								byteBuffer.array());
 					}
@@ -186,7 +163,8 @@ public class WampWebSocketHandler
 					if (logger.isErrorEnabled()) {
 						logger.error(
 								"Deserialization failed because no accepted protocol "
-										+ inMsg + " in session " + session.getId());
+										+ webSocketMessage + " in session "
+										+ session.getId());
 					}
 					return;
 				}
@@ -197,7 +175,7 @@ public class WampWebSocketHandler
 
 			if (wampMessage == null) {
 				if (logger.isErrorEnabled()) {
-					logger.error("Deserialization failed for message " + inMsg
+					logger.error("Deserialization failed for message " + webSocketMessage
 							+ " in session " + session.getId());
 				}
 				return;
@@ -205,10 +183,9 @@ public class WampWebSocketHandler
 
 			wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
 					session.getId());
-			wampMessage.setHeader(WampMessageHeader.PRINCIPAL,
-					session.getHandshakeInfo().getPrincipal().block());
-			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
-					this.webSocketId2WampSessionId.get(session.getId()));
+			wampMessage.setHeader(WampMessageHeader.PRINCIPAL, session.getPrincipal());
+			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, session
+					.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name()));
 
 			if (wampMessage instanceof HelloMessage) {
 				// If this is a helloMessage sent during a running session close the
@@ -218,13 +195,14 @@ public class WampWebSocketHandler
 					session.close(CloseStatus.PROTOCOL_ERROR);
 				}
 
-				long newWampSessionId = IdGenerator.newRandomId(
-						new HashSet<>(this.webSocketId2WampSessionId.values()));
-				this.webSocketId2WampSessionId.put(session.getId(), newWampSessionId);
+				long newWampSessionId = IdGenerator.newRandomId(this.wampSessionIds);
+				this.wampSessionIds.add(newWampSessionId);
+				session.getAttributes().put(WampMessageHeader.WAMP_SESSION_ID.name(),
+						newWampSessionId);
 
 				WelcomeMessage welcomeMessage = new WelcomeMessage(
 						(HelloMessage) wampMessage, newWampSessionId, this.roles);
-				this.clientOutboundChannel.send(welcomeMessage);
+				handleMessageToClient(session, welcomeMessage);
 
 				this.applicationEventPublisher
 						.publishEvent(new WampSessionEstablishedEvent(welcomeMessage));
@@ -235,9 +213,8 @@ public class WampWebSocketHandler
 			else if (wampMessage instanceof GoodbyeMessage) {
 				GoodbyeMessage goodbyeMessage = new GoodbyeMessage(
 						WampError.GOODBYE_AND_OUT);
-				goodbyeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
-						session.getId());
-				this.clientOutboundChannel.send(goodbyeMessage);
+				handleMessageToClient(session, goodbyeMessage);
+				session.close(CloseStatus.GOING_AWAY);
 			}
 			else {
 				if (wampMessage.getWampSessionId() == null) {
@@ -245,33 +222,26 @@ public class WampWebSocketHandler
 					session.close(CloseStatus.PROTOCOL_ERROR);
 				}
 
-				this.clientInboundChannel.send(wampMessage);
+				outputChannel.send(wampMessage);
 			}
 		}
 		catch (IOException e) {
 			if (logger.isErrorEnabled()) {
-				logger.error(
-						"Failed to parse " + inMsg + " in session " + session.getId(), e);
+				logger.error("Failed to parse " + webSocketMessage + " in session "
+						+ session.getId(), e);
 			}
 		}
 
 	}
 
-	private static String resolveSessionId(Message<?> message) {
-		return (String) message.getHeaders()
-				.get(WampMessageHeader.WEBSOCKET_SESSION_ID.name());
-	}
-
-	public WebSocketMessage handleOutgoingMessage(Message<Object> message,
-			WebSocketSession session) {
+	/**
+	 * Handle WAMP messages going back out to WebSocket clients.
+	 */
+	@Override
+	public void handleMessageToClient(WebSocketSession session, Message<?> message) {
 		if (!(message instanceof WampMessage)) {
 			logger.error("Expected WampMessage. Ignoring " + message + ".");
-			return null;
-		}
-
-		if (message instanceof InternalCloseMessage) {
-			session.close(CloseStatus.GOING_AWAY);
-			return null;
+			return;
 		}
 
 		WampMessage wampMessage = (WampMessage) message;
@@ -279,17 +249,17 @@ public class WampWebSocketHandler
 
 		boolean isBinary = false;
 
-		String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
+		String acceptedProtocol = session.getAcceptedProtocol();
 		if (acceptedProtocol != null) {
-			if (acceptedProtocol.equals(WampWebSocketHandler.MSGPACK_PROTOCOL)) {
+			if (acceptedProtocol.equals(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 				isBinary = true;
 				useFactory = this.msgpackFactory;
 			}
-			else if (acceptedProtocol.equals(WampWebSocketHandler.SMILE_PROTOCOL)) {
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.SMILE_PROTOCOL)) {
 				isBinary = true;
 				useFactory = this.smileFactory;
 			}
-			else if (acceptedProtocol.equals(WampWebSocketHandler.CBOR_PROTOCOL)) {
+			else if (acceptedProtocol.equals(WampSubProtocolHandler.CBOR_PROTOCOL)) {
 				isBinary = true;
 				useFactory = this.cborFactory;
 			}
@@ -301,18 +271,12 @@ public class WampWebSocketHandler
 				generator.writeEndArray();
 				generator.close();
 
-				if (wampMessage instanceof GoodbyeMessage) {
-					InternalCloseMessage cm = new InternalCloseMessage();
-					cm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
-					this.clientOutboundChannel.send(cm);
-				}
-
 				if (isBinary) {
-					return session
-							.binaryMessage(factory -> factory.wrap(bos.toByteArray()));
+					session.sendMessage(new BinaryMessage(bos.toByteArray()));
 				}
-				return session.textMessage(
-						new String(bos.toByteArray(), StandardCharsets.UTF_8));
+				else {
+					session.sendMessage(new TextMessage(bos.toByteArray()));
+				}
 
 			}
 			catch (Throwable ex) {
@@ -323,14 +287,21 @@ public class WampWebSocketHandler
 				}
 
 				// Is this an outbound invocation message. In that case we need to feed
-				// back an error message
+				// back
+				// an error message
 				if (message instanceof InvocationMessage) {
 					ErrorMessage errorMessage = new ErrorMessage(
 							(InvocationMessage) message, WampError.NETWORK_FAILURE);
 					this.clientInboundChannel.send(errorMessage);
 				}
 
-				session.close(CloseStatus.PROTOCOL_ERROR);
+				try {
+					session.close(CloseStatus.PROTOCOL_ERROR);
+				}
+				catch (IOException e) {
+					// Ignore
+				}
+
 			}
 		}
 		else {
@@ -340,13 +311,37 @@ public class WampWebSocketHandler
 								+ session.getId());
 			}
 		}
+	}
 
-		return null;
+	@Override
+	public String resolveSessionId(Message<?> message) {
+		return (String) message.getHeaders()
+				.get(WampMessageHeader.WEBSOCKET_SESSION_ID.name());
+	}
+
+	@Override
+	public void afterSessionStarted(WebSocketSession session,
+			MessageChannel outputChannel) {
+		// nothing here
+	}
+
+	@Override
+	public void afterSessionEnded(WebSocketSession session, CloseStatus closeStatus,
+			MessageChannel outputChannel) {
+
+		Long wampSessionId = (Long) session.getAttributes()
+				.get(WampMessageHeader.WAMP_SESSION_ID.name());
+		if (wampSessionId != null) {
+			this.applicationEventPublisher.publishEvent(new WampDisconnectEvent(
+					wampSessionId, session.getId(), session.getPrincipal()));
+			this.wampSessionIds.remove(wampSessionId);
+			session.getAttributes().remove(WampMessageHeader.WAMP_SESSION_ID.name());
+		}
 	}
 
 	@Override
 	public String toString() {
-		return "WampWebSocketHandler " + getSubProtocols();
+		return "WampSubProtocolHandler " + getSupportedProtocols();
 	}
 
 	@Override

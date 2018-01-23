@@ -39,7 +39,7 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
-import ch.rasc.wamp2spring.servlet.config.WampSubProtocolHandler;
+import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 
 public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler {
 

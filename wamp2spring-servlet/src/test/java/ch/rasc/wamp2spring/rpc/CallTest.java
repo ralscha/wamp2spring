@@ -32,7 +32,7 @@ import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
-import ch.rasc.wamp2spring.servlet.config.EnableServletWamp;
+import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,

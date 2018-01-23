@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.WampPublisher;
-import ch.rasc.wamp2spring.servlet.config.EnableServletWamp;
+import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,

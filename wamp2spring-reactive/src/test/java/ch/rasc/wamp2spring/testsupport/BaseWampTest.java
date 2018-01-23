@@ -50,7 +50,7 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampRole;
-import ch.rasc.wamp2spring.reactive.config.WampWebSocketHandler;
+import ch.rasc.wamp2spring.reactive.WampWebSocketHandler;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

@@ -34,13 +34,13 @@
 
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/ralscha/wamp2spring-session/issues</url>
+		<url>https://github.com/ralscha/wamp2spring/issues</url>
 	</issueManagement>
 
 	<scm>
-		<connection>scm:git:git@github.com:ralscha/wamp2spring-session.git</connection>
-		<developerConnection>scm:git:git@github.com:ralscha/wamp2spring-session.git</developerConnection>
-		<url>https://github.com/ralscha/wamp2spring-session.git</url>
+		<connection>scm:git:git@github.com:ralscha/wamp2spring.git</connection>
+		<developerConnection>scm:git:git@github.com:ralscha/wamp2spring.git</developerConnection>
+		<url>https://github.com/ralscha/wamp2spring.git</url>
 	</scm>
 
 	<properties>
@@ -207,7 +207,7 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Automatic-Module-Name>ch.rasc.wamp2spring.session</Automatic-Module-Name>
+							<Automatic-Module-Name>ch.rasc.wamp2spring.session.servlet</Automatic-Module-Name>
 						</manifestEntries>
 					</archive>
 				</configuration>				

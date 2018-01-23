@@ -33,7 +33,7 @@ import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.reactive.config.EnableReactiveWamp;
+import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
@@ -96,7 +96,7 @@ public class ConnectionTest extends BaseWampTest {
 			assertThat(goodbyeMessage.getMessage()).isNull();
 			assertThat(goodbyeMessage.getReason())
 					.isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
-			
+
 			try {
 				TimeUnit.SECONDS.sleep(5);
 				wc.sendMessage(

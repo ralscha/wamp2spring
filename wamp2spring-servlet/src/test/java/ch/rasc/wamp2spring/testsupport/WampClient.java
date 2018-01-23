@@ -45,7 +45,7 @@ import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
-import ch.rasc.wamp2spring.servlet.config.WampSubProtocolHandler;
+import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
 
 public class WampClient implements AutoCloseable {

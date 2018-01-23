@@ -31,7 +31,7 @@ import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.servlet.config.EnableServletWamp;
+import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.rpc.TestDto;
-import ch.rasc.wamp2spring.servlet.config.EnableServletWamp;
+import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 

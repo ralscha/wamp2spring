@@ -42,7 +42,7 @@ import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
-import ch.rasc.wamp2spring.servlet.config.EnableServletWamp;
+import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.CompletableFutureWebSocketHandler;
 

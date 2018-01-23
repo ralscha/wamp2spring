@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 @NonNullApi
-package ch.rasc.wamp2spring.reactive.config;
+package ch.rasc.wamp2spring.servlet;
 
 import org.springframework.lang.NonNullApi;

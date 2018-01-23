@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.servlet.config;
+package ch.rasc.wamp2spring.servlet;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import org.springframework.web.socket.server.HandshakeHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 /**
- * A {@link HandshakeHandler} implementation that prefers the JSON data format.
+ * A {@link HandshakeHandler} implementation that prefers the SMILE data format.
  *
  * You can configure this {@link HandshakeHandler} by extending the
  * {@link WampServletConfiguration} and overwriting the
@@ -34,20 +34,20 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
  *
  * 	&#64;Override
  * 	protected HandshakeHandler getHandshakeHandler() {
- * 		return new PreferJsonHandshakeHandler();
+ * 		return new PreferSmileHandshakeHandler();
  * 	}
  *
  * }
  * </pre>
  */
-public class PreferJsonHandshakeHandler extends DefaultHandshakeHandler {
+public class PreferSmileHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
 	protected String selectProtocol(List<String> requestedProtocols,
 			WebSocketHandler webSocketHandler) {
 
-		if (requestedProtocols.contains(WampSubProtocolHandler.JSON_PROTOCOL)) {
-			return WampSubProtocolHandler.JSON_PROTOCOL;
+		if (requestedProtocols.contains(WampSubProtocolHandler.SMILE_PROTOCOL)) {
+			return WampSubProtocolHandler.SMILE_PROTOCOL;
 		}
 
 		return super.selectProtocol(requestedProtocols, webSocketHandler);

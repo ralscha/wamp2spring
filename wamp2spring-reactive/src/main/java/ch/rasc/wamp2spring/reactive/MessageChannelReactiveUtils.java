@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.reactive.config;
+package ch.rasc.wamp2spring.reactive;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;

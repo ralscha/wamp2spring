@@ -36,7 +36,7 @@ import ch.rasc.wamp2spring.message.RegisterMessage;
 import ch.rasc.wamp2spring.message.RegisteredMessage;
 import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.YieldMessage;
-import ch.rasc.wamp2spring.reactive.config.EnableReactiveWamp;
+import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.session;
+package ch.rasc.wamp2spring.session.servlet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,7 +26,7 @@ import org.springframework.session.web.socket.handler.WebSocketRegistryListener;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
 
-import ch.rasc.wamp2spring.servlet.config.WampServletConfigurer;
+import ch.rasc.wamp2spring.servlet.WampServletConfigurer;
 
 public class SessionWampServletConfigurer<S extends Session>
 		implements WampServletConfigurer {

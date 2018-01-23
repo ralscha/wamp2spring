@@ -32,7 +32,7 @@ import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
-import ch.rasc.wamp2spring.reactive.config.EnableReactiveWamp;
+import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.Maps;
 

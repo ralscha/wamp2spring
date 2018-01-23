@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 @NonNullApi
-package ch.rasc.wamp2spring.security;
+package ch.rasc.wamp2spring.security.servlet;
 
 import org.springframework.lang.NonNullApi;

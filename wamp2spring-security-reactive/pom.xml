@@ -8,14 +8,14 @@
 	</parent>
 
 	<groupId>ch.rasc</groupId>
-	<artifactId>wamp2spring-servlet</artifactId>
+	<artifactId>wamp2spring-security-reactive</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 
 	<inceptionYear>2018</inceptionYear>
 
-	<name>wamp2spring web servlet stack</name>
-	<description>wamp2spring adapter for Spring 5 web servlet stack  </description>
-	<url>https://github.com/ralscha/wamp2spring-servlet/</url>
+	<name>Integration of wamp2spring with Spring Security</name>
+	<description>Integration of wamp2spring with Spring Security</description>
+	<url>https://github.com/ralscha/wamp2spring-security/</url>
 
 	<developers>
 		<developer>
@@ -46,86 +46,30 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.version>5.0.2.RELEASE</spring.version>
-		<jackson.version>2.9.3</jackson.version>
+		<spring-security.version>5.0.0.RELEASE</spring-security.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>sonatype</id>
-			<name>sonatype</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
 	<dependencies>
+
 		<dependency>
 			<groupId>ch.rasc</groupId>
-			<artifactId>wamp2spring-core</artifactId>
+			<artifactId>wamp2spring-security-core</artifactId>
 			<version>2.0.0-SNAPSHOT</version>
 		</dependency>
-
+		
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-websocket</artifactId>
-			<version>${spring.version}</version>
+			<groupId>ch.rasc</groupId>
+			<artifactId>wamp2spring-reactive</artifactId>
+			<version>2.0.0-SNAPSHOT</version>
 		</dependency>
-
+				
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-			<version>${spring.version}</version>
+			<groupId>com.google.code.findbugs</groupId>
+			<artifactId>jsr305</artifactId>
+			<version>3.0.2</version>
+			<scope>provided</scope>
 		</dependency>
-
-		<!-- TEST DEPENDENCIES -->
-
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>3.9.0</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>1.5.9.RELEASE</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<version>1.5.9.RELEASE</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>2.13.0</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>nl.jqno.equalsverifier</groupId>
-			<artifactId>equalsverifier</artifactId>
-			<version>2.4.2</version>
-			<scope>test</scope>
-		</dependency>
-
+		
 	</dependencies>
 
 	<reporting>
@@ -141,7 +85,7 @@
 				<version>3.0.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring/docs/5.0.2.RELEASE/javadoc-api/</link>
+						<link>http://docs.spring.io/spring/docs/5.0.2.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
@@ -169,9 +113,6 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
 				<version>3.0.5</version>
-				<configuration>
-					<excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -262,10 +203,10 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Automatic-Module-Name>ch.rasc.wamp2spring.servlet</Automatic-Module-Name>
+							<Automatic-Module-Name>ch.rasc.wamp2spring.security.reactive</Automatic-Module-Name>
 						</manifestEntries>
 					</archive>
-				</configuration>
+				</configuration>				
 			</plugin>
 
 			<plugin>
@@ -284,10 +225,8 @@
 				<configuration>
 					<header>${basedir}/../header.txt</header>
 					<properties>
-						
 						<year>${project.inceptionYear}</year>
 						<currentYear>2018</currentYear>
-						
 					</properties>
 					<excludes>
 						<exclude>**/*.xml</exclude>
@@ -323,14 +262,14 @@
 				<version>3.0.5</version>
 				<executions>
 					<execution>
-						<phase>none</phase>
+						<phase>compile</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-
+			</plugin>			
+			
 		</plugins>
 	</build>
 

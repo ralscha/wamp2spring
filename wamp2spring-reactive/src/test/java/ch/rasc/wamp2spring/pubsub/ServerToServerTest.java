@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 
 import ch.rasc.wamp2spring.WampPublisher;
-import ch.rasc.wamp2spring.reactive.config.EnableReactiveWamp;
+import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,

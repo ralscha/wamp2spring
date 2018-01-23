@@ -34,13 +34,13 @@
 
 	<issueManagement>
 		<system>GitHub</system>
-		<url>https://github.com/ralscha/wamp2spring-security/issues</url>
+		<url>https://github.com/ralscha/wamp2spring/issues</url>
 	</issueManagement>
 
 	<scm>
-		<connection>scm:git:git@github.com:ralscha/wamp2spring-security.git</connection>
-		<developerConnection>scm:git:git@github.com:ralscha/wamp2spring-security.git</developerConnection>
-		<url>https://github.com/ralscha/wamp2spring-security.git</url>
+		<connection>scm:git:git@github.com:ralscha/wamp2spring.git</connection>
+		<developerConnection>scm:git:git@github.com:ralscha/wamp2spring.git</developerConnection>
+		<url>https://github.com/ralscha/wamp2spring.git</url>
 	</scm>
 
 	<properties>

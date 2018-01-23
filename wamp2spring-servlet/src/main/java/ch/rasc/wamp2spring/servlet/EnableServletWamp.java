@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.reactive.config;
+package ch.rasc.wamp2spring.servlet;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -31,18 +31,18 @@ import ch.rasc.wamp2spring.config.Feature;
  *
  * <pre class="code">
  * &#64;SpringBootApplication
- * &#64;EnableReactiveWamp
+ * &#64;EnableServletWamp
  * public class Application {
  * }
  * </pre>
  *
  * To configure certain aspects of the wamp2spring library you can implement the
- * {@link WampReactiveConfigurer} interface with a &#64;Configuration class.
+ * {@link WampServletConfigurer} interface with a &#64;Configuration class.
  *
  * <pre class="code">
  * &#64;SpringBootApplication
- * &#64;EnableReactiveWamp(disable = Feature.DEALER)
- * public class Application implements WampConfigurer {
+ * &#64;EnableServletWamp(disable = Feature.DEALER)
+ * public class Application implements WampServletConfigurer {
  *
  * 	&#64;Override
  * 	public void addArgumentResolvers(
@@ -52,12 +52,12 @@ import ch.rasc.wamp2spring.config.Feature;
  * </pre>
  * <p>
  * If your application needs more control about the wamp2spring configuration you can
- * subclass a &#64;Configuration class from {@link WampReactiveConfiguration}. Do not add
- * the &#64;EnableReactiveWamp annotation when you configure WAMP this way.
+ * subclass a &#64;Configuration class from {@link WampServletConfiguration}. Do not add
+ * the &#64;EnableServletWamp annotation when you configure WAMP this way.
  *
  * <pre class="code">
  * &#64;SpringBootApplication
- * public class Application extends WampConfiguration {
+ * public class Application extends WampServletConfiguration {
  * 	&#64;Override
  * 	protected String getWebSocketHandlerPath() {
  * 		return "/wampsession";
@@ -69,8 +69,8 @@ import ch.rasc.wamp2spring.config.Feature;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(WampReactiveConfiguration.class)
-public @interface EnableReactiveWamp {
+@Import(WampServletConfiguration.class)
+public @interface EnableServletWamp {
 	/**
 	 * Disable listed features. By default every supported feature is enabled.
 	 */

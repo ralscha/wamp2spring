@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.servlet.config;
+package ch.rasc.wamp2spring.servlet;
 
 import java.util.List;
 
@@ -22,8 +22,7 @@ import org.springframework.web.socket.server.HandshakeHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 /**
- * A {@link HandshakeHandler} implementation that prefers a binary data format in the
- * order MessagePack, Smile and CBOR.
+ * A {@link HandshakeHandler} implementation that prefers the JSON data format.
  *
  * You can configure this {@link HandshakeHandler} by extending the
  * {@link WampServletConfiguration} and overwriting the
@@ -35,28 +34,20 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
  *
  * 	&#64;Override
  * 	protected HandshakeHandler getHandshakeHandler() {
- * 		return new PreferBinaryHandshakeHandler();
+ * 		return new PreferJsonHandshakeHandler();
  * 	}
  *
  * }
  * </pre>
  */
-public class PreferBinaryHandshakeHandler extends DefaultHandshakeHandler {
+public class PreferJsonHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
 	protected String selectProtocol(List<String> requestedProtocols,
 			WebSocketHandler webSocketHandler) {
 
-		if (requestedProtocols.contains(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
-			return WampSubProtocolHandler.MSGPACK_PROTOCOL;
-		}
-
-		if (requestedProtocols.contains(WampSubProtocolHandler.SMILE_PROTOCOL)) {
-			return WampSubProtocolHandler.SMILE_PROTOCOL;
-		}
-
-		if (requestedProtocols.contains(WampSubProtocolHandler.CBOR_PROTOCOL)) {
-			return WampSubProtocolHandler.CBOR_PROTOCOL;
+		if (requestedProtocols.contains(WampSubProtocolHandler.JSON_PROTOCOL)) {
+			return WampSubProtocolHandler.JSON_PROTOCOL;
 		}
 
 		return super.selectProtocol(requestedProtocols, webSocketHandler);

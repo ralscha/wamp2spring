@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.security;
+package ch.rasc.wamp2spring.security.servlet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +37,11 @@ import org.springframework.security.messaging.context.AuthenticationPrincipalArg
 import org.springframework.security.messaging.context.SecurityContextChannelInterceptor;
 
 import ch.rasc.wamp2spring.message.WampMessageHeader;
-import ch.rasc.wamp2spring.servlet.config.WampServletConfigurer;
+import ch.rasc.wamp2spring.security.WampMessageSecurityMetadataSourceRegistry;
+import ch.rasc.wamp2spring.servlet.WampServletConfigurer;
 
-public abstract class AbstractSecurityWampConfigurer implements WampServletConfigurer {
+public abstract class AbstractSecurityWampServletConfigurer
+		implements WampServletConfigurer {
 
 	private SecurityExpressionHandler<Message<Object>> defaultExpressionHandler = new DefaultMessageSecurityExpressionHandler<>();
 

@@ -194,13 +194,13 @@ public class WampMessageSecurityMetadataSourceRegistry {
 		this.expressionHandler = exprHandler;
 	}
 
-	protected MessageSecurityMetadataSource createMetadataSource() {
+	public MessageSecurityMetadataSource createMetadataSource() {
 		return ExpressionBasedMessageSecurityMetadataSourceFactory
 				.createExpressionMessageMetadataSource(this.matcherToExpression,
 						this.expressionHandler);
 	}
 
-	protected boolean containsMapping() {
+	public boolean containsMapping() {
 		return !this.matcherToExpression.isEmpty();
 	}
 

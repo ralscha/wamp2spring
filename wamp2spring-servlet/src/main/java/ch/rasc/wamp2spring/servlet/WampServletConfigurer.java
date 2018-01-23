@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.rasc.wamp2spring.servlet.config;
+package ch.rasc.wamp2spring.servlet;
 
-import java.util.List;
-
-import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
-import org.springframework.messaging.support.AbstractMessageChannel;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
 
-import ch.rasc.wamp2spring.config.Features;
+import ch.rasc.wamp2spring.config.WampConfigurer;
 
 /**
  * Defines methods for configuring WAMP support.
@@ -31,26 +27,7 @@ import ch.rasc.wamp2spring.config.Features;
  * Used together with {@link EnableWamp}
  */
 @SuppressWarnings("unused")
-public interface WampServletConfigurer {
-
-	/**
-	 * Configures the {@link org.springframework.messaging.MessageChannel} used for
-	 * incoming messages from WebSocket clients.
-	 */
-	default void configureClientInboundChannel(AbstractMessageChannel channel) {
-		// nothing here
-	}
-
-	/**
-	 * Adds resolvers to support custom controller method argument types.
-	 * <p>
-	 * This does not override the built-in argument resolvers.
-	 * @param argumentResolvers the resolvers to register (initially an empty list)
-	 */
-	default void addArgumentResolvers(
-			List<HandlerMethodArgumentResolver> argumentResolvers) {
-		// nothing here
-	}
+public interface WampServletConfigurer extends WampConfigurer {
 
 	/**
 	 * Decorates a WebSocket handler
@@ -72,21 +49,6 @@ public interface WampServletConfigurer {
 	 */
 	default void configureWebSocketHandlerRegistration(
 			WebSocketHandlerRegistration registration) {
-		// nothing here
-	}
-
-	/**
-	 * Configures wamp2spring features
-	 * <p>
-	 *
-	 * <pre class="code">
-	 * &#64;Override
-	 * protected void configureFeatures(Features features) {
-	 * 	features.disable(Feature.DEALER);
-	 * }
-	 * </pre>
-	 */
-	default void configureFeatures(Features features) {
 		// nothing here
 	}
 
