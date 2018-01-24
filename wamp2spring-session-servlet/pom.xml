@@ -89,7 +89,7 @@
 				<version>3.0.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring/docs/5.0.2.RELEASE/javadoc-api/</link>
+						<link>https://docs.spring.io/spring/docs/5.0.3.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
