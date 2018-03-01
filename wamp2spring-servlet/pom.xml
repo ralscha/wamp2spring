@@ -1,74 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<artifactId>oss-parent</artifactId>
-		<groupId>org.sonatype.oss</groupId>
-		<version>9</version>
-	</parent>
+    <parent>
+		<groupId>ch.rasc</groupId>
+		<artifactId>wamp2spring-parent</artifactId>
+		<version>2.0.0-SNAPSHOT</version>	
+    </parent>
 
-	<groupId>ch.rasc</groupId>
+	<properties>
+	    <main.basedir>${project.parent.basedir}</main.basedir>
+	</properties>
+
 	<artifactId>wamp2spring-servlet</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
-
-	<inceptionYear>2018</inceptionYear>
 
 	<name>wamp2spring web servlet stack</name>
 	<description>wamp2spring adapter for Spring 5 web servlet stack  </description>
-	<url>https://github.com/ralscha/wamp2spring-servlet/</url>
-
-	<developers>
-		<developer>
-			<name>Ralph Schaer</name>
-			<email>ralphschaer@gmail.com</email>
-		</developer>
-	</developers>
-
-	<licenses>
-		<license>
-			<name>Apache 2</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<issueManagement>
-		<system>GitHub</system>
-		<url>https://github.com/ralscha/wamp2spring/issues</url>
-	</issueManagement>
-
-	<scm>
-		<connection>scm:git:git@github.com:ralscha/wamp2spring.git</connection>
-		<developerConnection>scm:git:git@github.com:ralscha/wamp2spring.git</developerConnection>
-		<url>https://github.com/ralscha/wamp2spring.git</url>
-	</scm>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.0.4.RELEASE</spring.version>
-		<jackson.version>2.9.4</jackson.version>
-	</properties>
-
-	<repositories>
-
-		<repository>
-			<id>sonatype</id>
-			<name>sonatype</name>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
 
 	<dependencies>
 		<dependency>
 			<groupId>ch.rasc</groupId>
 			<artifactId>wamp2spring-core</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
@@ -102,14 +54,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
-			<version>2.0.0.RELEASE</version>
+			<version>${spring.boot.version}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>2.0.0.RELEASE</version>
+			<version>${spring.boot.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -128,211 +80,5 @@
 		</dependency>
 
 	</dependencies>
-
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.9</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.0</version>
-				<configuration>
-					<links>
-						<link>https://docs.spring.io/spring/docs/5.0.4.RELEASE/javadoc-api/</link>
-						<link>http://docs.oracle.com/javase/8/docs/api/</link>
-					</links>
-					<additionalOptions>-Xdoclint:none</additionalOptions>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jxr-plugin</artifactId>
-				<version>2.5</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.8</version>
-				<configuration>
-					<targetJdk>1.8</targetJdk>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-report-plugin</artifactId>
-				<version>2.20.1</version>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.5</version>
-				<configuration>
-					<excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.7</version>
-			</plugin>
-		</plugins>
-
-	</reporting>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<testSource>1.8</testSource>
-					<testTarget>1.8</testTarget>
-					<encoding>UTF-8</encoding>
-					<parameters>true</parameters>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.20.1</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.0.0</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.8.2</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-install-plugin</artifactId>
-				<version>2.5.2</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.0.2</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.7</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-site-plugin</artifactId>
-				<version>3.7</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.0.2</version>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Automatic-Module-Name>ch.rasc.wamp2spring.servlet</Automatic-Module-Name>
-						</manifestEntries>
-					</archive>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.0</version>
-				<configuration>
-					<additionalOptions>-Xdoclint:none</additionalOptions>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>com.mycila</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<version>3.0</version>
-				<configuration>
-					<header>${basedir}/../header.txt</header>
-					<properties>
-						
-						<year>${project.inceptionYear}</year>
-						<currentYear>2018</currentYear>
-						
-					</properties>
-					<excludes>
-						<exclude>**/*.xml</exclude>
-						<exclude>**/*.md</exclude>
-						<exclude>**/*.py</exclude>
-						<exclude>LICENSE</exclude>
-						<exclude>.travis.yml</exclude>
-						<exclude>**/.gitignore</exclude>
-						<exclude>.factorypath</exclude>
-						<exclude>.mvn/**/*</exclude>
-						<exclude>mvnw.cmd</exclude>
-						<exclude>mvnw</exclude>
-						<exclude>.apt_generated/**</exclude>
-						<exclude>.springBeans</exclude>
-						<exclude>.editorconfig</exclude>
-					</excludes>
-					<strictCheck>true</strictCheck>
-				</configuration>
-				<executions>
-					<execution>
-						<id>check-headers</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.5</version>
-				<executions>
-					<execution>
-						<phase>none</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-	</build>
 
 </project>
