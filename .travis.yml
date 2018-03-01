@@ -8,11 +8,11 @@ env:
 
 install: 
   - chmod 700 ./mvnw
-  - ../mvnw test -Dfindbugs.skip=true -B
+  - ./mvnw test -Dfindbugs.skip=true -B
 
 after_success:
   - python addsettings.py
-  - ../mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
+  - ./mvnw clean deploy -DskipTests=true -Dfindbugs.skip=true --settings ~/.m2/mySettings.xml
   
 cache:
   directories:
