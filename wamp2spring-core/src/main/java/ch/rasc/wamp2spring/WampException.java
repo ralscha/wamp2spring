@@ -31,6 +31,11 @@ public class WampException extends Exception {
 		this.uri = error;
 	}
 
+	public WampException(String error, String message, Throwable cause) {
+		super(message, cause);
+		this.uri = error;
+	}
+
 	public WampException(WampError error) {
 		this(error.getExternalValue());
 	}
@@ -39,7 +44,19 @@ public class WampException extends Exception {
 		this(error.getExternalValue(), message);
 	}
 
+	public WampException(WampError error, String message, Throwable cause) {
+		this(error.getExternalValue(), message, cause);
+	}
+
 	public String getUri() {
 		return uri;
+	}
+
+	private WampException() {
+		uri = null;
+	}
+
+	private WampException(Throwable cause) {
+		uri = null;
 	}
 }
