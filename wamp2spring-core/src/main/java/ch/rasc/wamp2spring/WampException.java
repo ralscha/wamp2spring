@@ -52,7 +52,7 @@ public class WampException extends Exception {
 	private final List<Object> arguments;
 	private final Map<String, Object> argumentsKw;
 
-	private WampException(String uri, List<Object> arguments, Map<String, Object> argumentsKw, Throwable throwable) {
+	protected WampException(String uri, List<Object> arguments, Map<String, Object> argumentsKw, Throwable throwable) {
 		super(throwable);
 		this.uri = uri;
 		this.arguments = arguments;
