@@ -15,48 +15,59 @@
  */
 package ch.rasc.wamp2spring;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * User exception that can be thrown at procedure invocation
  */
 public class WampException extends Exception {
 
+	public static class Builder {
+		private List<Object> arguments;
+		private Map<String, Object> argumentsKw;
+		private Throwable throwable;
+
+		public Builder arguments(List<Object> param) {
+			this.arguments = param;
+			return this;
+		}
+
+		public Builder argumentsKw(Map<String, Object> param) {
+			this.argumentsKw = param;
+			return this;
+		}
+
+		public Builder throwable(Throwable param) {
+			this.throwable = param;
+			return this;
+		}
+
+		public WampException build(String error) {
+			return new WampException(error, arguments, argumentsKw, throwable);
+		}
+	}
+
 	private final String uri;
+	private final List<Object> arguments;
+	private final Map<String, Object> argumentsKw;
 
-	public WampException(String error) {
-		this.uri = error;
-	}
-
-	public WampException(String error, String message) {
-		super(message);
-		this.uri = error;
-	}
-
-	public WampException(String error, String message, Throwable cause) {
-		super(message, cause);
-		this.uri = error;
-	}
-
-	public WampException(WampError error) {
-		this(error.getExternalValue());
-	}
-
-	public WampException(WampError error, String message) {
-		this(error.getExternalValue(), message);
-	}
-
-	public WampException(WampError error, String message, Throwable cause) {
-		this(error.getExternalValue(), message, cause);
+	private WampException(String uri, List<Object> arguments, Map<String, Object> argumentsKw, Throwable throwable) {
+		super(throwable);
+		this.uri = uri;
+		this.arguments = arguments;
+		this.argumentsKw = argumentsKw;
 	}
 
 	public String getUri() {
 		return uri;
 	}
 
-	private WampException() {
-		uri = null;
+	public List<Object> getArguments() {
+		return arguments;
 	}
 
-	private WampException(Throwable cause) {
-		uri = null;
+	public Map<String, Object> getArgumentsKw() {
+		return argumentsKw;
 	}
 }
