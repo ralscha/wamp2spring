@@ -42,6 +42,7 @@ import org.springframework.util.ReflectionUtils.MethodFilter;
 import org.springframework.util.StringUtils;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
@@ -277,6 +278,14 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 			sendMessageToClient(resultMessage);
 		}
+		catch (WampException e) {
+			sendMessageToClient(
+					new ErrorMessage(callMessage, e.getUri(),
+							 e.getMessage() != null ? Collections.singletonList(e.getMessage())
+									: null));
+
+			logInvocationError(handlerMethod, e);
+		}
 		catch (Exception e) {
 			if ("org.springframework.security.access.AccessDeniedException"
 					.equals(e.getClass().getName())) {
@@ -288,10 +297,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 						new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
 			}
 
-			if (this.logger.isErrorEnabled()) {
-				this.logger.error(
-						"Error while invoking the handlerMethod " + handlerMethod, e);
-			}
+			logInvocationError(handlerMethod, e);
 		}
 	}
 
@@ -341,6 +347,13 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			}
 		}
 
+	}
+
+	private void logInvocationError(InvocableHandlerMethod handlerMethod, Exception e) {
+		if (this.logger.isErrorEnabled()) {
+			this.logger.error(
+					"Error while invoking the handlerMethod " + handlerMethod, e);
+		}
 	}
 
 	@Override
