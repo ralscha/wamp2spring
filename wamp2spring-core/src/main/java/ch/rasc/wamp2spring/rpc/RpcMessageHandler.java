@@ -282,7 +282,10 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			sendMessageToClient(
 					new ErrorMessage(callMessage, e.getUri(), e.getArguments(), e.getArgumentsKw()));
 
-			logInvocationError(handlerMethod, e);
+			if (this.logger.isDebugEnabled()) {
+				this.logger.debug(
+						"Error while invoking the handlerMethod " + handlerMethod, e);
+			}
 		}
 		catch (Exception e) {
 			if ("org.springframework.security.access.AccessDeniedException"
@@ -295,7 +298,10 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 						new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
 			}
 
-			logInvocationError(handlerMethod, e);
+			if (this.logger.isErrorEnabled()) {
+				this.logger.error(
+						"Error while invoking the handlerMethod " + handlerMethod, e);
+			}
 		}
 	}
 
@@ -345,13 +351,6 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			}
 		}
 
-	}
-
-	private void logInvocationError(InvocableHandlerMethod handlerMethod, Exception e) {
-		if (this.logger.isErrorEnabled()) {
-			this.logger.error(
-					"Error while invoking the handlerMethod " + handlerMethod, e);
-		}
 	}
 
 	@Override

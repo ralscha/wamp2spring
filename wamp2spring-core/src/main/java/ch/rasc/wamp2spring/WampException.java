@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@ package ch.rasc.wamp2spring;
 
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.lang.Nullable;
 
 /**
  * User exception that can be thrown at procedure invocation
@@ -52,7 +54,10 @@ public class WampException extends Exception {
 	private final List<Object> arguments;
 	private final Map<String, Object> argumentsKw;
 
-	protected WampException(String uri, List<Object> arguments, Map<String, Object> argumentsKw, Throwable throwable) {
+	protected WampException(String uri,
+							@Nullable List<Object> arguments,
+							@Nullable Map<String, Object> argumentsKw,
+							@Nullable Throwable throwable) {
 		super(throwable);
 		this.uri = uri;
 		this.arguments = arguments;
@@ -63,11 +68,11 @@ public class WampException extends Exception {
 		return uri;
 	}
 
-	public List<Object> getArguments() {
+	public @Nullable List<Object> getArguments() {
 		return arguments;
 	}
 
-	public Map<String, Object> getArgumentsKw() {
+	public @Nullable Map<String, Object> getArgumentsKw() {
 		return argumentsKw;
 	}
 }
