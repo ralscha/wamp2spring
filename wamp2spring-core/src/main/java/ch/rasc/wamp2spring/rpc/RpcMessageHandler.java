@@ -42,6 +42,7 @@ import org.springframework.util.ReflectionUtils.MethodFilter;
 import org.springframework.util.StringUtils;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
@@ -276,6 +277,15 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			}
 
 			sendMessageToClient(resultMessage);
+		}
+		catch (WampException e) {
+			sendMessageToClient(
+					new ErrorMessage(callMessage, e.getUri(), e.getArguments(), e.getArgumentsKw()));
+
+			if (this.logger.isDebugEnabled()) {
+				this.logger.debug(
+						"Error while invoking the handlerMethod " + handlerMethod, e);
+			}
 		}
 		catch (Exception e) {
 			if ("org.springframework.security.access.AccessDeniedException"
