@@ -46,7 +46,8 @@ public class WampException extends Exception {
 		}
 
 		public WampException build(String error) {
-			return new WampException(error, arguments, argumentsKw, throwable);
+			return new WampException(error, this.arguments, this.argumentsKw,
+					this.throwable);
 		}
 	}
 
@@ -54,10 +55,8 @@ public class WampException extends Exception {
 	private final List<Object> arguments;
 	private final Map<String, Object> argumentsKw;
 
-	protected WampException(String uri,
-							@Nullable List<Object> arguments,
-							@Nullable Map<String, Object> argumentsKw,
-							@Nullable Throwable throwable) {
+	protected WampException(String uri, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, @Nullable Throwable throwable) {
 		super(throwable);
 		this.uri = uri;
 		this.arguments = arguments;
@@ -65,14 +64,14 @@ public class WampException extends Exception {
 	}
 
 	public String getUri() {
-		return uri;
+		return this.uri;
 	}
 
 	public @Nullable List<Object> getArguments() {
-		return arguments;
+		return this.arguments;
 	}
 
 	public @Nullable Map<String, Object> getArgumentsKw() {
-		return argumentsKw;
+		return this.argumentsKw;
 	}
 }
