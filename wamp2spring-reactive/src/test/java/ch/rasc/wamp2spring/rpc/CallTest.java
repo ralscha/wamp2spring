@@ -35,6 +35,7 @@ import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
+import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
 		classes = CallTest.Config.class)
@@ -170,6 +171,21 @@ public class CallTest extends BaseWampTest {
 		assertThat(this.callService.isCalled("callWithDtoAndMessage")).isTrue();
 	}
 
+	@Test
+	public void testCallWithException() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(10L, "callService.callWithException",
+						Collections.singletonList("theArgument")),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
+		ErrorMessage result = (ErrorMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(10L);
+		assertThat(result.getArgumentsKw()).isNull();
+		assertThat(result.getArguments()).containsExactly("arg1");
+		assertThat(result.getError()).isEqualTo("the error message");
+		assertThat(this.callService.isCalled("callWithException")).isTrue();
+	}	
+	
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableReactiveWamp

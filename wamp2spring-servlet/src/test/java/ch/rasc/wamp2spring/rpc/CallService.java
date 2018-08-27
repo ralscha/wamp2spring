@@ -17,9 +17,11 @@ package ch.rasc.wamp2spring.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.message.CallMessage;
 
@@ -92,6 +94,13 @@ public class CallService {
 		return testDto.getName().toUpperCase() + "/" + secondArgument;
 	}
 
+	@WampProcedure
+	public String callWithException(String argument) throws WampException {
+		this.called.add("callWithException");
+		assertThat(argument).isEqualTo("theArgument");
+		throw new WampException.Builder().arguments(Collections.singletonList("arg1")).build("the error message");
+	}
+	
 	public boolean isCalled(String method) {
 		boolean contains = this.called.contains(method);
 		this.called.remove(method);
