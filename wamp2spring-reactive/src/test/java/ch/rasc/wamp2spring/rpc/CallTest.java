@@ -35,7 +35,6 @@ import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
-import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
 		classes = CallTest.Config.class)
@@ -184,8 +183,8 @@ public class CallTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly("arg1");
 		assertThat(result.getError()).isEqualTo("the error message");
 		assertThat(this.callService.isCalled("callWithException")).isTrue();
-	}	
-	
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableReactiveWamp

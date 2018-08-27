@@ -98,9 +98,10 @@ public class CallService {
 	public String callWithException(String argument) throws WampException {
 		this.called.add("callWithException");
 		assertThat(argument).isEqualTo("theArgument");
-		throw new WampException.Builder().arguments(Collections.singletonList("arg1")).build("the error message");
+		throw new WampException.Builder().arguments(Collections.singletonList("arg1"))
+				.build("the error message");
 	}
-	
+
 	public boolean isCalled(String method) {
 		boolean contains = this.called.contains(method);
 		this.called.remove(method);

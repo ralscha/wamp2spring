@@ -167,7 +167,7 @@ public class CallTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly("HI/the_second_argument");
 		assertThat(this.callService.isCalled("callWithDtoAndMessage")).isTrue();
 	}
-	
+
 	@Test
 	public void testCallWithException() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
@@ -181,7 +181,7 @@ public class CallTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly("arg1");
 		assertThat(result.getError()).isEqualTo("the error message");
 		assertThat(this.callService.isCalled("callWithException")).isTrue();
-	}	
+	}
 
 	@Configuration
 	@EnableAutoConfiguration

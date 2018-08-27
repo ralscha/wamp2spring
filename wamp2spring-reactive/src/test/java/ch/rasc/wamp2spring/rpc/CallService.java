@@ -93,13 +93,14 @@ public class CallService {
 		assertThat(secondArgument).isEqualTo("the_second_argument");
 		return testDto.getName().toUpperCase() + "/" + secondArgument;
 	}
-	
+
 	@WampProcedure
 	public String callWithException(String argument) throws WampException {
 		this.called.add("callWithException");
 		assertThat(argument).isEqualTo("theArgument");
-		throw new WampException.Builder().arguments(Collections.singletonList("arg1")).build("the error message");
-	}	
+		throw new WampException.Builder().arguments(Collections.singletonList("arg1"))
+				.build("the error message");
+	}
 
 	public boolean isCalled(String method) {
 		boolean contains = this.called.contains(method);
