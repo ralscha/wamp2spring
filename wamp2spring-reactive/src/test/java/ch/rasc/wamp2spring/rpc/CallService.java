@@ -17,9 +17,16 @@ package ch.rasc.wamp2spring.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.assertj.core.util.Lists;
+import org.assertj.core.util.Maps;
+
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.message.CallMessage;
 
@@ -74,6 +81,20 @@ public class CallService {
 	}
 
 	@WampProcedure
+	public Integer wampError(String argument) throws WampException {
+		this.called.add("error");
+		assertThat(argument).isEqualTo("theArgument");
+
+		List<Object> arguments = Lists.list(1, 2);
+		Map<String, Object> argumentsKw = Maps.newHashMap("a", "b");
+
+		throw new WampException.Builder()
+				.arguments(arguments)
+				.argumentsKw(argumentsKw)
+				.build("app.error");
+	}
+
+	@WampProcedure
 	public String callWithDto(TestDto testDto) {
 		this.called.add("callWithDto");
 		assertThat(testDto.getName()).isEqualTo("Hi");
@@ -90,6 +111,22 @@ public class CallService {
 		assertThat(testDto.getId()).isEqualTo(2);
 		assertThat(secondArgument).isEqualTo("the_second_argument");
 		return testDto.getName().toUpperCase() + "/" + secondArgument;
+	}
+
+	@WampProcedure
+	public List<Double> callAndReturnList() {
+		this.called.add("callAndReturnList");
+		return Lists.list(1.1, 2.2, 3.3);
+	}
+
+	@WampProcedure
+	public Map<Double, Double> callAndReturnMap() {
+		this.called.add("callAndReturnMap");
+
+		Map<Double, Double> result = new HashMap<>();
+		result.put(0.0, 1.0);
+		result.put(1.0, 2.0);
+		return result;
 	}
 
 	public boolean isCalled(String method) {

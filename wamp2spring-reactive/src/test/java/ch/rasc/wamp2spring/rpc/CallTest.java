@@ -142,6 +142,20 @@ public class CallTest extends BaseWampTest {
 	}
 
 	@Test
+	public void testWampException() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L,
+				"callService.wampError", Collections.singletonList("theArgument")),
+				DataFormat.CBOR);
+		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
+		ErrorMessage error = (ErrorMessage) receivedMessage;
+		assertThat(error.getRequestId()).isEqualTo(7L);
+		assertThat(error.getArguments()).containsOnly(1, 2);
+		assertThat(error.getArgumentsKw()).containsEntry("a", "b");
+		assertThat(error.getError()).isEqualTo("app.error");
+		assertThat(this.callService.isCalled("error")).isTrue();
+	}
+
+	@Test
 	public void testDto() throws Exception {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
@@ -168,6 +182,34 @@ public class CallTest extends BaseWampTest {
 		assertThat(result.getArgumentsKw()).isNull();
 		assertThat(result.getArguments()).containsExactly("HI/the_second_argument");
 		assertThat(this.callService.isCalled("callWithDtoAndMessage")).isTrue();
+	}
+
+	@Test
+	public void testReturnedList() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(9L, "callService.callAndReturnList"),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
+		ResultMessage result = (ResultMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(9L);
+		assertThat(result.getArgumentsKw()).isNull();
+		assertThat(result.getArguments()).containsExactly(1.1, 2.2, 3.3);
+		assertThat(this.callService.isCalled("callAndReturnList")).isTrue();
+	}
+
+	@Test
+	public void testReturnedMap() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(9L, "callService.callAndReturnMap"),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
+		ResultMessage result = (ResultMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(9L);
+		assertThat(result.getArgumentsKw()).hasSize(2)
+										   .containsEntry("0.0", 1.0)
+										   .containsEntry("1.0", 2.0);
+		assertThat(result.getArguments()).isEmpty();
+		assertThat(this.callService.isCalled("callAndReturnMap")).isTrue();
 	}
 
 	@Configuration
