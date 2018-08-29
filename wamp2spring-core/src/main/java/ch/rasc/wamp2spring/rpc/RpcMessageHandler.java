@@ -257,25 +257,33 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void callWampMethod(CallMessage callMessage,
 			InvocableHandlerMethod handlerMethod) {
 		try {
 			Object returnValue = this.handlerMethodService.invoke(callMessage,
 					handlerMethod);
 
-			ResultMessage resultMessage;
+			List<Object> arguments = null;
+			Map<String, Object> argumentsKw = null;
+
 			if (returnValue instanceof WampResult) {
 				WampResult wampResult = (WampResult) returnValue;
-				resultMessage = new ResultMessage(callMessage, wampResult.getResults(),
-						wampResult.getResultsKw());
+				arguments = wampResult.getResults();
+				argumentsKw = wampResult.getResultsKw();
 			}
-			else {
-				resultMessage = new ResultMessage(callMessage,
-						returnValue != null ? Collections.singletonList(returnValue)
-								: null,
-						null);
+			else if (returnValue instanceof List) {
+				arguments = (List) returnValue;
+			}
+			else if (returnValue instanceof Map) {
+				argumentsKw = (Map) returnValue;
+			}
+			else if (returnValue != null) {
+			  	arguments = Collections.singletonList(returnValue);
 			}
 
+			ResultMessage resultMessage = new ResultMessage(callMessage,
+					arguments, argumentsKw);
 			sendMessageToClient(resultMessage);
 		}
 		catch (WampException e) {
