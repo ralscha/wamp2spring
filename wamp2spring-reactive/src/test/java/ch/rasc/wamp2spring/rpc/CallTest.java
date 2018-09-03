@@ -171,6 +171,34 @@ public class CallTest extends BaseWampTest {
 	}
 
 	@Test
+	public void testReturnedList() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(9L, "callService.callAndReturnList"),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
+		ResultMessage result = (ResultMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(9L);
+		assertThat(result.getArgumentsKw()).isNull();
+		assertThat(result.getArguments()).containsExactly(1.1, 2.2, 3.3);
+		assertThat(this.callService.isCalled("callAndReturnList")).isTrue();
+	}
+
+	@Test
+	public void testReturnedMap() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(9L, "callService.callAndReturnMap"),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
+		ResultMessage result = (ResultMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(9L);
+		assertThat(result.getArgumentsKw()).hasSize(2)
+										   .containsEntry("0.0", 1.0)
+										   .containsEntry("1.0", 2.0);
+		assertThat(result.getArguments()).isEmpty();
+		assertThat(this.callService.isCalled("callAndReturnMap")).isTrue();
+	}
+
+	@Test
 	public void testCallWithException() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
 				new CallMessage(10L, "callService.callWithException",

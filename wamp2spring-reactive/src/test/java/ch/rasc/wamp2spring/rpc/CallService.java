@@ -18,8 +18,13 @@ package ch.rasc.wamp2spring.rpc;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import org.assertj.core.util.Lists;
 
 import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
@@ -100,6 +105,22 @@ public class CallService {
 		assertThat(argument).isEqualTo("theArgument");
 		throw new WampException.Builder().arguments(Collections.singletonList("arg1"))
 				.build("the error message");
+	}
+
+	@WampProcedure
+	public List<Double> callAndReturnList() {
+		this.called.add("callAndReturnList");
+		return Lists.list(1.1, 2.2, 3.3);
+	}
+
+	@WampProcedure
+	public Map<Double, Double> callAndReturnMap() {
+		this.called.add("callAndReturnMap");
+
+		Map<Double, Double> result = new HashMap<>();
+		result.put(0.0, 1.0);
+		result.put(1.0, 2.0);
+		return result;
 	}
 
 	public boolean isCalled(String method) {
