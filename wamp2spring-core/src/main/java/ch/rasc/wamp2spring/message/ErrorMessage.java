@@ -103,13 +103,11 @@ public class ErrorMessage extends WampMessage {
 		setReceiver(callMessage);
 	}
 
-	public ErrorMessage(CallMessage callMessage,
-						String error,
-						@Nullable List<Object> arguments,
-						@Nullable Map<String, Object> argumentsKw) {
+	public ErrorMessage(CallMessage callMessage, String error,
+			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 
-		this(callMessage.getCode(), callMessage.getRequestId(), error,
-			 	arguments, argumentsKw);
+		this(callMessage.getCode(), callMessage.getRequestId(), error, arguments,
+				argumentsKw);
 		setReceiver(callMessage);
 	}
 

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>ch.rasc</groupId>
 		<artifactId>wamp2spring-parent</artifactId>
-		<version>2.0.1-SNAPSHOT</version>
+		<version>2.0.2-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -65,7 +65,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.11.0</version>
+			<version>3.11.1</version>
 			<scope>test</scope>
 		</dependency>
 

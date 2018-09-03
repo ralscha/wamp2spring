@@ -142,20 +142,6 @@ public class CallTest extends BaseWampTest {
 	}
 
 	@Test
-	public void testWampException() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L,
-				"callService.wampError", Collections.singletonList("theArgument")),
-				DataFormat.CBOR);
-		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
-		ErrorMessage error = (ErrorMessage) receivedMessage;
-		assertThat(error.getRequestId()).isEqualTo(7L);
-		assertThat(error.getArguments()).containsOnly(1, 2);
-		assertThat(error.getArgumentsKw()).containsEntry("a", "b");
-		assertThat(error.getError()).isEqualTo("app.error");
-		assertThat(this.callService.isCalled("error")).isTrue();
-	}
-
-	@Test
 	public void testDto() throws Exception {
 		TestDto dto = new TestDto(1, "Hi");
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
@@ -210,6 +196,21 @@ public class CallTest extends BaseWampTest {
 										   .containsEntry("1.0", 2.0);
 		assertThat(result.getArguments()).isEmpty();
 		assertThat(this.callService.isCalled("callAndReturnMap")).isTrue();
+	}
+
+	@Test
+	public void testCallWithException() throws Exception {
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(10L, "callService.callWithException",
+						Collections.singletonList("theArgument")),
+				DataFormat.JSON);
+		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
+		ErrorMessage result = (ErrorMessage) receivedMessage;
+		assertThat(result.getRequestId()).isEqualTo(10L);
+		assertThat(result.getArgumentsKw()).isNull();
+		assertThat(result.getArguments()).containsExactly("arg1");
+		assertThat(result.getError()).isEqualTo("the error message");
+		assertThat(this.callService.isCalled("callWithException")).isTrue();
 	}
 
 	@Configuration

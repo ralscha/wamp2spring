@@ -31,7 +31,8 @@ public interface WampConfigurer {
 	 * Configures the {@link org.springframework.messaging.MessageChannel} used for
 	 * incoming messages from WebSocket clients.
 	 */
-	default void configureClientInboundChannel(@SuppressWarnings("unused") AbstractMessageChannel channel) {
+	default void configureClientInboundChannel(
+			@SuppressWarnings("unused") AbstractMessageChannel channel) {
 		// nothing here
 	}
 

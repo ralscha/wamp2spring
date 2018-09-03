@@ -17,6 +17,7 @@ package ch.rasc.wamp2spring.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Maps;
 
 import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
@@ -81,20 +81,6 @@ public class CallService {
 	}
 
 	@WampProcedure
-	public Integer wampError(String argument) throws WampException {
-		this.called.add("error");
-		assertThat(argument).isEqualTo("theArgument");
-
-		List<Object> arguments = Lists.list(1, 2);
-		Map<String, Object> argumentsKw = Maps.newHashMap("a", "b");
-
-		throw new WampException.Builder()
-				.arguments(arguments)
-				.argumentsKw(argumentsKw)
-				.build("app.error");
-	}
-
-	@WampProcedure
 	public String callWithDto(TestDto testDto) {
 		this.called.add("callWithDto");
 		assertThat(testDto.getName()).isEqualTo("Hi");
@@ -111,6 +97,14 @@ public class CallService {
 		assertThat(testDto.getId()).isEqualTo(2);
 		assertThat(secondArgument).isEqualTo("the_second_argument");
 		return testDto.getName().toUpperCase() + "/" + secondArgument;
+	}
+
+	@WampProcedure
+	public String callWithException(String argument) throws WampException {
+		this.called.add("callWithException");
+		assertThat(argument).isEqualTo("theArgument");
+		throw new WampException.Builder().arguments(Collections.singletonList("arg1"))
+				.build("the error message");
 	}
 
 	@WampProcedure

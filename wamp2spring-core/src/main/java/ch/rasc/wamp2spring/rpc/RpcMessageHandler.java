@@ -287,8 +287,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			sendMessageToClient(resultMessage);
 		}
 		catch (WampException e) {
-			sendMessageToClient(
-					new ErrorMessage(callMessage, e.getUri(), e.getArguments(), e.getArgumentsKw()));
+			sendMessageToClient(new ErrorMessage(callMessage, e.getUri(),
+					e.getArguments(), e.getArgumentsKw()));
 
 			if (this.logger.isDebugEnabled()) {
 				this.logger.debug(
