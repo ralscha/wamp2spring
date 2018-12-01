@@ -294,7 +294,8 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * and others). Endpoint classes that require proxying should prefer class-based proxy
 	 * mechanisms.
 	 */
-	private void assertTargetBean(Method method, Object targetBean, Object[] args) {
+	@Override
+	protected void assertTargetBean(Method method, Object targetBean, Object[] args) {
 		Class<?> methodDeclaringClass = method.getDeclaringClass();
 		Class<?> targetBeanClass = targetBean.getClass();
 		if (!methodDeclaringClass.isAssignableFrom(targetBeanClass)) {
