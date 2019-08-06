@@ -45,21 +45,21 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.1.8.RELEASE</spring.version>
-		<spring.boot.version>2.1.6.RELEASE</spring.boot.version>
+		<spring.version>5.1.9.RELEASE</spring.version>
+		<spring.boot.version>2.1.7.RELEASE</spring.boot.version>
 		<jackson.version>2.9.9</jackson.version>
-		<spring-security.version>5.1.5.RELEASE</spring-security.version>
+		<spring-security.version>5.1.6.RELEASE</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
 	
     <modules>
         <module>wamp2spring-core</module>
         <module>wamp2spring-reactive</module>
-		<module>wamp2spring-servlet</module>
-		<module>wamp2spring-security-core</module>
-		<module>wamp2spring-security-servlet</module>
-		<module>wamp2spring-security-reactive</module>
-		<module>wamp2spring-session-servlet</module>		
+        <module>wamp2spring-servlet</module>
+        <module>wamp2spring-security-core</module>
+        <module>wamp2spring-security-servlet</module>
+        <module>wamp2spring-security-reactive</module>
+        <module>wamp2spring-session-servlet</module>		
     </modules>
 	
 	<reporting>
@@ -75,7 +75,7 @@
 				<version>3.0.1</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring/docs/5.1.8.RELEASE/javadoc-api/</link>
+						<link>https://docs.spring.io/spring/docs/5.1.9.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
