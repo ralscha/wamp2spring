@@ -45,10 +45,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.2.0.RELEASE</spring.version>
-		<spring.boot.version>2.2.0.RELEASE</spring.boot.version>
-		<jackson.version>2.10.0</jackson.version>
-		<spring-security.version>5.2.0.RELEASE</spring-security.version>
+		<spring.version>5.2.1.RELEASE</spring.version>
+		<spring.boot.version>2.2.1.RELEASE</spring.boot.version>
+		<jackson.version>2.10.1</jackson.version>
+		<spring-security.version>5.2.1.RELEASE</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
 	
@@ -75,7 +75,7 @@
 				<version>3.0.1</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring/docs/5.2.0.RELEASE/javadoc-api/</link>
+						<link>https://docs.spring.io/spring/docs/5.2.1.RELEASE/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
