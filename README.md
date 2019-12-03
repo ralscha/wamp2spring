@@ -1,5 +1,4 @@
-
-[![Build Status](https://api.travis-ci.org/ralscha/wamp2spring.png)](https://travis-ci.org/ralscha/wamp2spring)
+![Build Status](https://github.com/ralscha/wamp2spring/workflows/test/badge.svg)
 
 *wamp2spring* is a Java implementation of the [WAMP specification](http://wamp-proto.org/spec/) built on top of the WebSocket support of Spring 5.   
 WAMP is a WebSocket subprotocol that provides two application messaging patterns: Remote Procedure Calls and Publish / Subscribe. 
