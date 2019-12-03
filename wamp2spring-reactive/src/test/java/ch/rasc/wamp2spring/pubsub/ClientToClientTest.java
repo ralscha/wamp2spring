@@ -42,7 +42,7 @@ public class ClientToClientTest extends BaseWampTest {
 	@Test
 	public void testNoArgs() throws Exception {
 		try (WampClient wc1 = new WampClient(DataFormat.JSON);
-				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+				WampClient wc2 = new WampClient(DataFormat.CBOR)) {
 
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());

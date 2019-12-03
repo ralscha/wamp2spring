@@ -98,7 +98,7 @@ public class CallKwTest extends BaseWampTest {
 	public void testWrongNumberOfArguments() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(44L,
 				"callService.noReturn", Maps.map("arg1", "name").getMap()),
-				DataFormat.MSGPACK);
+				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(44L);

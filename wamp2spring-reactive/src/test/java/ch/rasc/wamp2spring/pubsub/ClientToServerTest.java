@@ -101,7 +101,7 @@ public class ClientToServerTest extends BaseWampTest {
 
 	@Test
 	public void testNoArguments() throws Exception {
-		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
+		try (WampClient wc = new WampClient(DataFormat.JSON)) {
 			wc.connect(wampEndpointUrl());
 
 			PublishMessage publishMessage = new PublishMessage.Builder(5L,

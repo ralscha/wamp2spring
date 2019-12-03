@@ -118,7 +118,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testNoParams() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(6L, "callService.noParams"), DataFormat.MSGPACK);
+				new CallMessage(6L, "callService.noParams"), DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(6L);
