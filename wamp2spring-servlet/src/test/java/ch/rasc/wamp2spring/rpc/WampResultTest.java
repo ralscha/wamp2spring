@@ -71,7 +71,7 @@ public class WampResultTest extends BaseWampTest {
 	@Test
 	public void testEmpty() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"),
-				DataFormat.MSGPACK);
+				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(3L);

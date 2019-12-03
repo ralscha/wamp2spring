@@ -92,7 +92,7 @@ public class RegisterTest extends BaseWampTest {
 
 	@Test
 	public void testInvocationError() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.MSGPACK);
+		try (WampClient wc1 = new WampClient(DataFormat.CBOR);
 				WampClient wc2 = new WampClient(DataFormat.JSON)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
