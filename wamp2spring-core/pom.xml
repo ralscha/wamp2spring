@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>org.msgpack</groupId>
 			<artifactId>jackson-dataformat-msgpack</artifactId>
-			<version>0.8.19</version>
+			<version>0.8.20</version>
 		</dependency>
 
 		<dependency>
@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.1.0</version>
+			<version>3.2.0</version>
 			<scope>test</scope>
 		</dependency>
 
