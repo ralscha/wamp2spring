@@ -47,7 +47,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.version>5.2.2.RELEASE</spring.version>
 		<spring.boot.version>2.2.2.RELEASE</spring.boot.version>
-		<jackson.version>2.10.1</jackson.version>
+		<jackson.version>2.10.2</jackson.version>
 		<spring-security.version>5.2.1.RELEASE</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
