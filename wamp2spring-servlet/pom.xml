@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.17.1</version>
+			<version>3.17.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -77,14 +77,14 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.5.9</version>
+			<version>3.5.11</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.jqno.equalsverifier</groupId>
 			<artifactId>equalsverifier</artifactId>
-			<version>3.4.2</version>
+			<version>3.4.3</version>
 			<scope>test</scope>
 		</dependency>
 
