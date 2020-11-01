@@ -25,7 +25,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.support.ChannelInterceptorAdapter;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
 import org.springframework.web.socket.WebSocketHandler;
@@ -38,7 +38,7 @@ import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 
 public final class SessionRepositoryMessageInterceptor<S extends Session>
-		extends ChannelInterceptorAdapter implements HandshakeInterceptor {
+		implements ChannelInterceptor, HandshakeInterceptor {
 
 	private static final String SPRING_SESSION_ID_ATTR_NAME = "SPRING.SESSION.ID";
 
@@ -62,7 +62,7 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 				}
 			}
 		}
-		return super.preSend(message, channel);
+		return preSend(message, channel);
 	}
 
 	private static boolean messageMatches(Message<?> message) {
