@@ -75,7 +75,7 @@ public class SubscriptionRegistry {
 				if (subscription == null) {
 					long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
 					subscription = new Subscription(subscribeMessage.getTopic(),
-							subscribeMessage.getMatchPolicy(), subscriptionId);
+							subscribeMessage.getMatchPolicy(), subscriptionId, subscribeMessage.getOptions());
 					subscriptionMap.put(subscription.getTopic(), subscription);
 					this.subscriptionsById.put(subscriptionId, subscription);
 					created = true;
@@ -101,7 +101,7 @@ public class SubscriptionRegistry {
 					if (subscription == null) {
 						long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
 						subscription = new Subscription(topic, eventListener.getMatch(),
-								subscriptionId);
+								subscriptionId, null);
 						subscriptionMap.put(subscription.getTopic(), subscription);
 						this.subscriptionsById.put(subscriptionId, subscription);
 						invalidateCacheEntries(subscription);

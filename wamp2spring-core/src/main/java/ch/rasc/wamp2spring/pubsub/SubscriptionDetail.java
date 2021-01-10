@@ -15,18 +15,22 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
+import java.util.Map;
+
 public class SubscriptionDetail {
 
 	private final long id;
 	private final long createdTimeMillis;
 	private final String topic;
 	private final MatchPolicy matchPolicy;
+	private final Map<String, Object> options;
 
 	public SubscriptionDetail(Subscription subscription) {
 		this.id = subscription.getSubscriptionId();
 		this.createdTimeMillis = subscription.getCreatedTimeMillis();
 		this.topic = subscription.getTopic();
 		this.matchPolicy = subscription.getMatchPolicy();
+		this.options = subscription.getOptions();
 	}
 
 	public long getId() {
@@ -45,11 +49,15 @@ public class SubscriptionDetail {
 		return this.matchPolicy;
 	}
 
+	public Map<String, Object> getOptions() {
+		return this.options;
+	}
+
 	@Override
 	public String toString() {
-		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis="
-				+ this.createdTimeMillis + ", topic=" + this.topic + ", matchPolicy="
-				+ this.matchPolicy + "]";
+		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis
+				+ ", topic=" + this.topic + ", matchPolicy=" + this.matchPolicy + ", options="
+				+ this.options + "]";
 	}
 
 }

@@ -17,6 +17,7 @@ package ch.rasc.wamp2spring.pubsub;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,16 +35,20 @@ class Subscription {
 
 	private final long createdTimeMillis;
 
+	private final Map<String, Object> options;
+
 	@Nullable
 	private List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
 
-	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId) {
+	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId,
+			Map<String, Object> options) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
 		this.topicMatch = new DestinationMatch(topic, matchPolicy);
 
 		this.subscriptionId = subscriptionId;
 		this.subscribers = ConcurrentHashMap.newKeySet();
+		this.options = options;
 	}
 
 	void addEventListenerHandlerMethod(InvocableHandlerMethod handlerMethod) {
@@ -87,6 +92,10 @@ class Subscription {
 
 	Set<Subscriber> getSubscribers() {
 		return this.subscribers;
+	}
+
+	public Map<String, Object> getOptions() {
+		return this.options;
 	}
 
 	@Nullable

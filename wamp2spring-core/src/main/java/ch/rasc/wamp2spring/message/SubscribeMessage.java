@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -40,25 +41,38 @@ public class SubscribeMessage extends WampMessage {
 
 	private final boolean getRetained;
 
+	private final Map<String, Object> options;
+
 	public SubscribeMessage(long requestId, String topic) {
-		this(requestId, topic, MatchPolicy.EXACT, false);
+		this(requestId, topic, MatchPolicy.EXACT, false, null);
 	}
 
 	public SubscribeMessage(long requestId, String topic, boolean get_retained) {
-		this(requestId, topic, MatchPolicy.EXACT, get_retained);
+		this(requestId, topic, MatchPolicy.EXACT, get_retained, null);
 	}
 
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match) {
-		this(requestId, topic, match, false);
+		this(requestId, topic, match, false, null);
 	}
 
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match,
 			boolean getRetained) {
+		this(requestId, topic, match, getRetained, null);
+	}
+
+	public SubscribeMessage(long requestId, String topic, MatchPolicy match,
+			boolean getRetained, Map<String, Object> options) {
 		super(CODE);
 		this.requestId = requestId;
 		this.matchPolicy = match;
 		this.topic = topic;
 		this.getRetained = getRetained;
+		if (options != null) {
+			this.options = Collections.unmodifiableMap(options);
+		}
+		else {
+			this.options = null;
+		}
 	}
 
 	public static SubscribeMessage deserialize(JsonParser jp) throws IOException {
@@ -84,7 +98,7 @@ public class SubscribeMessage extends WampMessage {
 		jp.nextToken();
 		String topic = jp.getValueAsString();
 
-		return new SubscribeMessage(request, topic, match, getRetained);
+		return new SubscribeMessage(request, topic, match, getRetained, options);
 	}
 
 	@Override
@@ -132,6 +146,17 @@ public class SubscribeMessage extends WampMessage {
 	 */
 	public boolean isGetRetained() {
 		return this.getRetained;
+	}
+
+	/**
+	 * Returns the Options dictionary. Third argument of a SUBSCRIBE message.
+	 * <p>
+     * <code>[SUBSCRIBE, Request|id, Options|dict, Topic|uri]</code>
+	 * <p>
+	 * Returns a unmodifiable view of the map. Can be null.
+	 */
+	public Map<String, Object> getOptions() {
+		return this.options;
 	}
 
 	@Override
