@@ -45,10 +45,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.3.3</spring.version>
-		<spring.boot.version>2.4.2</spring.boot.version>
+		<spring.version>5.3.4</spring.version>
+		<spring.boot.version>2.4.3</spring.boot.version>
 		<jackson.version>2.12.1</jackson.version>
-		<spring-security.version>5.4.2</spring-security.version>
+		<spring-security.version>5.4.5</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
 	
