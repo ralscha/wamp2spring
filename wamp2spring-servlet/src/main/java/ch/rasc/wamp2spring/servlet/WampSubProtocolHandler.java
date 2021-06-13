@@ -139,7 +139,16 @@ public class WampSubProtocolHandler
 						((TextMessage) webSocketMessage).asBytes());
 			}
 			else if (webSocketMessage instanceof BinaryMessage) {
-				ByteBuffer byteBuffer = ((BinaryMessage) webSocketMessage).getPayload();
+				BinaryMessage binaryMessage = (BinaryMessage) webSocketMessage;
+				ByteBuffer byteBuffer = binaryMessage.getPayload();
+
+				// happens when using undertow
+				if (!byteBuffer.hasArray()) {
+					ByteBuffer duplicate = byteBuffer.duplicate();
+					byte[] bytes = new byte[duplicate.remaining()];
+					duplicate.get(bytes);
+					webSocketMessage = new BinaryMessage(bytes, binaryMessage.isLast());
+				}
 
 				String acceptedProtocol = session.getAcceptedProtocol();
 				if (acceptedProtocol != null) {
