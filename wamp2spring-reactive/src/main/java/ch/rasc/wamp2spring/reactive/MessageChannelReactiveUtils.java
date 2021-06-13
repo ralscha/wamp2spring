@@ -48,7 +48,7 @@ public final class MessageChannelReactiveUtils {
 			return adaptSubscribableChannelToPublisher(
 					(SubscribableChannel) messageChannel);
 		}
-		else if (messageChannel instanceof PollableChannel) {
+		if (messageChannel instanceof PollableChannel) {
 			return adaptPollableChannelToPublisher((PollableChannel) messageChannel);
 		}
 		else {

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.data.MapEntry;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -265,13 +265,13 @@ public class RetentionTest extends BaseWampTest {
 			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(28.5);
 				if (londonCheck) {
-					Assert.fail("Wrong message");
+					Assertions.fail("Wrong message");
 				}
 			}
 			else {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				if (parisCheck) {
-					Assert.fail("Wrong message");
+					Assertions.fail("Wrong message");
 				}
 			}
 			assertThat(eventMessage.getArgumentsKw()).isNull();
@@ -353,21 +353,21 @@ public class RetentionTest extends BaseWampTest {
 			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(23.6);
 				if (londonCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 				londonCheck = true;
 			}
 			else if ("temperature.paris".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				if (parisCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 				parisCheck = true;
 			}
 			else {
 				assertThat(eventMessage.getArguments()).containsExactly(3.6);
 				if (osloCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 				osloCheck = true;
 			}
@@ -383,19 +383,19 @@ public class RetentionTest extends BaseWampTest {
 			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(23.6);
 				if (londonCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 			}
 			else if ("temperature.paris".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				if (parisCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 			}
 			else {
 				assertThat(eventMessage.getArguments()).containsExactly(3.6);
 				if (osloCheck) {
-					Assert.fail("wrong message");
+					Assertions.fail("wrong message");
 				}
 			}
 			assertThat(eventMessage.getArgumentsKw()).isNull();

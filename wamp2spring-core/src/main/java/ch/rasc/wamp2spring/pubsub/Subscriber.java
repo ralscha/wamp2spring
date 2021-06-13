@@ -39,7 +39,7 @@ final class Subscriber {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(wampSessionId);
+		return Objects.hash(this.wampSessionId);
 	}
 
 	@Override

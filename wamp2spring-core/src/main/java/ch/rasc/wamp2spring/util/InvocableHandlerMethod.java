@@ -230,9 +230,9 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	@Nullable
 	private Object convertListElements(TypeDescriptor td,
 			@Nullable Object convertedValue) {
-		if ((convertedValue != null)
-				&& (List.class.isAssignableFrom(convertedValue.getClass())
-						&& td.isCollection() && td.getElementTypeDescriptor() != null)) {
+		if (convertedValue != null
+				&& List.class.isAssignableFrom(convertedValue.getClass())
+				&& td.isCollection() && td.getElementTypeDescriptor() != null) {
 			Class<?> elementType = td.getElementTypeDescriptor().getType();
 
 			Collection<Object> convertedList = new ArrayList<>();
@@ -275,7 +275,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			if (targetException instanceof Error) {
 				throw (Error) targetException;
 			}
-			else if (targetException instanceof Exception) {
+			if (targetException instanceof Exception) {
 				throw (Exception) targetException;
 			}
 			else {

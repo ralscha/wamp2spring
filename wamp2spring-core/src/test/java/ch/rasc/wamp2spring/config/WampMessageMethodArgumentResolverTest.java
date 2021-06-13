@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Method;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 
 import ch.rasc.wamp2spring.annotation.WampProcedure;
@@ -34,7 +34,7 @@ public class WampMessageMethodArgumentResolverTest {
 
 	private MethodParameter stringParameter;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		Method testMethod = getClass().getDeclaredMethod("handleMessage",
 				CallMessage.class, String.class);

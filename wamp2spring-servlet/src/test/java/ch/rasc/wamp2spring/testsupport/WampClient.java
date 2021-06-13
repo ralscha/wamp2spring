@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
@@ -146,7 +146,7 @@ public class WampClient implements AutoCloseable {
 	public void waitForNothing() {
 		try {
 			this.result.getWampMessages();
-			Assert.fail("has to fail with a timeout exception");
+			Assertions.fail("has to fail with a timeout exception");
 		}
 		catch (Exception e) {
 			assertThat(e).isInstanceOf(TimeoutException.class);

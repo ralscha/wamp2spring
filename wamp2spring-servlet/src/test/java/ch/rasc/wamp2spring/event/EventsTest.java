@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,7 +54,7 @@ public class EventsTest extends BaseWampTest {
 	@Autowired
 	private EventsBean eventsBean;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.eventsBean.resetCounter();
 	}

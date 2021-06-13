@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
@@ -47,9 +47,9 @@ public class WampPublisherTest {
 	@Captor
 	ArgumentCaptor<PublishMessage> messageCaptor;
 
-	@Before
+	@BeforeEach
 	public void setup() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		Mockito.when(
 				this.clientOutboundChannel.send(ArgumentMatchers.any(WampMessage.class)))
 				.thenReturn(true);

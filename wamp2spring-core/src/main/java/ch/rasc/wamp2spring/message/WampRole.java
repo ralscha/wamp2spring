@@ -48,7 +48,7 @@ public final class WampRole {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(features, role);
+		return Objects.hash(this.features, this.role);
 	}
 
 	@Override

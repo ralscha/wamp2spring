@@ -20,8 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.Method;
 import java.security.Principal;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.messaging.MessageHandlingException;
 
@@ -38,7 +39,7 @@ public class PrincipalMethodArgumentResolverTest {
 
 	private MethodParameter stringParameter;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		Method testMethod = getClass().getDeclaredMethod("handleMessage", Principal.class,
 				String.class);
@@ -63,12 +64,15 @@ public class PrincipalMethodArgumentResolverTest {
 				.isEqualTo(testPrincipal);
 	}
 
-	@Test(expected = MessageHandlingException.class)
+	@Test
 	public void missingPrincipalTest() throws Exception {
-		CallMessage callMessage = new CallMessage(1, "call");
-		TestPrincipal testPrincipal = new TestPrincipal("testPrincipal");
-		assertThat(this.resolver.resolveArgument(this.principalParameter, callMessage))
-				.isEqualTo(testPrincipal);
+		Assertions.assertThrows(MessageHandlingException.class, () -> {
+			CallMessage callMessage = new CallMessage(1, "call");
+			TestPrincipal testPrincipal = new TestPrincipal("testPrincipal");
+			assertThat(
+					this.resolver.resolveArgument(this.principalParameter, callMessage))
+							.isEqualTo(testPrincipal);
+		});
 	}
 
 	@SuppressWarnings({ "unused" })

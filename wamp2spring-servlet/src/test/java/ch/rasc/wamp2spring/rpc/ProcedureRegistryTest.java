@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import ch.rasc.wamp2spring.config.Features;
@@ -39,7 +39,7 @@ public class ProcedureRegistryTest {
 
 	private ProcedureRegistry procedureRegistry;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.procedureRegistry = new ProcedureRegistry(new Features());
 	}

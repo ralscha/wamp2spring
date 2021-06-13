@@ -43,7 +43,7 @@ public class WampMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(code);
+		return Objects.hash(this.code);
 	}
 
 	@Override

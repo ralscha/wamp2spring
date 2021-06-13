@@ -31,8 +31,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.lang.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.util.StopWatch;
@@ -47,7 +47,7 @@ public class SubscriptionRegistryTest {
 
 	private SubscriptionRegistry subscriptionRegistry;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.subscriptionRegistry = new SubscriptionRegistry();
 	}

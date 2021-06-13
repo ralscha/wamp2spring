@@ -66,10 +66,10 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 	}
 
 	private static boolean messageMatches(Message<?> message) {
-		return (!(message instanceof AbortMessage) && !(message instanceof ErrorMessage)
+		return !(message instanceof AbortMessage) && !(message instanceof ErrorMessage)
 				&& !(message instanceof GoodbyeMessage)
 				&& !(message instanceof HelloMessage)
-				&& !(message instanceof WelcomeMessage));
+				&& !(message instanceof WelcomeMessage);
 	}
 
 	@Override

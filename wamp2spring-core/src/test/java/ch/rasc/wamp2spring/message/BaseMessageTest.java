@@ -15,13 +15,13 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.junit.Assert.fail;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.junit.jupiter.api.Assertions;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -56,7 +56,7 @@ public class BaseMessageTest {
 			return new String(bos.toByteArray());
 		}
 		catch (IOException e) {
-			fail(e.getMessage());
+			Assertions.fail(e.getMessage());
 			return null;
 		}
 	}

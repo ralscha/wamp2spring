@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.assertj.core.data.MapEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class InvocationMessageTest extends BaseMessageTest {
 

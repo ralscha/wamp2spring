@@ -17,7 +17,7 @@ package ch.rasc.wamp2spring.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class FeaturesTest {
 

@@ -26,8 +26,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionFailedException;
@@ -46,7 +47,7 @@ public class InvocableHandlerMethodTest {
 
 	private InvocableHandlerMethod invocableHandlerMethod;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		this.invocableHandlerMethod = new InvocableHandlerMethod(
 				new HandlerMethod(this, "setup"));
@@ -93,11 +94,14 @@ public class InvocableHandlerMethodTest {
 				.isEqualTo(3);
 	}
 
-	@Test(expected = ConversionFailedException.class)
+	@Test
 	public void testTointException() throws NoSuchMethodException, SecurityException {
-		Method testMethod = getClass().getDeclaredMethod("intParam", Integer.TYPE);
-		MethodParameter param = new MethodParameter(testMethod, 0);
-		assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
+		Assertions.assertThrows(ConversionFailedException.class, () -> {
+			Method testMethod = getClass().getDeclaredMethod("intParam", Integer.TYPE);
+			MethodParameter param = new MethodParameter(testMethod, 0);
+			assertThat(this.invocableHandlerMethod.convert(param, "str"))
+					.isEqualTo("str");
+		});
 	}
 
 	@Test
@@ -121,11 +125,15 @@ public class InvocableHandlerMethodTest {
 				.isEqualTo(Integer.valueOf(3));
 	}
 
-	@Test(expected = ConversionFailedException.class)
-	public void testToIntegerException() throws NoSuchMethodException, SecurityException {
-		Method testMethod = getClass().getDeclaredMethod("IntegerParam", Integer.class);
-		MethodParameter param = new MethodParameter(testMethod, 0);
-		assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
+	@Test
+	public void testToIntegerException() {
+		Assertions.assertThrows(ConversionFailedException.class, () -> {
+			Method testMethod = getClass().getDeclaredMethod("IntegerParam",
+					Integer.class);
+			MethodParameter param = new MethodParameter(testMethod, 0);
+			assertThat(this.invocableHandlerMethod.convert(param, "str"))
+					.isEqualTo("str");
+		});
 	}
 
 	@Test
@@ -150,13 +158,16 @@ public class InvocableHandlerMethodTest {
 				.isEqualTo(new BigDecimal("3.141"));
 	}
 
-	@Test(expected = ConversionFailedException.class)
+	@Test
 	public void testToBigDecimalException()
 			throws NoSuchMethodException, SecurityException {
-		Method testMethod = getClass().getDeclaredMethod("BigDecimalParam",
-				BigDecimal.class);
-		MethodParameter param = new MethodParameter(testMethod, 0);
-		assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
+		Assertions.assertThrows(ConversionFailedException.class, () -> {
+			Method testMethod = getClass().getDeclaredMethod("BigDecimalParam",
+					BigDecimal.class);
+			MethodParameter param = new MethodParameter(testMethod, 0);
+			assertThat(this.invocableHandlerMethod.convert(param, "str"))
+					.isEqualTo("str");
+		});
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -238,34 +249,6 @@ public class InvocableHandlerMethodTest {
 						.hasSize(3).containsExactly("1", "2", "3");
 	}
 
-	private void stringParam(String param) {
-		// nothing here
-	}
-
-	private void intParam(int param) {
-		// nothing here
-	}
-
-	private void IntegerParam(Integer param) {
-		// nothing here
-	}
-
-	private void BigDecimalParam(BigDecimal param) {
-		// nothing here
-	}
-
-	private void OptionalParam(Optional<?> param) {
-		// nothing here
-	}
-
-	private void dtoParam(TestDto param) {
-		// nothing here
-	}
-
-	private void listParam(List<String> list) {
-		// nothing here
-	}
-
 	static class TestDto {
 		private String v1;
 		private int v2;
@@ -306,7 +289,7 @@ public class InvocableHandlerMethodTest {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(v1, v2, v3, v4);
+			return Objects.hash(this.v1, this.v2, this.v3, this.v4);
 		}
 
 		@Override

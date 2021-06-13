@@ -23,13 +23,11 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -51,9 +49,8 @@ import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@Ignore
+@Disabled
 public class BaseWampTest {
 
 	public enum DataFormat {

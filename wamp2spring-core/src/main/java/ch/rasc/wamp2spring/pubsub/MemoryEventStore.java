@@ -51,8 +51,8 @@ public class MemoryEventStore implements EventStore {
 			}
 			return Collections.emptyList();
 		}
-		if ((query.getMatchPolicy() == MatchPolicy.PREFIX)
-				|| (query.getMatchPolicy() == MatchPolicy.WILDCARD)) {
+		if (query.getMatchPolicy() == MatchPolicy.PREFIX
+				|| query.getMatchPolicy() == MatchPolicy.WILDCARD) {
 			List<PublishMessage> matchedMessages = new ArrayList<>();
 			this.eventRetention.forEach((topic, publishMessage) -> {
 				if (query.matches(topic)) {

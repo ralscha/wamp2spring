@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.pubsub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.data.MapEntry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;

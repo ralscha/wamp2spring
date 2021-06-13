@@ -16,11 +16,12 @@
 package ch.rasc.wamp2spring.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Collections;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -53,7 +54,8 @@ public class ConnectionTest extends BaseWampTest {
 			try {
 				wc.sendMessage(
 						new PublishMessage.Builder(1L, "crud.user.create").build());
-				fail("sendMessage should fail because the connection should be closed");
+				Assertions.fail(
+						"sendMessage should fail because the connection should be closed");
 			}
 			catch (Exception e) {
 				assertThat(e).isInstanceOf(IllegalStateException.class);
