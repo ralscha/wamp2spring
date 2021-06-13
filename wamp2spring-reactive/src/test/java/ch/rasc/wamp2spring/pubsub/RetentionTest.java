@@ -129,6 +129,7 @@ public class RetentionTest extends BaseWampTest {
 			subscribeMessage = new SubscribeMessage(4, "humidity", true);
 			wc4.getResult().reset(2);
 			wc4.sendMessage(subscribeMessage);
+			TimeUnit.SECONDS.sleep(2);
 			result = wc4.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
@@ -500,6 +501,7 @@ public class RetentionTest extends BaseWampTest {
 					MatchPolicy.WILDCARD, true);
 			wc3.getResult().reset(2);
 			wc3.sendMessage(subscribeMessage);
+			TimeUnit.SECONDS.sleep(2);
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
