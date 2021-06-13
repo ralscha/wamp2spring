@@ -249,6 +249,34 @@ public class InvocableHandlerMethodTest {
 						.hasSize(3).containsExactly("1", "2", "3");
 	}
 
+	private void stringParam(String param) {
+		// nothing here
+	}
+
+	private void intParam(int param) {
+		// nothing here
+	}
+
+	private void IntegerParam(Integer param) {
+		// nothing here
+	}
+
+	private void BigDecimalParam(BigDecimal param) {
+		// nothing here
+	}
+
+	private void OptionalParam(Optional<?> param) {
+		// nothing here
+	}
+
+	private void dtoParam(TestDto param) {
+		// nothing here
+	}
+
+	private void listParam(List<String> list) {
+		// nothing here
+	}
+
 	static class TestDto {
 		private String v1;
 		private int v2;
