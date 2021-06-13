@@ -15,7 +15,9 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
     - name: Maven Test
-      run: ./mvnw clean test	
+      run: ./mvnw clean test
+      env:
+        WS_TIMEOUT: 10
   deploy:
     needs: test
     runs-on: ubuntu-latest
