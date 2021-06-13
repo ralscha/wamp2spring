@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,6 +52,7 @@ public class RetentionTest extends BaseWampTest {
 	private RetentionService retentionService;
 
 	@Test
+	@DisabledIfSystemProperty(named = "CI", matches = "true")
 	public void testExact() throws Exception {
 		try (WampClient wc1 = new WampClient(DataFormat.JSON);
 				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
@@ -151,7 +152,7 @@ public class RetentionTest extends BaseWampTest {
 	}
 
 	@Test
-	@Disabled
+	@DisabledIfSystemProperty(named = "CI", matches = "true")
 	public void testPrefix() throws Exception {
 		try (WampClient wc1 = new WampClient(DataFormat.JSON);
 				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
@@ -408,6 +409,7 @@ public class RetentionTest extends BaseWampTest {
 	}
 
 	@Test
+	@DisabledIfSystemProperty(named = "CI", matches = "true")
 	public void testWildcard() throws Exception {
 		try (WampClient wc1 = new WampClient(DataFormat.JSON);
 				WampClient wc2 = new WampClient(DataFormat.MSGPACK);
