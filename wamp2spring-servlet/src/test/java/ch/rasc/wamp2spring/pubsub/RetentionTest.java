@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -245,7 +245,7 @@ public class RetentionTest extends BaseWampTest {
 					"temperature.paris");
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.isRetained()).isTrue();
-			if (eventMessage.getTopic().equals("temperature.london")) {
+			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(28.5);
 				londonCheck = true;
 			}
@@ -262,7 +262,7 @@ public class RetentionTest extends BaseWampTest {
 					"temperature.paris");
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.isRetained()).isTrue();
-			if (eventMessage.getTopic().equals("temperature.london")) {
+			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(28.5);
 				if (londonCheck) {
 					Assert.fail("Wrong message");
@@ -329,11 +329,11 @@ public class RetentionTest extends BaseWampTest {
 					"temperature.paris", "temperature.oslo");
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.isRetained()).isTrue();
-			if (eventMessage.getTopic().equals("temperature.london")) {
+			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(23.6);
 				londonCheck = true;
 			}
-			else if (eventMessage.getTopic().equals("temperature.paris")) {
+			else if ("temperature.paris".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				parisCheck = true;
 			}
@@ -350,14 +350,14 @@ public class RetentionTest extends BaseWampTest {
 					"temperature.paris", "temperature.oslo");
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.isRetained()).isTrue();
-			if (eventMessage.getTopic().equals("temperature.london")) {
+			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(23.6);
 				if (londonCheck) {
 					Assert.fail("wrong message");
 				}
 				londonCheck = true;
 			}
-			else if (eventMessage.getTopic().equals("temperature.paris")) {
+			else if ("temperature.paris".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				if (parisCheck) {
 					Assert.fail("wrong message");
@@ -380,13 +380,13 @@ public class RetentionTest extends BaseWampTest {
 					"temperature.paris", "temperature.oslo");
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.isRetained()).isTrue();
-			if (eventMessage.getTopic().equals("temperature.london")) {
+			if ("temperature.london".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(23.6);
 				if (londonCheck) {
 					Assert.fail("wrong message");
 				}
 			}
-			else if (eventMessage.getTopic().equals("temperature.paris")) {
+			else if ("temperature.paris".equals(eventMessage.getTopic())) {
 				assertThat(eventMessage.getArguments()).containsExactly(15.4);
 				if (parisCheck) {
 					Assert.fail("wrong message");

@@ -13,8 +13,8 @@
 
 	<artifactId>wamp2spring-security-servlet</artifactId>
 
-	<name>Integration of wamp2spring with Spring Security</name>
-	<description>Integration of wamp2spring with Spring Security</description>
+	<name>Integration of wamp2spring with Spring Security Servlet</name>
+	<description>Integration of wamp2spring with Spring Security Servlet</description>
 
 	<dependencies>
 

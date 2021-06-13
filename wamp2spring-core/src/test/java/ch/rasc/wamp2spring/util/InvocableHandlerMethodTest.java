@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.Before;
@@ -305,13 +306,7 @@ public class InvocableHandlerMethodTest {
 
 		@Override
 		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + (this.v1 == null ? 0 : this.v1.hashCode());
-			result = prime * result + this.v2;
-			result = prime * result + (this.v3 == null ? 0 : this.v3.hashCode());
-			result = prime * result + (this.v4 == null ? 0 : this.v4.hashCode());
-			return result;
+			return Objects.hash(v1, v2, v3, v4);
 		}
 
 		@Override
@@ -326,31 +321,16 @@ public class InvocableHandlerMethodTest {
 				return false;
 			}
 			TestDto other = (TestDto) obj;
-			if (this.v1 == null) {
-				if (other.v1 != null) {
-					return false;
-				}
-			}
-			else if (!this.v1.equals(other.v1)) {
+			if (!Objects.equals(this.v1, other.v1)) {
 				return false;
 			}
 			if (this.v2 != other.v2) {
 				return false;
 			}
-			if (this.v3 == null) {
-				if (other.v3 != null) {
-					return false;
-				}
-			}
-			else if (!this.v3.equals(other.v3)) {
+			if (!Objects.equals(this.v3, other.v3)) {
 				return false;
 			}
-			if (this.v4 == null) {
-				if (other.v4 != null) {
-					return false;
-				}
-			}
-			else if (!this.v4.equals(other.v4)) {
+			if (!Objects.equals(this.v4, other.v4)) {
 				return false;
 			}
 			return true;

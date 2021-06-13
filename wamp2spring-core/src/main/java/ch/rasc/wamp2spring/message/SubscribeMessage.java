@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ public class SubscribeMessage extends WampMessage {
 	/**
 	 * Returns the Options dictionary. Third argument of a SUBSCRIBE message.
 	 * <p>
-     * <code>[SUBSCRIBE, Request|id, Options|dict, Topic|uri]</code>
+	 * <code>[SUBSCRIBE, Request|id, Options|dict, Topic|uri]</code>
 	 * <p>
 	 * Returns a unmodifiable view of the map. Can be null.
 	 */

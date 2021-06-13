@@ -13,8 +13,8 @@
 
 	<artifactId>wamp2spring-security-reactive</artifactId>
 
-	<name>Integration of wamp2spring with Spring Security</name>
-	<description>Integration of wamp2spring with Spring Security</description>
+	<name>Integration of wamp2spring with Spring Security Reactive</name>
+	<description>Integration of wamp2spring with Spring Security Reactive</description>
 
 	<dependencies>
 

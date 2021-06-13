@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.message;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.lang.Nullable;
@@ -47,11 +48,7 @@ public final class WampRole {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (this.features == null ? 0 : this.features.hashCode());
-		result = prime * result + (this.role == null ? 0 : this.role.hashCode());
-		return result;
+		return Objects.hash(features, role);
 	}
 
 	@Override
@@ -66,20 +63,10 @@ public final class WampRole {
 			return false;
 		}
 		WampRole other = (WampRole) obj;
-		if (this.features == null) {
-			if (other.features != null) {
-				return false;
-			}
-		}
-		else if (!this.features.equals(other.features)) {
+		if (!Objects.equals(this.features, other.features)) {
 			return false;
 		}
-		if (this.role == null) {
-			if (other.role != null) {
-				return false;
-			}
-		}
-		else if (!this.role.equals(other.role)) {
+		if (!Objects.equals(this.role, other.role)) {
 			return false;
 		}
 		return true;

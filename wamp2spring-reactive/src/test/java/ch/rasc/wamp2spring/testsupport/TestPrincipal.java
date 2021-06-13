@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.testsupport;
 
 import java.security.Principal;
+import java.util.Objects;
 
 public class TestPrincipal implements Principal {
 
@@ -32,10 +33,7 @@ public class TestPrincipal implements Principal {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (this.name == null ? 0 : this.name.hashCode());
-		return result;
+		return Objects.hash(name);
 	}
 
 	@Override
@@ -50,12 +48,7 @@ public class TestPrincipal implements Principal {
 			return false;
 		}
 		TestPrincipal other = (TestPrincipal) obj;
-		if (this.name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		}
-		else if (!this.name.equals(other.name)) {
+		if (!Objects.equals(this.name, other.name)) {
 			return false;
 		}
 		return true;

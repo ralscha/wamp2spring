@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,29 +166,25 @@ public class WampWebSocketHandler
 				ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
 
 				String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
-				if (acceptedProtocol != null) {
-					if (acceptedProtocol.equals(WampWebSocketHandler.MSGPACK_PROTOCOL)) {
-						wampMessage = WampMessage.deserialize(this.msgpackFactory,
-								byteBuffer.array());
-					}
-					else if (acceptedProtocol
-							.equals(WampWebSocketHandler.SMILE_PROTOCOL)) {
-						wampMessage = WampMessage.deserialize(this.smileFactory,
-								byteBuffer.array());
-					}
-					else if (acceptedProtocol
-							.equals(WampWebSocketHandler.CBOR_PROTOCOL)) {
-						wampMessage = WampMessage.deserialize(this.cborFactory,
-								byteBuffer.array());
-					}
-				}
-				else {
+				if (acceptedProtocol == null) {
 					if (logger.isErrorEnabled()) {
 						logger.error(
 								"Deserialization failed because no accepted protocol "
 										+ inMsg + " in session " + session.getId());
 					}
 					return;
+				}
+				if (WampWebSocketHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
+					wampMessage = WampMessage.deserialize(this.msgpackFactory,
+							byteBuffer.array());
+				}
+				else if (WampWebSocketHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
+					wampMessage = WampMessage.deserialize(this.smileFactory,
+							byteBuffer.array());
+				}
+				else if (WampWebSocketHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
+					wampMessage = WampMessage.deserialize(this.cborFactory,
+							byteBuffer.array());
 				}
 			}
 			else {
@@ -281,15 +277,15 @@ public class WampWebSocketHandler
 
 		String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
 		if (acceptedProtocol != null) {
-			if (acceptedProtocol.equals(WampWebSocketHandler.MSGPACK_PROTOCOL)) {
+			if (WampWebSocketHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
 				useFactory = this.msgpackFactory;
 			}
-			else if (acceptedProtocol.equals(WampWebSocketHandler.SMILE_PROTOCOL)) {
+			else if (WampWebSocketHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
 				useFactory = this.smileFactory;
 			}
-			else if (acceptedProtocol.equals(WampWebSocketHandler.CBOR_PROTOCOL)) {
+			else if (WampWebSocketHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
 				useFactory = this.cborFactory;
 			}
@@ -333,12 +329,10 @@ public class WampWebSocketHandler
 				session.close(CloseStatus.PROTOCOL_ERROR);
 			}
 		}
-		else {
-			if (logger.isErrorEnabled()) {
-				logger.error(
-						"Failed to send WebSocket message to client because no accepted protocol "
-								+ session.getId());
-			}
+		else if (logger.isErrorEnabled()) {
+			logger.error(
+					"Failed to send WebSocket message to client because no accepted protocol "
+							+ session.getId());
 		}
 
 		return null;

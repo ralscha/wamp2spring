@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -279,11 +279,11 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 				argumentsKw = (Map) returnValue;
 			}
 			else if (returnValue != null) {
-			  	arguments = Collections.singletonList(returnValue);
+				arguments = Collections.singletonList(returnValue);
 			}
 
-			ResultMessage resultMessage = new ResultMessage(callMessage,
-					arguments, argumentsKw);
+			ResultMessage resultMessage = new ResultMessage(callMessage, arguments,
+					argumentsKw);
 			sendMessageToClient(resultMessage);
 		}
 		catch (WampException e) {

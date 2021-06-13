@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,7 @@ public class WampResult {
 
 	@SafeVarargs
 	public static <T> WampResult create(T... a) {
-		List<T> arg = new ArrayList<>();
-		arg.addAll(Arrays.asList(a));
+		List<T> arg = new ArrayList<>(Arrays.asList(a));
 		return new WampResult(arg);
 	}
 

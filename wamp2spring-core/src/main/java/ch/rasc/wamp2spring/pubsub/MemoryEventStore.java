@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,16 +51,8 @@ public class MemoryEventStore implements EventStore {
 			}
 			return Collections.emptyList();
 		}
-		else if (query.getMatchPolicy() == MatchPolicy.PREFIX) {
-			List<PublishMessage> matchedMessages = new ArrayList<>();
-			this.eventRetention.forEach((topic, publishMessage) -> {
-				if (query.matches(topic)) {
-					matchedMessages.add(publishMessage);
-				}
-			});
-			return matchedMessages;
-		}
-		else if (query.getMatchPolicy() == MatchPolicy.WILDCARD) {
+		if ((query.getMatchPolicy() == MatchPolicy.PREFIX)
+				|| (query.getMatchPolicy() == MatchPolicy.WILDCARD)) {
 			List<PublishMessage> matchedMessages = new ArrayList<>();
 			this.eventRetention.forEach((topic, publishMessage) -> {
 				if (query.matches(topic)) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package ch.rasc.wamp2spring.pubsub;
+
+import java.util.Objects;
 
 import org.springframework.lang.Nullable;
 
@@ -37,10 +39,7 @@ final class Subscriber {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (this.wampSessionId ^ this.wampSessionId >>> 32);
-		return result;
+		return Objects.hash(wampSessionId);
 	}
 
 	@Override

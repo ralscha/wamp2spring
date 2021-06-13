@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package ch.rasc.wamp2spring.security.matcher;
+
+import java.util.Objects;
 
 import org.springframework.messaging.Message;
 import org.springframework.security.messaging.util.matcher.MessageMatcher;
@@ -41,10 +43,7 @@ public class WampMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + this.code;
-		return result;
+		return Objects.hash(code);
 	}
 
 	@Override

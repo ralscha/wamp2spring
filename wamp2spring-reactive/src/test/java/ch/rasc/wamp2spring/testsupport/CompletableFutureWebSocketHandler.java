@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,15 +132,15 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 			String acceptedProtocol = session.getAcceptedProtocol();
 			if (acceptedProtocol != null) {
-				if (acceptedProtocol.equals(WampWebSocketHandler.MSGPACK_PROTOCOL)) {
+				if (WampWebSocketHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
 					wampMessage = WampMessage.deserialize(this.msgpackFactory,
 							message.getPayload().array());
 				}
-				else if (acceptedProtocol.equals(WampWebSocketHandler.SMILE_PROTOCOL)) {
+				else if (WampWebSocketHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
 					wampMessage = WampMessage.deserialize(this.smileFactory,
 							message.getPayload().array());
 				}
-				else if (acceptedProtocol.equals(WampWebSocketHandler.CBOR_PROTOCOL)) {
+				else if (WampWebSocketHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
 					wampMessage = WampMessage.deserialize(this.cborFactory,
 							message.getPayload().array());
 				}
@@ -155,10 +155,8 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 					}
 				}
 			}
-			else {
-				if (this.logger.isErrorEnabled()) {
-					this.logger.error("No accepted protocol " + session.getId());
-				}
+			else if (this.logger.isErrorEnabled()) {
+				this.logger.error("No accepted protocol " + session.getId());
 			}
 		}
 		catch (IOException e) {

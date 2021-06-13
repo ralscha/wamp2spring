@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,7 +213,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 								superClass, null, elemType);
 						return this.objectMapper.convertValue(argument, type);
 					}
-					else if (td.isArray()) {
+					if (td.isArray()) {
 						JavaType type = typeFactory.constructArrayType(
 								td.getElementTypeDescriptor().getType());
 						return this.objectMapper.convertValue(argument, type);
@@ -230,20 +230,19 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	@Nullable
 	private Object convertListElements(TypeDescriptor td,
 			@Nullable Object convertedValue) {
-		if (convertedValue != null) {
-			if (List.class.isAssignableFrom(convertedValue.getClass())
-					&& td.isCollection() && td.getElementTypeDescriptor() != null) {
-				Class<?> elementType = td.getElementTypeDescriptor().getType();
+		if ((convertedValue != null)
+				&& (List.class.isAssignableFrom(convertedValue.getClass())
+						&& td.isCollection() && td.getElementTypeDescriptor() != null)) {
+			Class<?> elementType = td.getElementTypeDescriptor().getType();
 
-				Collection<Object> convertedList = new ArrayList<>();
-				for (Object record : (List<Object>) convertedValue) {
-					Object convertedObject = this.objectMapper.convertValue(record,
-							elementType);
-					convertedList.add(convertedObject);
-				}
-				return convertedList;
-
+			Collection<Object> convertedList = new ArrayList<>();
+			for (Object record : (List<Object>) convertedValue) {
+				Object convertedObject = this.objectMapper.convertValue(record,
+						elementType);
+				convertedList.add(convertedObject);
 			}
+			return convertedList;
+
 		}
 		return convertedValue;
 	}
@@ -273,7 +272,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			if (targetException instanceof RuntimeException) {
 				throw (RuntimeException) targetException;
 			}
-			else if (targetException instanceof Error) {
+			if (targetException instanceof Error) {
 				throw (Error) targetException;
 			}
 			else if (targetException instanceof Exception) {

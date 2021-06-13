@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class SubscriptionRegistry {
 	private final Map<Long, Subscription> subscriptionsById = new ConcurrentHashMap<>();
 
 	private final LoadingCache<String, Set<Subscription>> subscriptionsCache = Caffeine
-			.newBuilder().maximumSize(512).build(key -> internalFindSubscriptions(key));
+			.newBuilder().maximumSize(512).build(this::internalFindSubscriptions);
 
 	private final Object monitor = new Object();
 
@@ -75,7 +75,8 @@ public class SubscriptionRegistry {
 				if (subscription == null) {
 					long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
 					subscription = new Subscription(subscribeMessage.getTopic(),
-							subscribeMessage.getMatchPolicy(), subscriptionId, subscribeMessage.getOptions());
+							subscribeMessage.getMatchPolicy(), subscriptionId,
+							subscribeMessage.getOptions());
 					subscriptionMap.put(subscription.getTopic(), subscription);
 					this.subscriptionsById.put(subscriptionId, subscription);
 					created = true;

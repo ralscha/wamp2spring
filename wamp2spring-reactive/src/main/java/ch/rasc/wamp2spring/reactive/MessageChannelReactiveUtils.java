@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018 the original author or authors.
+ * Copyright 2017-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import reactor.core.scheduler.Schedulers;
 public final class MessageChannelReactiveUtils {
 
 	private MessageChannelReactiveUtils() {
-		super();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -45,7 +44,7 @@ public final class MessageChannelReactiveUtils {
 		if (messageChannel instanceof Publisher) {
 			return (Publisher<Message<T>>) messageChannel;
 		}
-		else if (messageChannel instanceof SubscribableChannel) {
+		if (messageChannel instanceof SubscribableChannel) {
 			return adaptSubscribableChannelToPublisher(
 					(SubscribableChannel) messageChannel);
 		}
