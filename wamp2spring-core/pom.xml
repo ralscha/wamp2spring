@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>org.msgpack</groupId>
 			<artifactId>jackson-dataformat-msgpack</artifactId>
-			<version>0.8.24</version>
+			<version>0.9.0</version>
 		</dependency>
 
 		<dependency>
@@ -65,7 +65,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.19.0</version>
+			<version>3.20.2</version>
 			<scope>test</scope>
 		</dependency>
 
