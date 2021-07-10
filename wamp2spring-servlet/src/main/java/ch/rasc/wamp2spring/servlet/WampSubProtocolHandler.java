@@ -142,12 +142,13 @@ public class WampSubProtocolHandler
 				BinaryMessage binaryMessage = (BinaryMessage) webSocketMessage;
 				ByteBuffer byteBuffer = binaryMessage.getPayload();
 
-				// happens when using undertow
-				if (!byteBuffer.hasArray()) {
+				byte[] payloadBytes;
+				if (byteBuffer.hasArray()) {
+					payloadBytes = byteBuffer.array();
+				} else {
 					ByteBuffer duplicate = byteBuffer.duplicate();
-					byte[] bytes = new byte[duplicate.remaining()];
-					duplicate.get(bytes);
-					webSocketMessage = new BinaryMessage(bytes, binaryMessage.isLast());
+					payloadBytes = new byte[duplicate.remaining()];
+					duplicate.get(payloadBytes);
 				}
 
 				String acceptedProtocol = session.getAcceptedProtocol();
@@ -161,16 +162,13 @@ public class WampSubProtocolHandler
 					return;
 				}
 				if (WampSubProtocolHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory,
-							byteBuffer.array());
+					wampMessage = WampMessage.deserialize(this.msgpackFactory, payloadBytes);
 				}
 				else if (WampSubProtocolHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory,
-							byteBuffer.array());
+					wampMessage = WampMessage.deserialize(this.smileFactory, payloadBytes);
 				}
 				else if (WampSubProtocolHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.cborFactory,
-							byteBuffer.array());
+					wampMessage = WampMessage.deserialize(this.cborFactory, payloadBytes);
 				}
 			}
 			else {
