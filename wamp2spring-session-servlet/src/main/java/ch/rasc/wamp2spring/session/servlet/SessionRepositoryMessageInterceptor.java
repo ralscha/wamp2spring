@@ -62,7 +62,7 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 				}
 			}
 		}
-		return preSend(message, channel);
+		return message;
 	}
 
 	private static boolean messageMatches(Message<?> message) {
