@@ -38,7 +38,8 @@ public class CallParameterTestService {
 
 	@WampProcedure(value = "headersMethod")
 	public String headersMethod(@Headers Map<String, Object> headers) {
-		assertThat(headers).containsOnlyKeys("WAMP_SESSION_ID", "WEBSOCKET_SESSION_ID",
+		assertThat(headers).hasSize(3);
+		assertThat(headers).containsKeys("WAMP_SESSION_ID", "WEBSOCKET_SESSION_ID",
 				"WAMP_MESSAGE_CODE");
 
 		return "headersMethod called";
