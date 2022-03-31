@@ -45,9 +45,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.3.16</spring.version>
+		<spring.version>5.3.18</spring.version>
 		<spring.boot.version>2.4.5</spring.boot.version>
-		<jackson.version>2.13.1</jackson.version>
+		<jackson.version>2.13.2.2</jackson.version>
+		<jackson-dataformat.version>2.13.2</jackson-dataformat.version>
 		<spring-security.version>5.4.6</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
@@ -75,7 +76,7 @@
 				<version>3.2.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/5.3.16/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/5.3.18/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
@@ -108,7 +109,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.10.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -167,13 +168,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.9.1</version>
+				<version>3.10.0</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.2.2</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
