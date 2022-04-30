@@ -45,7 +45,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.3.18</spring.version>
+		<spring.version>5.3.19</spring.version>
 		<spring.boot.version>2.4.5</spring.boot.version>
 		<jackson.version>2.13.2.2</jackson.version>
 		<jackson-dataformat.version>2.13.2</jackson-dataformat.version>
@@ -76,7 +76,7 @@
 				<version>3.2.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/5.3.18/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/5.3.19/javadoc-api/</link>
 						<link>http://docs.oracle.com/javase/8/docs/api/</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
