@@ -29,13 +29,6 @@
 			<version>${spring.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.google.code.findbugs</groupId>
-			<artifactId>jsr305</artifactId>
-			<version>3.0.2</version>
-			<optional>true</optional>
-		</dependency>
-
 		<!-- TEST DEPENDENCIES -->
 
 		<dependency>
@@ -90,7 +83,7 @@
 		<dependency>
 			<groupId>nl.jqno.equalsverifier</groupId>
 			<artifactId>equalsverifier</artifactId>
-			<version>3.12.4</version>
+			<version>3.13.2</version>
 			<scope>test</scope>
 		</dependency>
 
