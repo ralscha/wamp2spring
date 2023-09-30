@@ -9,7 +9,7 @@
 
 	<groupId>ch.rasc</groupId>
 	<artifactId>wamp2spring-parent</artifactId>
-	<version>2.0.7-SNAPSHOT</version>	
+	<version>2.0.9-SNAPSHOT</version>	
     <packaging>pom</packaging>
     <name>wamp2spring-parent</name>
 	
@@ -73,7 +73,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.6.0</version>
 				<configuration>
 					<links>
 						<link>https://docs.spring.io/spring-framework/docs/5.3.23/javadoc-api/</link>
@@ -187,7 +187,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.6.0</version>
 				<configuration>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
 				</configuration>
