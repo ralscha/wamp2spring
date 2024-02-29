@@ -186,11 +186,10 @@ public class WampConfiguration {
 	@Bean
 	public MessageHandler pubSubMessageHandler(ApplicationContext applicationContext) {
 		if (this.features.isEnabled(Feature.BROKER)) {
-			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
-					clientInboundChannel(), brokerChannel(), clientOutboundChannel(),
-					subscriptionRegistry(), handlerMethodService(applicationContext),
-					this.features, eventStore());
-			return pubSubMessageHandler;
+			return new PubSubMessageHandler(clientInboundChannel(), brokerChannel(),
+					clientOutboundChannel(), subscriptionRegistry(),
+					handlerMethodService(applicationContext), this.features,
+					eventStore());
 		}
 		return new NoOpMessageHandler();
 	}
@@ -203,10 +202,9 @@ public class WampConfiguration {
 	@Bean
 	public MessageHandler rpcMessageHandler(ApplicationContext applicationContext) {
 		if (this.features.isEnabled(Feature.DEALER)) {
-			RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(
-					clientInboundChannel(), clientOutboundChannel(), procedureRegistry(),
-					handlerMethodService(applicationContext), this.features);
-			return rpcMessageHandler;
+			return new RpcMessageHandler(clientInboundChannel(), clientOutboundChannel(),
+					procedureRegistry(), handlerMethodService(applicationContext),
+					this.features);
 		}
 		return new NoOpMessageHandler();
 	}

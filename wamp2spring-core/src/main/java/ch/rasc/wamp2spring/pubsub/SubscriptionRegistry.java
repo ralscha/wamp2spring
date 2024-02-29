@@ -54,12 +54,9 @@ public class SubscriptionRegistry {
 	private final Object monitor = new Object();
 
 	public SubscriptionRegistry() {
-		this.subscriptionsByMatch.put(MatchPolicy.EXACT,
-				new ConcurrentHashMap<String, Subscription>());
-		this.subscriptionsByMatch.put(MatchPolicy.PREFIX,
-				new ConcurrentHashMap<String, Subscription>());
-		this.subscriptionsByMatch.put(MatchPolicy.WILDCARD,
-				new ConcurrentHashMap<String, Subscription>());
+		this.subscriptionsByMatch.put(MatchPolicy.EXACT, new ConcurrentHashMap<>());
+		this.subscriptionsByMatch.put(MatchPolicy.PREFIX, new ConcurrentHashMap<>());
+		this.subscriptionsByMatch.put(MatchPolicy.WILDCARD, new ConcurrentHashMap<>());
 	}
 
 	SubscribeResult subscribe(SubscribeMessage subscribeMessage) {

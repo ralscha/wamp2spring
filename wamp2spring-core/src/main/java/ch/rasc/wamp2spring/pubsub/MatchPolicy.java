@@ -32,16 +32,12 @@ public enum MatchPolicy {
 
 	@Nullable
 	public static MatchPolicy fromExtValue(String externalValue) {
-		switch (externalValue) {
-		case "exact":
-			return EXACT;
-		case "prefix":
-			return PREFIX;
-		case "wildcard":
-			return WILDCARD;
-		default:
-			return null;
-		}
+		return switch (externalValue) {
+		case "exact" -> EXACT;
+		case "prefix" -> PREFIX;
+		case "wildcard" -> WILDCARD;
+		default -> null;
+		};
 	}
 
 }

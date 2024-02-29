@@ -42,10 +42,7 @@ public class IdGenerator {
 		while (true) {
 			long candidateId = ThreadLocalRandom.current().nextLong();
 			if (MIN <= candidateId && candidateId <= MAX) {
-				if (existingIds == null) {
-					return candidateId;
-				}
-				if (!existingIds.contains(candidateId)) {
+				if ((existingIds == null) || !existingIds.contains(candidateId)) {
 					return candidateId;
 				}
 			}

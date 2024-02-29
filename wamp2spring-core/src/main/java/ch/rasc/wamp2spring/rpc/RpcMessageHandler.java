@@ -151,8 +151,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			return;
 		}
 
-		if (message instanceof RegisterMessage) {
-			RegisterMessage registerMessage = (RegisterMessage) message;
+		if (message instanceof RegisterMessage registerMessage) {
 			long registrationId = this.procedureRegistry.register(registerMessage);
 			if (registrationId != -1) {
 				sendMessageToClient(
@@ -166,8 +165,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 						WampError.PROCEDURE_ALREADY_EXISTS));
 			}
 		}
-		else if (message instanceof UnregisterMessage) {
-			UnregisterMessage unregisterMessage = (UnregisterMessage) message;
+		else if (message instanceof UnregisterMessage unregisterMessage) {
 			UnregisterResult result = this.procedureRegistry
 					.unregister(unregisterMessage);
 			if (result.isSuccess()) {
@@ -186,9 +184,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 						WampError.NO_SUCH_REGISTRATION));
 			}
 		}
-		else if (message instanceof CallMessage) {
-			CallMessage callMessage = (CallMessage) message;
-
+		else if (message instanceof CallMessage callMessage) {
 			if (callMessage.isDiscloseMe()
 					&& this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 				sendMessageToClient(
@@ -215,8 +211,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 				}
 			}
 		}
-		else if (message instanceof YieldMessage) {
-			YieldMessage yieldMessage = (YieldMessage) message;
+		else if (message instanceof YieldMessage yieldMessage) {
 			CallMessage callMessage = this.procedureRegistry
 					.removeInvocationCall(yieldMessage);
 			if (callMessage != null) {
@@ -267,8 +262,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			List<Object> arguments = null;
 			Map<String, Object> argumentsKw = null;
 
-			if (returnValue instanceof WampResult) {
-				WampResult wampResult = (WampResult) returnValue;
+			if (returnValue instanceof WampResult wampResult) {
 				arguments = wampResult.getResults();
 				argumentsKw = wampResult.getResultsKw();
 			}

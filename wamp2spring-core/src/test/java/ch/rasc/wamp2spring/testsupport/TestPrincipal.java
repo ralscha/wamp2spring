@@ -41,10 +41,7 @@ public class TestPrincipal implements Principal {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
+		if ((obj == null) || (getClass() != obj.getClass())) {
 			return false;
 		}
 		TestPrincipal other = (TestPrincipal) obj;

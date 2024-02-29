@@ -278,11 +278,9 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			if (targetException instanceof Exception) {
 				throw (Exception) targetException;
 			}
-			else {
-				String text = getInvocationErrorMessage("Failed to invoke handler method",
-						args);
-				throw new IllegalStateException(text, targetException);
-			}
+			String text = getInvocationErrorMessage("Failed to invoke handler method",
+					args);
+			throw new IllegalStateException(text, targetException);
 		}
 	}
 
