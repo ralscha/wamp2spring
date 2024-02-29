@@ -156,7 +156,9 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 			return;
 		}
 
-		if (message instanceof SubscribeMessage subscribeMessage) {
+		if (message instanceof SubscribeMessage) {
+			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
+
 			if (this.features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
 					&& subscribeMessage.getMatchPolicy() != MatchPolicy.EXACT) {
 				sendMessageToClient(
@@ -175,7 +177,9 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 				handleRetentionRequest(subscribeMessage, result.getSubscription());
 			}
 		}
-		else if (message instanceof UnsubscribeMessage unsubscribeMessage) {
+		else if (message instanceof UnsubscribeMessage) {
+			UnsubscribeMessage unsubscribeMessage = (UnsubscribeMessage) message;
+
 			UnsubscribeResult result = this.subscriptionRegistry
 					.unsubscribe(unsubscribeMessage);
 			if (result.getError() == null) {
@@ -188,7 +192,8 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 			}
 
 		}
-		else if (message instanceof PublishMessage publishMessage) {
+		else if (message instanceof PublishMessage) {
+			PublishMessage publishMessage = (PublishMessage) message;
 			if (publishMessage.isDiscloseMe() && this.features
 					.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
 				if (publishMessage.getWebSocketSessionId() != null) {
@@ -370,10 +375,13 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle,
 		}
 
 		if (this.features.isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
-			if ((publishMessage.getEligible() != null && !publishMessage.getEligible()
-					.contains(subscriber.getWampSessionId()))
-					|| (publishMessage.getExclude() != null && publishMessage.getExclude()
-							.contains(subscriber.getWampSessionId()))) {
+			if (publishMessage.getEligible() != null && !publishMessage.getEligible()
+					.contains(subscriber.getWampSessionId())) {
+				return false;
+			}
+
+			if (publishMessage.getExclude() != null && publishMessage.getExclude()
+					.contains(subscriber.getWampSessionId())) {
 				return false;
 			}
 		}

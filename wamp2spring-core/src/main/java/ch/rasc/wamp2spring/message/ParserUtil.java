@@ -94,19 +94,27 @@ public class ParserUtil {
 		case VALUE_STRING:
 			return jp.getValueAsString();
 		case VALUE_NUMBER_INT:
-			return switch (jp.getNumberType()) {
-			case INT -> jp.getIntValue();
-			case LONG -> jp.getLongValue();
-			case BIG_INTEGER -> jp.getBigIntegerValue();
-			default -> null;
-			};
+			switch (jp.getNumberType()) {
+			case INT:
+				return jp.getIntValue();
+			case LONG:
+				return jp.getLongValue();
+			case BIG_INTEGER:
+				return jp.getBigIntegerValue();
+			default:
+				return null;
+			}
 		case VALUE_NUMBER_FLOAT:
-			return switch (jp.getNumberType()) {
-			case FLOAT -> jp.getFloatValue();
-			case DOUBLE -> jp.getDoubleValue();
-			case BIG_DECIMAL -> jp.getDecimalValue();
-			default -> null;
-			};
+			switch (jp.getNumberType()) {
+			case FLOAT:
+				return jp.getFloatValue();
+			case DOUBLE:
+				return jp.getDoubleValue();
+			case BIG_DECIMAL:
+				return jp.getDecimalValue();
+			default:
+				return null;
+			}
 		default:
 			return null;
 		}
