@@ -137,8 +137,8 @@ public class BaseWampTest {
 	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result,
 			DataFormat dataFormat) throws InterruptedException, ExecutionException {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
-		return webSocketClient
-				.execute(result, getHeaders(dataFormat), wampEndpointUrl()).get();
+		return webSocketClient.execute(result, getHeaders(dataFormat), wampEndpointUrl())
+				.get();
 	}
 
 	protected WebSocketHttpHeaders getHeaders(DataFormat dataFormat) {
