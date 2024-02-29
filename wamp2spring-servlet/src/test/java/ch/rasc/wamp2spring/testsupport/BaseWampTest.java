@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Disabled;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -83,7 +83,7 @@ public class BaseWampTest {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
-				.doHandshake(result, getHeaders(dataFormat), wampEndpointUrl()).get()) {
+				.execute(result, getHeaders(dataFormat), wampEndpointUrl()).get()) {
 
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("publisher"));
@@ -136,7 +136,7 @@ public class BaseWampTest {
 			DataFormat dataFormat) throws InterruptedException, ExecutionException {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		return webSocketClient
-				.doHandshake(result, getHeaders(dataFormat), wampEndpointUrl()).get();
+				.execute(result, getHeaders(dataFormat), wampEndpointUrl()).get();
 	}
 
 	protected WebSocketHttpHeaders getHeaders(DataFormat dataFormat) {

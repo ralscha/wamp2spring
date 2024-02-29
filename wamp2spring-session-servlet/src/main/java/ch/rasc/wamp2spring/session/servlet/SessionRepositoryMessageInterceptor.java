@@ -18,8 +18,6 @@ package ch.rasc.wamp2spring.session.servlet;
 import java.time.Instant;
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
-
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -36,6 +34,7 @@ import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
+import jakarta.servlet.http.HttpSession;
 
 public final class SessionRepositoryMessageInterceptor<S extends Session>
 		implements ChannelInterceptor, HandshakeInterceptor {

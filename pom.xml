@@ -9,7 +9,7 @@
 
 	<groupId>ch.rasc</groupId>
 	<artifactId>wamp2spring-parent</artifactId>
-	<version>2.0.9-SNAPSHOT</version>	
+	<version>3.0.0-SNAPSHOT</version>	
     <packaging>pom</packaging>
     <name>wamp2spring-parent</name>
 	
@@ -45,11 +45,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>5.3.26</spring.version>
-		<spring.boot.version>2.7.5</spring.boot.version>
+		<spring.version>6.1.4</spring.version>
+		<spring.boot.version>3.2.3</spring.boot.version>
 		<jackson.version>2.16.1</jackson.version>
 		<jackson-dataformat.version>2.16.1</jackson-dataformat.version>
-		<spring-security.version>5.7.4</spring-security.version>
+		<spring-security.version>6.2.2</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
 	
@@ -68,16 +68,16 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>3.4.5</version>
+				<version>3.5.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.0</version>
+				<version>3.6.3</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/5.3.26/javadoc-api/</link>
-						<link>http://docs.oracle.com/javase/8/docs/api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/6.1.4/javadoc-api/</link>
+						<link>https://docs.oracle.com/en/java/javase/17/docs/api/index.html</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
 				</configuration>
@@ -85,20 +85,20 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.3.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.21.0</version>
+				<version>3.21.2</version>
 				<configuration>
-					<targetJdk>1.8</targetJdk>
+					<targetJdk>17</targetJdk>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.5</version>
 			</plugin>
 		</plugins>
 
@@ -111,10 +111,10 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.12.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<testSource>1.8</testSource>
-					<testTarget>1.8</testTarget>
+					<source>17</source>
+					<target>17</target>
+					<testSource>17</testSource>
+					<testTarget>17</testTarget>
 					<encoding>UTF-8</encoding>
 					<parameters>true</parameters>
 				</configuration>
@@ -138,7 +138,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.5</version>
 			</plugin>
 
 			<plugin>
@@ -181,15 +181,6 @@
 							<Automatic-Module-Name>ch.rasc.wamp2spring</Automatic-Module-Name>
 						</manifestEntries>
 					</archive>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<additionalOptions>-Xdoclint:none</additionalOptions>
 				</configuration>
 			</plugin>
 

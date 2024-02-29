@@ -51,12 +51,10 @@ public final class MessageChannelReactiveUtils {
 		if (messageChannel instanceof PollableChannel) {
 			return adaptPollableChannelToPublisher((PollableChannel) messageChannel);
 		}
-		else {
-			throw new IllegalArgumentException(
-					"The 'messageChannel' must be an instance of Publisher, "
-							+ "SubscribableChannel or PollableChannel, not: "
-							+ messageChannel);
-		}
+		throw new IllegalArgumentException(
+				"The 'messageChannel' must be an instance of Publisher, "
+						+ "SubscribableChannel or PollableChannel, not: "
+						+ messageChannel);
 	}
 
 	private static <T> Publisher<Message<T>> adaptSubscribableChannelToPublisher(
@@ -109,7 +107,7 @@ public final class MessageChannelReactiveUtils {
 						&& (m = this.channel.receive()) != null) {
 					sink.next((Message<T>) m);
 				}
-			}), FluxSink.OverflowStrategy.IGNORE).subscribeOn(Schedulers.elastic())
+			}), FluxSink.OverflowStrategy.IGNORE).subscribeOn(Schedulers.boundedElastic())
 					.subscribe(subscriber);
 		}
 

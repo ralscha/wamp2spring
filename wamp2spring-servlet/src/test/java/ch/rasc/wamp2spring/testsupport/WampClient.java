@@ -99,7 +99,7 @@ public class WampClient implements AutoCloseable {
 
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		this.webSocketSession = webSocketClient
-				.doHandshake(this.result, this.headers, wampEndpointUrl).get();
+				.execute(this.result, this.headers, wampEndpointUrl).get();
 
 		sendMessage(helloMessage);
 		WelcomeMessage welcomeMessage = this.result.getWelcomeMessage();
