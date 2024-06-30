@@ -45,10 +45,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>6.1.6</spring.version>
-		<spring.boot.version>3.2.5</spring.boot.version>
-		<jackson.version>2.17.0</jackson.version>
-		<jackson-dataformat.version>2.17.0</jackson-dataformat.version>
+		<spring.version>6.1.10</spring.version>
+		<spring.boot.version>3.3.1</spring.boot.version>
+		<jackson.version>2.17.1</jackson.version>
+		<jackson-dataformat.version>2.17.1</jackson-dataformat.version>
 		<spring-security.version>6.2.4</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
@@ -73,10 +73,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.3</version>
+				<version>3.7.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/6.1.6/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/6.1.10/javadoc-api/</link>
 						<link>https://docs.oracle.com/en/java/javase/17/docs/api/index.html</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
@@ -85,7 +85,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
-				<version>3.3.2</version>
+				<version>3.4.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -98,7 +98,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.3.1</version>
 			</plugin>
 		</plugins>
 
@@ -109,7 +109,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.12.1</version>
+				<version>3.13.0</version>
 				<configuration>
 					<source>17</source>
 					<target>17</target>
@@ -123,7 +123,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.3.1</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -138,25 +138,25 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.2.5</version>
+				<version>3.3.0</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.3.2</version>
+				<version>3.4.0</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.1.2</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-install-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.1.2</version>
 			</plugin>
 
 			<plugin>
@@ -168,13 +168,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
-				<version>3.12.1</version>
+				<version>4.0.0-M15</version>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.4.2</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -187,7 +187,7 @@
 			<plugin>
 				<groupId>com.mycila</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>3.0</version>
+				<version>4.5</version>
 				<configuration>
 					<header>${main.basedir}/header.txt</header>
 					<properties>						

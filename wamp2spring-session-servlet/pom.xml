@@ -20,7 +20,7 @@
 		<dependency>
 			<groupId>org.springframework.session</groupId>
 			<artifactId>spring-session-core</artifactId>
-			<version>3.2.1</version>
+			<version>3.3.1</version>
 		</dependency>
 
 		<dependency>
@@ -32,7 +32,7 @@
 		<dependency>
 		    <groupId>jakarta.servlet</groupId>
 		    <artifactId>jakarta.servlet-api</artifactId>
-		    <version>6.0.0</version>
+		    <version>6.1.0</version>
 		    <scope>provided</scope>
 		</dependency>
 			
