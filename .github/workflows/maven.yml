@@ -27,5 +27,3 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: 17
-    - name: Deploy to Sonatype
-      run: ./mvnw -B -Drepo.username=${{secrets.SONATYPE_USERNAME}} -Drepo.password=${{secrets.SONATYPE_PASSWORD}} clean deploy -DskipTests=true --settings mySettings.xml
