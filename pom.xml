@@ -45,7 +45,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>6.1.10</spring.version>
+		<spring.version>6.1.12</spring.version>
 		<spring.boot.version>3.3.1</spring.boot.version>
 		<jackson.version>2.17.1</jackson.version>
 		<jackson-dataformat.version>2.17.1</jackson-dataformat.version>
@@ -76,7 +76,7 @@
 				<version>3.7.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/6.1.10/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/6.1.12/javadoc-api/</link>
 						<link>https://docs.oracle.com/en/java/javase/17/docs/api/index.html</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
@@ -98,7 +98,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.5.0</version>
 			</plugin>
 		</plugins>
 
@@ -138,7 +138,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.5.0</version>
 			</plugin>
 
 			<plugin>
