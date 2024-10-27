@@ -45,10 +45,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring.version>6.1.13</spring.version>
-		<spring.boot.version>3.3.1</spring.boot.version>
-		<jackson.version>2.17.1</jackson.version>
-		<jackson-dataformat.version>2.17.1</jackson-dataformat.version>
+		<spring.version>6.1.14</spring.version>
+		<spring.boot.version>3.3.5</spring.boot.version>
+		<jackson.version>2.18.0</jackson.version>
+		<jackson-dataformat.version>2.18.0</jackson-dataformat.version>
 		<spring-security.version>6.2.4</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
@@ -76,7 +76,7 @@
 				<version>3.7.0</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/6.1.13/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/6.1.14/javadoc-api/</link>
 						<link>https://docs.oracle.com/en/java/javase/17/docs/api/index.html</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
@@ -123,7 +123,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.3.5</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
