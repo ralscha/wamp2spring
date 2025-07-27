@@ -121,17 +121,11 @@
 			            <goals>
 			                <goal>jar</goal>
 			            </goals>
+			            <configuration>
+			                <sourcepath>${project.build.sourceDirectory}${path.separator}../wamp2spring-core/src/main/java</sourcepath>
+			            </configuration>
 			        </execution>
 			    </executions>
-			    <configuration>
-			        <additionalDependencies>
-			            <additionalDependency>
-			                <groupId>ch.rasc</groupId>
-			                <artifactId>wamp2spring-core</artifactId>
-			                <version>${project.version}</version>
-			            </additionalDependency>
-			        </additionalDependencies>
-			    </configuration>
 			</plugin>
        </plugins>
     </build>
