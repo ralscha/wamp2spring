@@ -73,10 +73,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.11.1</version>
+				<version>3.11.2</version>
 				<configuration>
 					<links>
-						<link>https://docs.spring.io/spring-framework/docs/6.2.6/javadoc-api/</link>
+						<link>https://docs.spring.io/spring-framework/docs/6.2.9/javadoc-api/</link>
 						<link>https://docs.oracle.com/en/java/javase/17/docs/api/index.html</link>
 					</links>
 					<additionalOptions>-Xdoclint:none</additionalOptions>
