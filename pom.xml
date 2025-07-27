@@ -148,10 +148,7 @@
 							<goal>jar-no-fork</goal>
 						</goals>
 					</execution>
-				</executions>
-			    <configuration>
-			        <failOnError>false</failOnError>
-			    </configuration>				
+				</executions>				
 			</plugin>
 
 			<plugin>
