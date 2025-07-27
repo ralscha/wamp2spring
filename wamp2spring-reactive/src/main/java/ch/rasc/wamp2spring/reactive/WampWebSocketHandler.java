@@ -129,27 +129,27 @@ public class WampWebSocketHandler
 	@Override
 	public Mono<Void> handle(WebSocketSession session) {
 		return session.getHandshakeInfo().getPrincipal()
-			.map(Optional::of).defaultIfEmpty(Optional.empty())
-			.flatMap(optPrincipal -> {
-				Principal principal = optPrincipal.orElse(null);
+				.map(Optional::of).defaultIfEmpty(Optional.empty())
+				.flatMap(optPrincipal -> {
+					Principal principal = optPrincipal.orElse(null);
 
-				Mono<Void> receiveFlux = session.receive()
+					Mono<Void> receiveFlux = session.receive()
 						.doOnNext(inMsg -> handleIncomingMessage(inMsg, session, principal))
 						.then();
 
-				Mono<Void> sendFlux = session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
-								.filter(msg -> resolveSessionId(msg).equals(session.getId()))
-								.map(msg -> handleOutgoingMessage(msg, session)))
-						.doFinally(sig -> {
-							Long wampSessionId = this.webSocketId2WampSessionId.get(session.getId());
-							if (wampSessionId != null) {
-								this.applicationEventPublisher.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), principal));
-								this.webSocketId2WampSessionId.remove(session.getId());
-							}
-						});
+					Mono<Void> sendFlux = session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
+						.filter(msg -> resolveSessionId(msg).equals(session.getId()))
+						.map(msg -> handleOutgoingMessage(msg, session))
+					).doFinally(sig -> {
+						Long wampSessionId = this.webSocketId2WampSessionId.get(session.getId());
+						if (wampSessionId != null) {
+							this.applicationEventPublisher.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), principal));
+							this.webSocketId2WampSessionId.remove(session.getId());
+						}
+					});
 
-				return Mono.when(receiveFlux, sendFlux);
-			});
+					return Mono.when(receiveFlux, sendFlux);
+				});
 	}
 
 	public void handleIncomingMessage(WebSocketMessage inMsg, WebSocketSession session, Principal principal) {
