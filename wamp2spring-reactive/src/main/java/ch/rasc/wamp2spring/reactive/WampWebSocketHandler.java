@@ -134,7 +134,11 @@ public class WampWebSocketHandler
 	public Mono<Void> handle(WebSocketSession session) {
 		return session.getHandshakeInfo().getPrincipal()
 			.cast(Principal.class)
-			.switchIfEmpty(Mono.error(new IllegalStateException("Principal is required")))
+			.switchIfEmpty(Mono.fromRunnable(() -> {
+				if (logger.isErrorEnabled()) {
+					logger.error("Principal is required but not found for session: " + session.getId());
+				}
+			}).then(Mono.empty()))
 			.flatMap(principal -> {
 				Mono<Void> sendFlux = session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
 						.filter(msg -> resolveSessionId(msg).equals(session.getId()))
