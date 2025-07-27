@@ -134,8 +134,7 @@ public class WampWebSocketHandler
 				Principal principal = optPrincipal.orElse(null);
 				Mono<Void> sendFlux = session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
 						.filter(msg -> resolveSessionId(msg).equals(session.getId()))
-						.map(msg -> handleOutgoingMessage(msg, session))
-						.filter(Objects::nonNull));
+						.map(msg -> handleOutgoingMessage(msg, session)));
 
 				Mono<Void> receiveFlux = session.receive()
 						.doOnNext(inMsg -> handleIncomingMessage(inMsg, session, principal))
