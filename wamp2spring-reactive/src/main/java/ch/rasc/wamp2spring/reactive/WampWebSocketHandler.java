@@ -20,11 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -133,13 +129,9 @@ public class WampWebSocketHandler
 	@Override
 	public Mono<Void> handle(WebSocketSession session) {
 		return session.getHandshakeInfo().getPrincipal()
-			.cast(Principal.class)
-			.switchIfEmpty(Mono.fromRunnable(() -> {
-				if (logger.isErrorEnabled()) {
-					logger.error("Principal is required but not found for session: " + session.getId());
-				}
-			}).then(Mono.empty()))
-			.flatMap(principal -> {
+			.map(Optional::of).defaultIfEmpty(Optional.empty())
+			.flatMap(optPrincipal -> {
+				Principal principal = optPrincipal.orElse(null);
 				Mono<Void> sendFlux = session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
 						.filter(msg -> resolveSessionId(msg).equals(session.getId()))
 						.map(msg -> handleOutgoingMessage(msg, session))
