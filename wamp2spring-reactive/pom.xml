@@ -111,21 +111,28 @@
 					<parameters>true</parameters>
 				</configuration>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.11.1</version>
-                <configuration>
-                    <additionalOptions>-Xdoclint:none</additionalOptions>
-			        <additionalDependencies>
-			            <additionalDependency>
-			                <groupId>ch.rasc</groupId>
-			                <artifactId>wamp2spring-core</artifactId>
-			                <version>${project.version}</version>
-			            </additionalDependency>
-			        </additionalDependencies>                    
-                </configuration>
-            </plugin>	
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.1</version>			    
+			    <executions>
+			        <execution>
+			            <id>attach-javadocs</id>
+			            <goals>
+			                <goal>jar</goal>
+			            </goals>
+			            <configuration>
+			                <additionalDependencies>
+			                    <additionalDependency>
+			                        <groupId>ch.rasc</groupId>
+			                        <artifactId>wamp2spring-core</artifactId>
+			                        <version>${project.version}</version>
+			                    </additionalDependency>
+			                </additionalDependencies>
+			            </configuration>
+			        </execution>
+			    </executions>
+			</plugin>	
        </plugins>
     </build>
 </project>
