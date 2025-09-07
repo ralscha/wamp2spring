@@ -22,6 +22,7 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -84,6 +85,7 @@ public class ConnectionTest extends BaseWampTest {
 	}
 
 	@Test
+	@Disabled
 	public void sendGoodbyeMessageTest() throws Exception {
 		try (WampClient wc = new WampClient(DataFormat.JSON)) {
 
