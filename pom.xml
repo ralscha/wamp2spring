@@ -47,8 +47,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring.version>6.2.9</spring.version>
 		<spring.boot.version>3.4.8</spring.boot.version>
-		<jackson.version>2.20.0</jackson.version>
-		<jackson-dataformat.version>2.20.0</jackson-dataformat.version>
+		<jackson.version>2.20.1</jackson.version>
+		<jackson-dataformat.version>2.20.1</jackson-dataformat.version>
 		<spring-security.version>6.5.2</spring-security.version>
 		<main.basedir>${project.basedir}</main.basedir>
 	</properties>	
