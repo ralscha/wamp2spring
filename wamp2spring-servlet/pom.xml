@@ -43,6 +43,12 @@
 		</dependency>
 
 		<!-- TEST DEPENDENCIES -->
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>1.18.1</version>
+			<scope>test</scope>			
+		</dependency>
 
 		<dependency>
 			<groupId>org.assertj</groupId>
@@ -89,7 +95,7 @@
 		<dependency>
 			<groupId>nl.jqno.equalsverifier</groupId>
 			<artifactId>equalsverifier</artifactId>
-			<version>3.19.2</version>
+			<version>4.2.3</version>
 			<scope>test</scope>
 		</dependency>
 
