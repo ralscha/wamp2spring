@@ -23,6 +23,7 @@ import org.springframework.lang.Nullable;
  * Base class for the WAMP events
  */
 public abstract class WampEvent {
+
 	@Nullable
 	private final Principal principal;
 
@@ -30,8 +31,7 @@ public abstract class WampEvent {
 
 	private final String webSocketSessionId;
 
-	public WampEvent(Long wampSessionId, String webSocketSessionId,
-			@Nullable Principal principal) {
+	public WampEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal) {
 		this.wampSessionId = wampSessionId;
 		this.principal = principal;
 		this.webSocketSessionId = webSocketSessionId;

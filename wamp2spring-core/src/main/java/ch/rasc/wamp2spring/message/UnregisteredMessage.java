@@ -45,8 +45,7 @@ public class UnregisteredMessage extends WampMessage {
 		this(requestId, null, null);
 	}
 
-	public UnregisteredMessage(long requestId, @Nullable Long registrationId,
-			@Nullable String reason) {
+	public UnregisteredMessage(long requestId, @Nullable Long registrationId, @Nullable String reason) {
 		super(CODE);
 		this.requestId = requestId;
 		this.registrationId = registrationId;
@@ -112,8 +111,8 @@ public class UnregisteredMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "UnregisteredMessage [requestId=" + this.requestId + ", registrationId="
-				+ this.registrationId + ", reason=" + this.reason + "]";
+		return "UnregisteredMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId
+				+ ", reason=" + this.reason + "]";
 	}
 
 }

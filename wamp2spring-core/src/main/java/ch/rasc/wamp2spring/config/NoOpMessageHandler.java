@@ -28,4 +28,5 @@ public class NoOpMessageHandler implements MessageHandler {
 	public void handleMessage(Message<?> message) {
 		// nothing here
 	}
+
 }

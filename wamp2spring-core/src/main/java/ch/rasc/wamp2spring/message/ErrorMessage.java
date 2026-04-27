@@ -51,8 +51,8 @@ public class ErrorMessage extends WampMessage {
 	@Nullable
 	private final Map<String, Object> argumentsKw;
 
-	public ErrorMessage(int type, long requestId, String error,
-			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+	public ErrorMessage(int type, long requestId, String error, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.type = type;
 		this.requestId = requestId;
@@ -62,58 +62,50 @@ public class ErrorMessage extends WampMessage {
 	}
 
 	public ErrorMessage(ErrorMessage errorMessage, CallMessage callMessage) {
-		this(callMessage.getCode(), callMessage.getRequestId(), errorMessage.getError(),
-				errorMessage.getArguments(), errorMessage.getArgumentsKw());
+		this(callMessage.getCode(), callMessage.getRequestId(), errorMessage.getError(), errorMessage.getArguments(),
+				errorMessage.getArgumentsKw());
 		setReceiver(callMessage);
 	}
 
 	public ErrorMessage(SubscribeMessage subscribeMessage, WampError error) {
-		this(subscribeMessage.getCode(), subscribeMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(subscribeMessage.getCode(), subscribeMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(subscribeMessage);
 	}
 
 	public ErrorMessage(UnsubscribeMessage unsubscribeMessage, WampError error) {
-		this(unsubscribeMessage.getCode(), unsubscribeMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(unsubscribeMessage.getCode(), unsubscribeMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(unsubscribeMessage);
 	}
 
 	public ErrorMessage(PublishMessage publishMessage, WampError error) {
-		this(publishMessage.getCode(), publishMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(publishMessage.getCode(), publishMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(publishMessage);
 	}
 
 	public ErrorMessage(RegisterMessage registerMessage, WampError error) {
-		this(registerMessage.getCode(), registerMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(registerMessage.getCode(), registerMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(registerMessage);
 	}
 
 	public ErrorMessage(UnregisterMessage unregisterMessage, WampError error) {
-		this(unregisterMessage.getCode(), unregisterMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(unregisterMessage.getCode(), unregisterMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(unregisterMessage);
 	}
 
 	public ErrorMessage(CallMessage callMessage, WampError error) {
-		this(callMessage.getCode(), callMessage.getRequestId(), error.getExternalValue(),
-				null, null);
+		this(callMessage.getCode(), callMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(callMessage);
 	}
 
-	public ErrorMessage(CallMessage callMessage, String error,
-			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+	public ErrorMessage(CallMessage callMessage, String error, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
 
-		this(callMessage.getCode(), callMessage.getRequestId(), error, arguments,
-				argumentsKw);
+		this(callMessage.getCode(), callMessage.getRequestId(), error, arguments, argumentsKw);
 		setReceiver(callMessage);
 	}
 
 	public ErrorMessage(InvocationMessage invocationMessage, WampError error) {
-		this(invocationMessage.getCode(), invocationMessage.getRequestId(),
-				error.getExternalValue(), null, null);
+		this(invocationMessage.getCode(), invocationMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(invocationMessage);
 	}
 
@@ -193,9 +185,8 @@ public class ErrorMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "ErrorMessage [type=" + this.type + ", requestId=" + this.requestId
-				+ ", error=" + this.error + ", arguments=" + this.arguments
-				+ ", argumentsKw=" + this.argumentsKw + "]";
+		return "ErrorMessage [type=" + this.type + ", requestId=" + this.requestId + ", error=" + this.error
+				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

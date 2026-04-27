@@ -44,15 +44,13 @@ public class MemoryEventStore implements EventStore {
 	@Override
 	public List<PublishMessage> getRetained(DestinationMatch query) {
 		if (query.getMatchPolicy() == MatchPolicy.EXACT) {
-			PublishMessage publishMessage = this.eventRetention
-					.get(query.getDestination());
+			PublishMessage publishMessage = this.eventRetention.get(query.getDestination());
 			if (publishMessage != null) {
 				return Collections.singletonList(publishMessage);
 			}
-			return Collections.emptyList();
+			return List.of();
 		}
-		if (query.getMatchPolicy() == MatchPolicy.PREFIX
-				|| query.getMatchPolicy() == MatchPolicy.WILDCARD) {
+		if (query.getMatchPolicy() == MatchPolicy.PREFIX || query.getMatchPolicy() == MatchPolicy.WILDCARD) {
 			List<PublishMessage> matchedMessages = new ArrayList<>();
 			this.eventRetention.forEach((topic, publishMessage) -> {
 				if (query.matches(topic)) {
@@ -62,7 +60,7 @@ public class MemoryEventStore implements EventStore {
 			return matchedMessages;
 		}
 
-		return Collections.emptyList();
+		return List.of();
 	}
 
 }

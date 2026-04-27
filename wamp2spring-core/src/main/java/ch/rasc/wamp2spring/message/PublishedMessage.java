@@ -69,8 +69,7 @@ public class PublishedMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "PublishedMessage [requestId=" + this.requestId + ", publicationId="
-				+ this.publicationId + "]";
+		return "PublishedMessage [requestId=" + this.requestId + ", publicationId=" + this.publicationId + "]";
 	}
 
 }

@@ -41,8 +41,7 @@ public class PrincipalMethodArgumentResolverTest {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		Method testMethod = getClass().getDeclaredMethod("handleMessage", Principal.class,
-				String.class);
+		Method testMethod = getClass().getDeclaredMethod("handleMessage", Principal.class, String.class);
 		this.resolver = new PrincipalMethodArgumentResolver();
 		this.principalParameter = new MethodParameter(testMethod, 0);
 		this.stringParameter = new MethodParameter(testMethod, 1);
@@ -60,8 +59,7 @@ public class PrincipalMethodArgumentResolverTest {
 		TestPrincipal testPrincipal = new TestPrincipal("testPrincipal");
 		callMessage.setHeader(WampMessageHeader.PRINCIPAL, testPrincipal);
 
-		assertThat(this.resolver.resolveArgument(this.principalParameter, callMessage))
-				.isEqualTo(testPrincipal);
+		assertThat(this.resolver.resolveArgument(this.principalParameter, callMessage)).isEqualTo(testPrincipal);
 	}
 
 	@Test
@@ -69,9 +67,7 @@ public class PrincipalMethodArgumentResolverTest {
 		Assertions.assertThrows(MessageHandlingException.class, () -> {
 			CallMessage callMessage = new CallMessage(1, "call");
 			TestPrincipal testPrincipal = new TestPrincipal("testPrincipal");
-			assertThat(
-					this.resolver.resolveArgument(this.principalParameter, callMessage))
-							.isEqualTo(testPrincipal);
+			assertThat(this.resolver.resolveArgument(this.principalParameter, callMessage)).isEqualTo(testPrincipal);
 		});
 	}
 
@@ -80,4 +76,5 @@ public class PrincipalMethodArgumentResolverTest {
 	private void handleMessage(Principal myPrincipal, String anotherParam) {
 		// nothing here
 	}
+
 }

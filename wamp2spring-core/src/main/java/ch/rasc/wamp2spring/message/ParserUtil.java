@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * JSON parsing helper methods
  */
 public class ParserUtil {
+
 	@Nullable
 	public static List<Object> readArray(JsonParser jp) throws IOException {
 		if (jp.currentToken() != JsonToken.START_ARRAY) {
@@ -88,35 +89,36 @@ public class ParserUtil {
 	@Nullable
 	private static Object getValue(JsonParser jp) throws IOException {
 		switch (jp.currentToken()) {
-		case VALUE_FALSE:
-		case VALUE_TRUE:
-			return jp.getBooleanValue();
-		case VALUE_STRING:
-			return jp.getValueAsString();
-		case VALUE_NUMBER_INT:
-			switch (jp.getNumberType()) {
-			case INT:
-				return jp.getIntValue();
-			case LONG:
-				return jp.getLongValue();
-			case BIG_INTEGER:
-				return jp.getBigIntegerValue();
+			case VALUE_FALSE:
+			case VALUE_TRUE:
+				return jp.getBooleanValue();
+			case VALUE_STRING:
+				return jp.getValueAsString();
+			case VALUE_NUMBER_INT:
+				switch (jp.getNumberType()) {
+					case INT:
+						return jp.getIntValue();
+					case LONG:
+						return jp.getLongValue();
+					case BIG_INTEGER:
+						return jp.getBigIntegerValue();
+					default:
+						return null;
+				}
+			case VALUE_NUMBER_FLOAT:
+				switch (jp.getNumberType()) {
+					case FLOAT:
+						return jp.getFloatValue();
+					case DOUBLE:
+						return jp.getDoubleValue();
+					case BIG_DECIMAL:
+						return jp.getDecimalValue();
+					default:
+						return null;
+				}
 			default:
 				return null;
-			}
-		case VALUE_NUMBER_FLOAT:
-			switch (jp.getNumberType()) {
-			case FLOAT:
-				return jp.getFloatValue();
-			case DOUBLE:
-				return jp.getDoubleValue();
-			case BIG_DECIMAL:
-				return jp.getDecimalValue();
-			default:
-				return null;
-			}
-		default:
-			return null;
 		}
 	}
+
 }

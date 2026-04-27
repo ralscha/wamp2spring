@@ -21,14 +21,13 @@ import ch.rasc.wamp2spring.message.UnregisterMessage;
  * Fired when a Callee session is removed from a registration.
  */
 public class WampProcedureUnregisteredEvent extends WampProcedureEvent {
-	public WampProcedureUnregisteredEvent(UnregisterMessage unregisterMessage,
-			String procedure, long registrationId) {
+
+	public WampProcedureUnregisteredEvent(UnregisterMessage unregisterMessage, String procedure, long registrationId) {
 		super(unregisterMessage, procedure, registrationId);
 	}
 
-	public WampProcedureUnregisteredEvent(WampDisconnectEvent event, String procedure,
-			long registrationId) {
-		super(event.getWampSessionId(), event.getWebSocketSessionId(),
-				event.getPrincipal(), procedure, registrationId);
+	public WampProcedureUnregisteredEvent(WampDisconnectEvent event, String procedure, long registrationId) {
+		super(event.getWampSessionId(), event.getWebSocketSessionId(), event.getPrincipal(), procedure, registrationId);
 	}
+
 }

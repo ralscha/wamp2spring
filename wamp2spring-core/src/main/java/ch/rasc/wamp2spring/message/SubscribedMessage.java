@@ -69,8 +69,7 @@ public class SubscribedMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "SubscribedMessage [requestId=" + this.requestId + ", subscriptionId="
-				+ this.subscriptionId + "]";
+		return "SubscribedMessage [requestId=" + this.requestId + ", subscriptionId=" + this.subscriptionId + "]";
 	}
 
 }

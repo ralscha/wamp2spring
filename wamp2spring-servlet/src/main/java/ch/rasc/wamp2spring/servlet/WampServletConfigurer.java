@@ -47,8 +47,7 @@ public interface WampServletConfigurer extends WampConfigurer {
 	 * }
 	 * </pre>
 	 */
-	default void configureWebSocketHandlerRegistration(
-			WebSocketHandlerRegistration registration) {
+	default void configureWebSocketHandlerRegistration(WebSocketHandlerRegistration registration) {
 		// nothing here
 	}
 

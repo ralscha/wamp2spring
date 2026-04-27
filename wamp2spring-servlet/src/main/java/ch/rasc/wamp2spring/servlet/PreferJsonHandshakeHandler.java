@@ -43,8 +43,7 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 public class PreferJsonHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
-	protected String selectProtocol(List<String> requestedProtocols,
-			WebSocketHandler webSocketHandler) {
+	protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
 
 		if (requestedProtocols.contains(WampSubProtocolHandler.JSON_PROTOCOL)) {
 			return WampSubProtocolHandler.JSON_PROTOCOL;

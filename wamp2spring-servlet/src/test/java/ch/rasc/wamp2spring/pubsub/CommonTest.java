@@ -25,8 +25,7 @@ public class CommonTest {
 
 	@Test
 	public void testEquals() {
-		EqualsVerifier.forClass(Subscriber.class).withIgnoredFields("webSocketSessionId")
-				.verify();
+		EqualsVerifier.forClass(Subscriber.class).withIgnoredFields("webSocketSessionId").verify();
 	}
 
 	@Test
@@ -40,4 +39,5 @@ public class CommonTest {
 		assertThat(MatchPolicy.fromExtValue("prefix")).isEqualTo(MatchPolicy.PREFIX);
 		assertThat(MatchPolicy.fromExtValue("wildcard")).isEqualTo(MatchPolicy.WILDCARD);
 	}
+
 }

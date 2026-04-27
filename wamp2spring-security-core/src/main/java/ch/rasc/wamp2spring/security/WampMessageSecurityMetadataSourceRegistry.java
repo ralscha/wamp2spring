@@ -19,12 +19,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.messaging.Message;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
-import org.springframework.security.messaging.access.expression.ExpressionBasedMessageSecurityMetadataSourceFactory;
-import org.springframework.security.messaging.access.intercept.MessageSecurityMetadataSource;
+import org.springframework.security.messaging.access.intercept.MessageAuthorizationContext;
+import org.springframework.security.messaging.access.intercept.MessageMatcherDelegatingAuthorizationManager;
 import org.springframework.security.messaging.util.matcher.MessageMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -82,11 +89,9 @@ public class WampMessageSecurityMetadataSourceRegistry {
 		if (procedures != null && procedures.length > 0) {
 			List<DestinationMatch> destionationMatches = new ArrayList<>();
 			for (String procedure : procedures) {
-				destionationMatches
-						.add(new DestinationMatch(procedure, MatchPolicy.EXACT));
+				destionationMatches.add(new DestinationMatch(procedure, MatchPolicy.EXACT));
 			}
-			return registerMessage(destionationMatches
-					.toArray(new DestinationMatch[destionationMatches.size()]));
+			return registerMessage(destionationMatches.toArray(new DestinationMatch[destionationMatches.size()]));
 		}
 		return registerMessage();
 	}
@@ -106,11 +111,9 @@ public class WampMessageSecurityMetadataSourceRegistry {
 		if (procedures != null && procedures.length > 0) {
 			List<DestinationMatch> destionationMatches = new ArrayList<>();
 			for (String procedure : procedures) {
-				destionationMatches
-						.add(new DestinationMatch(procedure, MatchPolicy.EXACT));
+				destionationMatches.add(new DestinationMatch(procedure, MatchPolicy.EXACT));
 			}
-			return callMessage(destionationMatches
-					.toArray(new DestinationMatch[destionationMatches.size()]));
+			return callMessage(destionationMatches.toArray(new DestinationMatch[destionationMatches.size()]));
 		}
 		return callMessage();
 	}
@@ -132,8 +135,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			for (String topic : topics) {
 				destionationMatches.add(new DestinationMatch(topic, MatchPolicy.EXACT));
 			}
-			return subscribeMessage(destionationMatches
-					.toArray(new DestinationMatch[destionationMatches.size()]));
+			return subscribeMessage(destionationMatches.toArray(new DestinationMatch[destionationMatches.size()]));
 		}
 		return subscribeMessage();
 	}
@@ -155,8 +157,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			for (String topic : topics) {
 				destionationMatches.add(new DestinationMatch(topic, MatchPolicy.EXACT));
 			}
-			return publishMessage(destionationMatches
-					.toArray(new DestinationMatch[destionationMatches.size()]));
+			return publishMessage(destionationMatches.toArray(new DestinationMatch[destionationMatches.size()]));
 		}
 		return publishMessage();
 	}
@@ -189,22 +190,51 @@ public class WampMessageSecurityMetadataSourceRegistry {
 		return new Constraint(Arrays.asList(matchers));
 	}
 
-	public void expressionHandler(
-			SecurityExpressionHandler<Message<Object>> exprHandler) {
+	public void expressionHandler(SecurityExpressionHandler<Message<Object>> exprHandler) {
 		this.expressionHandler = exprHandler;
 	}
 
-	public MessageSecurityMetadataSource createMetadataSource() {
-		return ExpressionBasedMessageSecurityMetadataSourceFactory
-				.createExpressionMessageMetadataSource(this.matcherToExpression,
-						this.expressionHandler);
+	public AuthorizationManager<Message<?>> createAuthorizationManager() {
+		MessageMatcherDelegatingAuthorizationManager.Builder builder = MessageMatcherDelegatingAuthorizationManager
+			.builder();
+		for (var entry : this.matcherToExpression.entrySet()) {
+			builder.matchers(entry.getKey())
+				.access(new ExpressionAuthorizationManager(entry.getValue(), this.expressionHandler));
+		}
+		return builder.build();
 	}
 
 	public boolean containsMapping() {
 		return !this.matcherToExpression.isEmpty();
 	}
 
+	private static final class ExpressionAuthorizationManager
+			implements AuthorizationManager<MessageAuthorizationContext<?>> {
+
+		private final Expression expression;
+
+		private final SecurityExpressionHandler<Message<Object>> expressionHandler;
+
+		ExpressionAuthorizationManager(String expression,
+				SecurityExpressionHandler<Message<Object>> expressionHandler) {
+			this.expression = expressionHandler.getExpressionParser().parseExpression(expression);
+			this.expressionHandler = expressionHandler;
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public AuthorizationResult authorize(Supplier<? extends Authentication> authentication,
+				MessageAuthorizationContext<?> context) {
+			EvaluationContext evaluationContext = this.expressionHandler.createEvaluationContext(authentication,
+					(Message<Object>) context.getMessage());
+			Boolean granted = this.expression.getValue(evaluationContext, Boolean.class);
+			return new AuthorizationDecision(Boolean.TRUE.equals(granted));
+		}
+
+	}
+
 	public class Constraint {
+
 		private final List<MessageMatcher<?>> messageMatchers;
 
 		Constraint(List<MessageMatcher<?>> messageMatchers) {
@@ -223,8 +253,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			return access(hasAuthorityBuilder(authority));
 		}
 
-		public WampMessageSecurityMetadataSourceRegistry hasAnyAuthority(
-				String... authorities) {
+		public WampMessageSecurityMetadataSourceRegistry hasAnyAuthority(String... authorities) {
 			return access(hasAnyAuthorityBuilder(authorities));
 		}
 
@@ -254,15 +283,13 @@ public class WampMessageSecurityMetadataSourceRegistry {
 
 		public WampMessageSecurityMetadataSourceRegistry access(String attribute) {
 			for (MessageMatcher<?> messageMatcher : this.messageMatchers) {
-				WampMessageSecurityMetadataSourceRegistry.this.matcherToExpression
-						.put(messageMatcher, attribute);
+				WampMessageSecurityMetadataSourceRegistry.this.matcherToExpression.put(messageMatcher, attribute);
 			}
 			return WampMessageSecurityMetadataSourceRegistry.this;
 		}
 
 		private String hasAnyRoleBuilder(String... authorities) {
-			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities,
-					"','ROLE_");
+			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities, "','ROLE_");
 			return "hasAnyRole('ROLE_" + anyAuthorities + "')";
 		}
 
@@ -270,8 +297,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			Assert.notNull(role, "role cannot be null");
 			if (role.startsWith("ROLE_")) {
 				throw new IllegalArgumentException(
-						"role should not start with 'ROLE_' since it is automatically inserted. Got '"
-								+ role + "'");
+						"role should not start with 'ROLE_' since it is automatically inserted. Got '" + role + "'");
 			}
 			return "hasRole('ROLE_" + role + "')";
 		}
@@ -281,9 +307,10 @@ public class WampMessageSecurityMetadataSourceRegistry {
 		}
 
 		private String hasAnyAuthorityBuilder(String... authorities) {
-			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities,
-					"','");
+			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities, "','");
 			return "hasAnyAuthority('" + anyAuthorities + "')";
 		}
+
 	}
+
 }

@@ -40,23 +40,21 @@ public class UnregisteredMessageTest extends BaseMessageTest {
 		assertThat(unregisteredMessage.getRegistrationId()).isEqualTo(333);
 		assertThat(unregisteredMessage.getReason()).isEqualTo("a reason");
 		json = serializeToJson(unregisteredMessage);
-		assertThat(json)
-				.isEqualTo("[67,13,{\"reason\":\"a reason\",\"registration\":333}]");
+		assertThat(json).isEqualTo("[67,13,{\"reason\":\"a reason\",\"registration\":333}]");
 	}
 
 	@Test
 	public void deserializeTest() throws IOException {
 		String json = "[67, 788923562]";
-		UnregisteredMessage unregisteredMessage = WampMessage
-				.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		UnregisteredMessage unregisteredMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
 		assertThat(unregisteredMessage.getCode()).isEqualTo(67);
 		assertThat(unregisteredMessage.getRequestId()).isEqualTo(788923562L);
 		assertThat(unregisteredMessage.getRegistrationId()).isNull();
 		assertThat(unregisteredMessage.getReason()).isNull();
 
 		json = "[67, 0, {\"registration\":334,\"reason\":\"another reason\"}]";
-		unregisteredMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		unregisteredMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(unregisteredMessage.getCode()).isEqualTo(67);
 		assertThat(unregisteredMessage.getRequestId()).isEqualTo(0);
 		assertThat(unregisteredMessage.getRegistrationId()).isEqualTo(334);

@@ -49,18 +49,15 @@ public class InvocableHandlerMethodTest {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		this.invocableHandlerMethod = new InvocableHandlerMethod(
-				new HandlerMethod(this, "setup"));
+		this.invocableHandlerMethod = new InvocableHandlerMethod(new HandlerMethod(this, "setup"));
 
 		HandlerMethodArgumentResolverComposite argumentResolvers = new HandlerMethodArgumentResolverComposite();
 		argumentResolvers.addResolver(new WampMessageMethodArgumentResolver());
 		argumentResolvers.addResolver(new PrincipalMethodArgumentResolver());
 		this.invocableHandlerMethod.setArgumentResolvers(argumentResolvers);
-		this.invocableHandlerMethod
-				.setConversionService(new DefaultFormattingConversionService());
+		this.invocableHandlerMethod.setConversionService(new DefaultFormattingConversionService());
 		this.invocableHandlerMethod.setObjectMapper(new ObjectMapper());
-		this.invocableHandlerMethod
-				.setParameterNameDiscoverer(new DefaultParameterNameDiscoverer());
+		this.invocableHandlerMethod.setParameterNameDiscoverer(new DefaultParameterNameDiscoverer());
 	}
 
 	@Test
@@ -75,8 +72,7 @@ public class InvocableHandlerMethodTest {
 		assertThat(this.invocableHandlerMethod.convert(param, 4L)).isEqualTo("4");
 		assertThat(this.invocableHandlerMethod.convert(param, 5.5f)).isEqualTo("5.5");
 		assertThat(this.invocableHandlerMethod.convert(param, 6.6)).isEqualTo("6.6");
-		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141")))
-				.isEqualTo("3.141");
+		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141"))).isEqualTo("3.141");
 	}
 
 	@Test
@@ -90,8 +86,7 @@ public class InvocableHandlerMethodTest {
 		assertThat(this.invocableHandlerMethod.convert(param, 4L)).isEqualTo(4);
 		assertThat(this.invocableHandlerMethod.convert(param, 5.5f)).isEqualTo(5);
 		assertThat(this.invocableHandlerMethod.convert(param, 6.6)).isEqualTo(6);
-		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141")))
-				.isEqualTo(3);
+		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141"))).isEqualTo(3);
 	}
 
 	@Test
@@ -99,8 +94,7 @@ public class InvocableHandlerMethodTest {
 		Assertions.assertThrows(ConversionFailedException.class, () -> {
 			Method testMethod = getClass().getDeclaredMethod("intParam", Integer.TYPE);
 			MethodParameter param = new MethodParameter(testMethod, 0);
-			assertThat(this.invocableHandlerMethod.convert(param, "str"))
-					.isEqualTo("str");
+			assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
 		});
 	}
 
@@ -109,64 +103,45 @@ public class InvocableHandlerMethodTest {
 		Method testMethod = getClass().getDeclaredMethod("IntegerParam", Integer.class);
 		MethodParameter param = new MethodParameter(testMethod, 0);
 		assertThat(this.invocableHandlerMethod.convert(param, null)).isNull();
-		assertThat(this.invocableHandlerMethod.convert(param, (byte) 1))
-				.isEqualTo(Integer.valueOf(1));
-		assertThat(this.invocableHandlerMethod.convert(param, (short) 2))
-				.isEqualTo(Integer.valueOf(2));
-		assertThat(this.invocableHandlerMethod.convert(param, 3))
-				.isEqualTo(Integer.valueOf(3));
-		assertThat(this.invocableHandlerMethod.convert(param, 4L))
-				.isEqualTo(Integer.valueOf(4));
-		assertThat(this.invocableHandlerMethod.convert(param, 5.5f))
-				.isEqualTo(Integer.valueOf(5));
-		assertThat(this.invocableHandlerMethod.convert(param, 6.6))
-				.isEqualTo(Integer.valueOf(6));
-		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141")))
-				.isEqualTo(Integer.valueOf(3));
+		assertThat(this.invocableHandlerMethod.convert(param, (byte) 1)).isEqualTo(Integer.valueOf(1));
+		assertThat(this.invocableHandlerMethod.convert(param, (short) 2)).isEqualTo(Integer.valueOf(2));
+		assertThat(this.invocableHandlerMethod.convert(param, 3)).isEqualTo(Integer.valueOf(3));
+		assertThat(this.invocableHandlerMethod.convert(param, 4L)).isEqualTo(Integer.valueOf(4));
+		assertThat(this.invocableHandlerMethod.convert(param, 5.5f)).isEqualTo(Integer.valueOf(5));
+		assertThat(this.invocableHandlerMethod.convert(param, 6.6)).isEqualTo(Integer.valueOf(6));
+		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141"))).isEqualTo(Integer.valueOf(3));
 	}
 
 	@Test
 	public void testToIntegerException() {
 		Assertions.assertThrows(ConversionFailedException.class, () -> {
-			Method testMethod = getClass().getDeclaredMethod("IntegerParam",
-					Integer.class);
+			Method testMethod = getClass().getDeclaredMethod("IntegerParam", Integer.class);
 			MethodParameter param = new MethodParameter(testMethod, 0);
-			assertThat(this.invocableHandlerMethod.convert(param, "str"))
-					.isEqualTo("str");
+			assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
 		});
 	}
 
 	@Test
 	public void testToBigDecimal() throws NoSuchMethodException, SecurityException {
-		Method testMethod = getClass().getDeclaredMethod("BigDecimalParam",
-				BigDecimal.class);
+		Method testMethod = getClass().getDeclaredMethod("BigDecimalParam", BigDecimal.class);
 		MethodParameter param = new MethodParameter(testMethod, 0);
 		assertThat(this.invocableHandlerMethod.convert(param, null)).isNull();
-		assertThat(this.invocableHandlerMethod.convert(param, (byte) 1))
-				.isEqualTo(new BigDecimal("1"));
-		assertThat(this.invocableHandlerMethod.convert(param, (short) 2))
-				.isEqualTo(new BigDecimal("2"));
-		assertThat(this.invocableHandlerMethod.convert(param, 3))
-				.isEqualTo(new BigDecimal("3"));
-		assertThat(this.invocableHandlerMethod.convert(param, 4L))
-				.isEqualTo(new BigDecimal("4"));
-		assertThat(this.invocableHandlerMethod.convert(param, 5.5f))
-				.isEqualTo(new BigDecimal("5.5"));
-		assertThat(this.invocableHandlerMethod.convert(param, 6.6))
-				.isEqualTo(new BigDecimal("6.6"));
+		assertThat(this.invocableHandlerMethod.convert(param, (byte) 1)).isEqualTo(new BigDecimal("1"));
+		assertThat(this.invocableHandlerMethod.convert(param, (short) 2)).isEqualTo(new BigDecimal("2"));
+		assertThat(this.invocableHandlerMethod.convert(param, 3)).isEqualTo(new BigDecimal("3"));
+		assertThat(this.invocableHandlerMethod.convert(param, 4L)).isEqualTo(new BigDecimal("4"));
+		assertThat(this.invocableHandlerMethod.convert(param, 5.5f)).isEqualTo(new BigDecimal("5.5"));
+		assertThat(this.invocableHandlerMethod.convert(param, 6.6)).isEqualTo(new BigDecimal("6.6"));
 		assertThat(this.invocableHandlerMethod.convert(param, new BigDecimal("3.141")))
-				.isEqualTo(new BigDecimal("3.141"));
+			.isEqualTo(new BigDecimal("3.141"));
 	}
 
 	@Test
-	public void testToBigDecimalException()
-			throws NoSuchMethodException, SecurityException {
+	public void testToBigDecimalException() throws NoSuchMethodException, SecurityException {
 		Assertions.assertThrows(ConversionFailedException.class, () -> {
-			Method testMethod = getClass().getDeclaredMethod("BigDecimalParam",
-					BigDecimal.class);
+			Method testMethod = getClass().getDeclaredMethod("BigDecimalParam", BigDecimal.class);
 			MethodParameter param = new MethodParameter(testMethod, 0);
-			assertThat(this.invocableHandlerMethod.convert(param, "str"))
-					.isEqualTo("str");
+			assertThat(this.invocableHandlerMethod.convert(param, "str")).isEqualTo("str");
 		});
 	}
 
@@ -242,11 +217,9 @@ public class InvocableHandlerMethodTest {
 		Method testMethod = getClass().getDeclaredMethod("listParam", List.class);
 		MethodParameter param = new MethodParameter(testMethod, 0);
 		assertThat(this.invocableHandlerMethod.convert(param, null)).isNull();
-		assertThat((List) this.invocableHandlerMethod.convert(param, "1")).hasSize(1)
-				.containsExactly("1");
-		assertThat(
-				(List) this.invocableHandlerMethod.convert(param, Arrays.asList(1, 2, 3)))
-						.hasSize(3).containsExactly("1", "2", "3");
+		assertThat((List) this.invocableHandlerMethod.convert(param, "1")).hasSize(1).containsExactly("1");
+		assertThat((List) this.invocableHandlerMethod.convert(param, Arrays.asList(1, 2, 3))).hasSize(3)
+			.containsExactly("1", "2", "3");
 	}
 
 	private void stringParam(String param) {
@@ -278,9 +251,13 @@ public class InvocableHandlerMethodTest {
 	}
 
 	static class TestDto {
+
 		private String v1;
+
 		private int v2;
+
 		private Integer v3;
+
 		private BigDecimal v4;
 
 		public String getV1() {

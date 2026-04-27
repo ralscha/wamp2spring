@@ -91,8 +91,8 @@ public class RegisterMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "RegisterMessage [requestId=" + this.requestId + ", procedure="
-				+ this.procedure + ", discloseCaller=" + this.discloseCaller + "]";
+		return "RegisterMessage [requestId=" + this.requestId + ", procedure=" + this.procedure + ", discloseCaller="
+				+ this.discloseCaller + "]";
 	}
 
 }

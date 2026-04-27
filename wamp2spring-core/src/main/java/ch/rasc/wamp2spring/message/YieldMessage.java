@@ -45,8 +45,7 @@ public class YieldMessage extends WampMessage {
 	@Nullable
 	private final Map<String, Object> argumentsKw;
 
-	public YieldMessage(long requestId, @Nullable List<Object> arguments,
-			@Nullable Map<String, Object> argumentsKw) {
+	public YieldMessage(long requestId, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.requestId = requestId;
 		this.arguments = arguments;
@@ -113,8 +112,8 @@ public class YieldMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "YieldMessage [requestId=" + this.requestId + ", arguments="
-				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+		return "YieldMessage [requestId=" + this.requestId + ", arguments=" + this.arguments + ", argumentsKw="
+				+ this.argumentsKw + "]";
 	}
 
 }

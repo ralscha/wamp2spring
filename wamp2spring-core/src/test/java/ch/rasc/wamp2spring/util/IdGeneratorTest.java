@@ -27,13 +27,11 @@ public class IdGeneratorTest {
 
 	@Test
 	public void testNewRandomId() {
-		assertThat(IdGenerator.newRandomId(null)).isBetween(IdGenerator.MIN,
-				IdGenerator.MAX);
+		assertThat(IdGenerator.newRandomId(null)).isBetween(IdGenerator.MIN, IdGenerator.MAX);
 
 		Set<Long> ids = new HashSet<>();
 		ids.add(1L);
-		assertThat(IdGenerator.newRandomId(ids)).isBetween(IdGenerator.MIN,
-				IdGenerator.MAX);
+		assertThat(IdGenerator.newRandomId(ids)).isBetween(IdGenerator.MIN, IdGenerator.MAX);
 	}
 
 	@Test

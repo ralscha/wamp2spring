@@ -54,36 +54,35 @@ import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 public class BaseWampTest {
 
 	public enum DataFormat {
+
 		JSON, MSGPACK, CBOR, SMILE
+
 	}
 
 	protected final JsonFactory jsonFactory = new MappingJsonFactory(new ObjectMapper());
 
-	protected final JsonFactory msgpackFactory = new ObjectMapper(
-			new MessagePackFactory()).getFactory();
+	protected final JsonFactory msgpackFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
 
-	protected final JsonFactory cborFactory = new ObjectMapper(new CBORFactory())
-			.getFactory();
+	protected final JsonFactory cborFactory = new ObjectMapper(new CBORFactory()).getFactory();
 
-	protected final JsonFactory smileFactory = new ObjectMapper(new SmileFactory())
-			.getFactory();
+	protected final JsonFactory smileFactory = new ObjectMapper(new SmileFactory()).getFactory();
 
 	@LocalServerPort
 	public int actualPort;
 
-	protected WampMessage sendWampMessage(WampMessage msg) throws InterruptedException,
-			ExecutionException, TimeoutException, IOException {
+	protected WampMessage sendWampMessage(WampMessage msg)
+			throws InterruptedException, ExecutionException, TimeoutException, IOException {
 		return sendWampMessage(msg, DataFormat.JSON);
 	}
 
 	protected WampMessage sendWampMessage(WampMessage msg, DataFormat dataFormat)
-			throws InterruptedException, ExecutionException, TimeoutException,
-			IOException {
+			throws InterruptedException, ExecutionException, TimeoutException, IOException {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 
 		try (WebSocketSession webSocketSession = webSocketClient
-				.execute(result, getHeaders(dataFormat), wampEndpointUrl()).get()) {
+			.execute(result, getHeaders(dataFormat), wampEndpointUrl())
+			.get()) {
 
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("publisher"));
@@ -100,8 +99,8 @@ public class BaseWampTest {
 		}
 	}
 
-	protected void sendMessage(DataFormat dataFormat, WebSocketSession webSocketSession,
-			WampMessage msg) throws IOException {
+	protected void sendMessage(DataFormat dataFormat, WebSocketSession webSocketSession, WampMessage msg)
+			throws IOException {
 
 		JsonFactory useFactory = this.jsonFactory;
 		if (dataFormat == DataFormat.MSGPACK) {
@@ -122,8 +121,7 @@ public class BaseWampTest {
 			generator.writeEndArray();
 			generator.close();
 
-			if (dataFormat == DataFormat.MSGPACK || dataFormat == DataFormat.CBOR
-					|| dataFormat == DataFormat.SMILE) {
+			if (dataFormat == DataFormat.MSGPACK || dataFormat == DataFormat.CBOR || dataFormat == DataFormat.SMILE) {
 				webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
 			}
 			else {
@@ -132,11 +130,10 @@ public class BaseWampTest {
 		}
 	}
 
-	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result,
-			DataFormat dataFormat) throws InterruptedException, ExecutionException {
+	protected WebSocketSession startWebSocketSession(AbstractWebSocketHandler result, DataFormat dataFormat)
+			throws InterruptedException, ExecutionException {
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
-		return webSocketClient.execute(result, getHeaders(dataFormat), wampEndpointUrl())
-				.get();
+		return webSocketClient.execute(result, getHeaders(dataFormat), wampEndpointUrl()).get();
 	}
 
 	protected WebSocketHttpHeaders getHeaders(DataFormat dataFormat) {
@@ -158,9 +155,10 @@ public class BaseWampTest {
 	}
 
 	protected URI wampEndpointUrl() {
-		return UriComponentsBuilder
-				.fromUriString("ws://localhost:" + this.actualPort + "/wamp").build()
-				.encode().toUri();
+		return UriComponentsBuilder.fromUriString("ws://localhost:" + this.actualPort + "/wamp")
+			.build()
+			.encode()
+			.toUri();
 	}
 
 }

@@ -41,30 +41,28 @@ import ch.rasc.wamp2spring.util.IdGenerator;
  * In memory subscription registry
  */
 public class SubscriptionRegistry {
-	private final static AtomicLong lastSubscriptionId = new AtomicLong(1L);
+
+	private final AtomicLong lastSubscriptionId = new AtomicLong(1L);
 
 	private final EnumMap<MatchPolicy, Map<String, Subscription>> subscriptionsByMatch = new EnumMap<>(
 			MatchPolicy.class);
 
 	private final Map<Long, Subscription> subscriptionsById = new ConcurrentHashMap<>();
 
-	private final LoadingCache<String, Set<Subscription>> subscriptionsCache = Caffeine
-			.newBuilder().maximumSize(512).build(this::internalFindSubscriptions);
+	private final LoadingCache<String, Set<Subscription>> subscriptionsCache = Caffeine.newBuilder()
+		.maximumSize(512)
+		.build(this::internalFindSubscriptions);
 
 	private final Object monitor = new Object();
 
 	public SubscriptionRegistry() {
-		this.subscriptionsByMatch.put(MatchPolicy.EXACT,
-				new ConcurrentHashMap<String, Subscription>());
-		this.subscriptionsByMatch.put(MatchPolicy.PREFIX,
-				new ConcurrentHashMap<String, Subscription>());
-		this.subscriptionsByMatch.put(MatchPolicy.WILDCARD,
-				new ConcurrentHashMap<String, Subscription>());
+		this.subscriptionsByMatch.put(MatchPolicy.EXACT, new ConcurrentHashMap<String, Subscription>());
+		this.subscriptionsByMatch.put(MatchPolicy.PREFIX, new ConcurrentHashMap<String, Subscription>());
+		this.subscriptionsByMatch.put(MatchPolicy.WILDCARD, new ConcurrentHashMap<String, Subscription>());
 	}
 
 	SubscribeResult subscribe(SubscribeMessage subscribeMessage) {
-		Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch
-				.get(subscribeMessage.getMatchPolicy());
+		Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch.get(subscribeMessage.getMatchPolicy());
 
 		boolean created = false;
 
@@ -74,9 +72,8 @@ public class SubscriptionRegistry {
 				subscription = subscriptionMap.get(subscribeMessage.getTopic());
 				if (subscription == null) {
 					long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
-					subscription = new Subscription(subscribeMessage.getTopic(),
-							subscribeMessage.getMatchPolicy(), subscriptionId,
-							subscribeMessage.getOptions());
+					subscription = new Subscription(subscribeMessage.getTopic(), subscribeMessage.getMatchPolicy(),
+							subscriptionId, subscribeMessage.getOptions());
 					subscriptionMap.put(subscription.getTopic(), subscription);
 					this.subscriptionsById.put(subscriptionId, subscription);
 					created = true;
@@ -88,66 +85,55 @@ public class SubscriptionRegistry {
 				subscribeMessage.getWampSessionId());
 		subscription.addSubscriber(subscriber);
 
-		return new SubscribeResult(subscribeMessage.getWampSessionId(), subscription,
-				created);
+		return new SubscribeResult(subscribeMessage.getWampSessionId(), subscription, created);
 	}
 
 	void subscribeEventHandlers(List<EventListenerInfo> eventListeners) {
 		for (EventListenerInfo eventListener : eventListeners) {
-			Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch
-					.get(eventListener.getMatch());
+			Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch.get(eventListener.getMatch());
 			for (String topic : eventListener.getTopic()) {
 				synchronized (this.monitor) {
 					Subscription subscription = subscriptionMap.get(topic);
 					if (subscription == null) {
 						long subscriptionId = IdGenerator.newLinearId(lastSubscriptionId);
-						subscription = new Subscription(topic, eventListener.getMatch(),
-								subscriptionId, null);
+						subscription = new Subscription(topic, eventListener.getMatch(), subscriptionId, null);
 						subscriptionMap.put(subscription.getTopic(), subscription);
 						this.subscriptionsById.put(subscriptionId, subscription);
 						invalidateCacheEntries(subscription);
 					}
-					subscription.addEventListenerHandlerMethod(
-							eventListener.getHandlerMethod());
+					subscription.addEventListenerHandlerMethod(eventListener.getHandlerMethod());
 				}
 			}
 		}
 	}
 
 	UnsubscribeResult unsubscribe(UnsubscribeMessage message) {
-		Subscription subscription = this.subscriptionsById
-				.get(message.getSubscriptionId());
+		Subscription subscription = this.subscriptionsById.get(message.getSubscriptionId());
 
 		if (subscription != null) {
-			Subscriber subscriber = new Subscriber(message.getWebSocketSessionId(),
-					message.getWampSessionId());
+			Subscriber subscriber = new Subscriber(message.getWebSocketSessionId(), message.getWampSessionId());
 
 			synchronized (this.monitor) {
 				if (subscription.removeSubscriber(subscriber)) {
 					boolean deleted = false;
 					if (!subscription.hasSubscribers()) {
-						this.subscriptionsByMatch.get(subscription.getMatchPolicy())
-								.remove(subscription.getTopic());
+						this.subscriptionsByMatch.get(subscription.getMatchPolicy()).remove(subscription.getTopic());
 						this.subscriptionsById.remove(subscription.getSubscriptionId());
 						deleted = true;
 						invalidateCacheEntries(subscription);
 					}
-					return new UnsubscribeResult(message.getWampSessionId(), subscription,
-							deleted);
+					return new UnsubscribeResult(message.getWampSessionId(), subscription, deleted);
 				}
 			}
 		}
 
-		return new UnsubscribeResult(message.getWampSessionId(),
-				WampError.NO_SUCH_SUBSCRIPTION);
+		return new UnsubscribeResult(message.getWampSessionId(), WampError.NO_SUCH_SUBSCRIPTION);
 	}
 
-	List<UnsubscribeResult> removeWebSocketSessionId(String webSocketSessionId,
-			long wampSessionId) {
+	List<UnsubscribeResult> removeWebSocketSessionId(String webSocketSessionId, long wampSessionId) {
 		List<UnsubscribeResult> results = new ArrayList<>();
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
-			Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch
-					.get(matchPolicy);
+			Map<String, Subscription> subscriptionMap = this.subscriptionsByMatch.get(matchPolicy);
 
 			for (Subscription subscription : subscriptionMap.values()) {
 				Subscriber subscriber = new Subscriber(webSocketSessionId, wampSessionId);
@@ -157,14 +143,12 @@ public class SubscriptionRegistry {
 						boolean deleted = false;
 						if (!subscription.hasSubscribers()) {
 							subscriptionMap.remove(subscription.getTopic());
-							this.subscriptionsById
-									.remove(subscription.getSubscriptionId());
+							this.subscriptionsById.remove(subscription.getSubscriptionId());
 							deleted = true;
 							invalidateCacheEntries(subscription);
 						}
 
-						results.add(new UnsubscribeResult(wampSessionId, subscription,
-								deleted));
+						results.add(new UnsubscribeResult(wampSessionId, subscription, deleted));
 					}
 				}
 			}
@@ -181,22 +165,19 @@ public class SubscriptionRegistry {
 	private Set<Subscription> internalFindSubscriptions(String topic) {
 		Set<Subscription> subscriptions = new HashSet<>();
 
-		Subscription exactSubscription = this.subscriptionsByMatch.get(MatchPolicy.EXACT)
-				.get(topic);
+		Subscription exactSubscription = this.subscriptionsByMatch.get(MatchPolicy.EXACT).get(topic);
 		if (exactSubscription != null) {
 			subscriptions.add(exactSubscription);
 		}
 
-		Map<String, Subscription> prefixSubscriptionMap = this.subscriptionsByMatch
-				.get(MatchPolicy.PREFIX);
+		Map<String, Subscription> prefixSubscriptionMap = this.subscriptionsByMatch.get(MatchPolicy.PREFIX);
 		for (Subscription prefixSubscription : prefixSubscriptionMap.values()) {
 			if (prefixSubscription.getTopicMatch().matches(topic)) {
 				subscriptions.add(prefixSubscription);
 			}
 		}
 
-		Map<String, Subscription> wildcardSubscriptionMap = this.subscriptionsByMatch
-				.get(MatchPolicy.WILDCARD);
+		Map<String, Subscription> wildcardSubscriptionMap = this.subscriptionsByMatch.get(MatchPolicy.WILDCARD);
 		String[] components = topic.split("\\.");
 		for (Subscription wildcardSubscription : wildcardSubscriptionMap.values()) {
 			if (wildcardSubscription.getTopicMatch().matchesWildcard(components)) {
@@ -219,7 +200,6 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns subscription IDs listed according to matching policies.
-	 *
 	 * @return subscription IDs grouped by matching policies
 	 */
 	public EnumMap<MatchPolicy, List<Long>> listSubscriptions() {
@@ -227,8 +207,10 @@ public class SubscriptionRegistry {
 
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			List<Long> subscriptionIds = this.subscriptionsByMatch.get(matchPolicy)
-					.values().stream().map(Subscription::getSubscriptionId)
-					.collect(Collectors.toList());
+				.values()
+				.stream()
+				.map(Subscription::getSubscriptionId)
+				.toList();
 			result.put(matchPolicy, subscriptionIds);
 		}
 
@@ -238,7 +220,6 @@ public class SubscriptionRegistry {
 	/**
 	 * Returns the subscription ID (if any) managing a topic, according to the matching
 	 * policy.
-	 *
 	 * @param topic the topic URI
 	 * @param matchPolicy the matching policy
 	 * @return the subscription id or null if no matching subscription exist
@@ -260,18 +241,15 @@ public class SubscriptionRegistry {
 	/**
 	 * Returns a list of IDs of subscriptions matching a topic URI, irrespective of match
 	 * policy.
-	 *
 	 * @param topic the topic URI
 	 * @return the list of session IDs subscribed to the topic
 	 */
 	public List<Long> getMatchSubscriptions(String topic) {
-		return findSubscriptions(topic).stream().map(Subscription::getSubscriptionId)
-				.collect(Collectors.toList());
+		return findSubscriptions(topic).stream().map(Subscription::getSubscriptionId).toList();
 	}
 
 	/**
 	 * Returns information on a particular subscription.
-	 *
 	 * @param subscriptionId the id of the subscription
 	 * @return the detail about the requested subscription. null when the subscription
 	 * does not exist.
@@ -287,22 +265,19 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Returns a list of session IDs for sessions currently attached to the subscription.
-	 *
 	 * @param subscriptionId the id of the subscription
 	 * @return the list of session IDs attached to the subscription
 	 */
 	public List<Long> listSubscribers(long subscriptionId) {
 		Subscription sub = this.subscriptionsById.get(subscriptionId);
 		if (sub != null) {
-			return sub.getSubscribers().stream().map(Subscriber::getWampSessionId)
-					.collect(Collectors.toList());
+			return sub.getSubscribers().stream().map(Subscriber::getWampSessionId).toList();
 		}
-		return Collections.emptyList();
+		return List.of();
 	}
 
 	/**
 	 * Returns the number of sessions currently attached to the subscription.
-	 *
 	 * @param subscriptionId the subscription id
 	 * @return the number of subscriptions or null when the subscription does not exist.
 	 */
@@ -317,7 +292,6 @@ public class SubscriptionRegistry {
 
 	/**
 	 * Checks if a particular topic currently has attached subscriptions
-	 *
 	 * @param topic the topic
 	 * @return true if currently sessions are attached to the topic
 	 */

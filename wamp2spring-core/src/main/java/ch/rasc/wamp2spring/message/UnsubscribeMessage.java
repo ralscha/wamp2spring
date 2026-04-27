@@ -64,8 +64,7 @@ public class UnsubscribeMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "UnsubscribeMessage [requestId=" + this.requestId + ", subscriptionId="
-				+ this.subscriptionId + "]";
+		return "UnsubscribeMessage [requestId=" + this.requestId + ", subscriptionId=" + this.subscriptionId + "]";
 	}
 
 }

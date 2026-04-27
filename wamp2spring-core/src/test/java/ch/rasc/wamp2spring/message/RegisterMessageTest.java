@@ -42,8 +42,7 @@ public class RegisterMessageTest extends BaseMessageTest {
 		assertThat(registerMessage.isDiscloseCaller()).isTrue();
 
 		json = serializeToJson(registerMessage);
-		assertThat(json).isEqualTo(
-				"[64,927639114088448,{\"disclose_caller\":true},\"com.maypp.add2\"]");
+		assertThat(json).isEqualTo("[64,927639114088448,{\"disclose_caller\":true},\"com.maypp.add2\"]");
 	}
 
 	@Test
@@ -58,8 +57,7 @@ public class RegisterMessageTest extends BaseMessageTest {
 		assertThat(registerMessage.isDiscloseCaller()).isFalse();
 
 		json = "[64, 927639114088448, {\"disclose_caller\":true},\"com.maypp.add2\"]";
-		registerMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		registerMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(registerMessage.getCode()).isEqualTo(64);
 		assertThat(registerMessage.getRequestId()).isEqualTo(927639114088448L);

@@ -25,6 +25,7 @@ public class Maps {
 	}
 
 	public static final class MapWrapper {
+
 		private final HashMap<String, Object> map;
 
 		public MapWrapper(String k, Object v) {
@@ -40,6 +41,7 @@ public class Maps {
 		public Map<String, Object> getMap() {
 			return this.map;
 		}
+
 	}
 
 }

@@ -22,7 +22,9 @@ import java.util.Set;
 import org.springframework.lang.Nullable;
 
 public final class WampRole {
+
 	private final String role;
+
 	private final Set<String> features;
 
 	public WampRole(String role) {

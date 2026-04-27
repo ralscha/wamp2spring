@@ -68,9 +68,7 @@ public class InvocationMessage extends WampMessage {
 
 	public InvocationMessage(Procedure procedure, CallMessage callMessage) {
 		this(IdGenerator.newLinearId(lastRequest), procedure.getRegistrationId(),
-				procedure.isDiscloseCaller() || callMessage.isDiscloseMe()
-						? callMessage.getWampSessionId()
-						: null,
+				procedure.isDiscloseCaller() || callMessage.isDiscloseMe() ? callMessage.getWampSessionId() : null,
 				callMessage.getArguments(), callMessage.getArgumentsKw());
 		setReceiverWebSocketSessionId(procedure.getWebSocketSessionId());
 	}
@@ -101,8 +99,7 @@ public class InvocationMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new InvocationMessage(request, registration, caller, arguments,
-				argumentsKw);
+		return new InvocationMessage(request, registration, caller, arguments, argumentsKw);
 	}
 
 	@Override
@@ -156,9 +153,9 @@ public class InvocationMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "InvocationMessage [requestId=" + this.requestId + ", registrationId="
-				+ this.registrationId + ", arguments=" + this.arguments + ", caller="
-				+ this.caller + ", argumentsKw=" + this.argumentsKw + "]";
+		return "InvocationMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId
+				+ ", arguments=" + this.arguments + ", caller=" + this.caller + ", argumentsKw=" + this.argumentsKw
+				+ "]";
 	}
 
 }

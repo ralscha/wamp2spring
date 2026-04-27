@@ -49,21 +49,17 @@ public class HandlerMethodService {
 	private final ObjectMapper objectMapper;
 
 	public HandlerMethodService(ConversionService conversionService,
-			List<HandlerMethodArgumentResolver> customArgumentResolvers,
-			ObjectMapper objectMapper, ApplicationContext applicationContext) {
+			List<HandlerMethodArgumentResolver> customArgumentResolvers, ObjectMapper objectMapper,
+			ApplicationContext applicationContext) {
 		this.conversionService = conversionService;
 		this.parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
 		this.argumentResolvers = new HandlerMethodArgumentResolverComposite();
 
-		ConfigurableBeanFactory beanFactory = ClassUtils.isAssignableValue(
-				ConfigurableApplicationContext.class, applicationContext)
-						? ((ConfigurableApplicationContext) applicationContext)
-								.getBeanFactory()
-						: null;
+		ConfigurableBeanFactory beanFactory = ClassUtils.isAssignableValue(ConfigurableApplicationContext.class,
+				applicationContext) ? ((ConfigurableApplicationContext) applicationContext).getBeanFactory() : null;
 
-		this.argumentResolvers.addResolver(
-				new HeaderMethodArgumentResolver(this.conversionService, beanFactory));
+		this.argumentResolvers.addResolver(new HeaderMethodArgumentResolver(this.conversionService, beanFactory));
 		this.argumentResolvers.addResolver(new HeadersMethodArgumentResolver());
 		this.argumentResolvers.addResolver(new WampMessageMethodArgumentResolver());
 		this.argumentResolvers.addResolver(new PrincipalMethodArgumentResolver());
@@ -74,19 +70,15 @@ public class HandlerMethodService {
 	}
 
 	@Nullable
-	public Object invoke(CallMessage callMessage, InvocableHandlerMethod handlerMethod)
-			throws Exception {
+	public Object invoke(CallMessage callMessage, InvocableHandlerMethod handlerMethod) throws Exception {
 		setHelpers(handlerMethod);
-		return handlerMethod.invoke(callMessage, callMessage.getArguments(),
-				callMessage.getArgumentsKw());
+		return handlerMethod.invoke(callMessage, callMessage.getArguments(), callMessage.getArgumentsKw());
 	}
 
 	@Nullable
-	public Object invoke(EventMessage eventMessage, InvocableHandlerMethod handlerMethod)
-			throws Exception {
+	public Object invoke(EventMessage eventMessage, InvocableHandlerMethod handlerMethod) throws Exception {
 		setHelpers(handlerMethod);
-		return handlerMethod.invoke(eventMessage, eventMessage.getArguments(),
-				eventMessage.getArgumentsKw());
+		return handlerMethod.invoke(eventMessage, eventMessage.getArguments(), eventMessage.getArgumentsKw());
 	}
 
 	private void setHelpers(InvocableHandlerMethod handlerMethod) {

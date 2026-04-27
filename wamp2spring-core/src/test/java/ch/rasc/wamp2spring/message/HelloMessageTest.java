@@ -43,16 +43,13 @@ public class HelloMessageTest extends BaseMessageTest {
 	@Test
 	public void deserializeTest() throws IOException {
 		String json = "[1, \"somerealm\", { \"roles\": { \"publisher\": {}, \"subscriber\": {} } }]";
-		HelloMessage helloMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		HelloMessage helloMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("somerealm");
-		assertThat(helloMessage.getRoles()).containsOnly(new WampRole("publisher"),
-				new WampRole("subscriber"));
+		assertThat(helloMessage.getRoles()).containsOnly(new WampRole("publisher"), new WampRole("subscriber"));
 
 		json = "[1,\"aRealm\",{\"roles\":{\"publisher\":{\"features\":{\"publisher_exclusion\":true}},\"subscriber\":{\"features\":{\"subscriber_blackwhite_listing\":true}}}}]";
-		helloMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		helloMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("aRealm");
 		assertThat(helloMessage.getRoles()).containsOnlyElementsOf(createRoles());
@@ -70,4 +67,5 @@ public class HelloMessageTest extends BaseMessageTest {
 
 		return roles;
 	}
+
 }

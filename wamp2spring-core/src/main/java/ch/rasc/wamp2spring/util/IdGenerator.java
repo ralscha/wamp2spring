@@ -27,6 +27,7 @@ import org.springframework.lang.Nullable;
 public class IdGenerator {
 
 	public static final long MIN = 1L;
+
 	public static final long MAX = 9007199254740992L;
 
 	/**
@@ -34,20 +35,15 @@ public class IdGenerator {
 	 * existing ids in the provided Set.
 	 * <p>
 	 * Used for global scope messages
-	 *
 	 * @param existingIds a collection of existing ids.
 	 * @return a new random identification number
 	 */
 	public static long newRandomId(@Nullable Set<Long> existingIds) {
+		// nextLong(MIN, MAX + 1) generates uniformly in [1, 2^53] directly
 		while (true) {
-			long candidateId = ThreadLocalRandom.current().nextLong();
-			if (MIN <= candidateId && candidateId <= MAX) {
-				if (existingIds == null) {
-					return candidateId;
-				}
-				if (!existingIds.contains(candidateId)) {
-					return candidateId;
-				}
+			long candidateId = ThreadLocalRandom.current().nextLong(MIN, MAX + 1);
+			if (existingIds == null || !existingIds.contains(candidateId)) {
+				return candidateId;
 			}
 		}
 	}
@@ -56,18 +52,18 @@ public class IdGenerator {
 	 * Creates new linear identification number from the provided parameter.
 	 * <p>
 	 * Used for session scope and router scope ids
-	 *
 	 * @param longValue start address of the identification number. Next number will be
 	 * this value plus 1
 	 * @return new id
 	 */
 	public static long newLinearId(AtomicLong longValue) {
-		long candiateId = longValue.incrementAndGet();
-		if (candiateId > IdGenerator.MAX) {
-			longValue.set(1L);
-			candiateId = longValue.longValue();
+		while (true) {
+			long current = longValue.get();
+			long next = (current >= IdGenerator.MAX) ? 1L : current + 1L;
+			if (longValue.compareAndSet(current, next)) {
+				return next;
+			}
 		}
-		return candiateId;
 	}
 
 }

@@ -24,8 +24,7 @@ import org.springframework.lang.Nullable;
  */
 public class WampDisconnectEvent extends WampEvent {
 
-	public WampDisconnectEvent(Long wampSessionId, String webSocketSessionId,
-			@Nullable Principal principal) {
+	public WampDisconnectEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal) {
 		super(wampSessionId, webSocketSessionId, principal);
 	}
 

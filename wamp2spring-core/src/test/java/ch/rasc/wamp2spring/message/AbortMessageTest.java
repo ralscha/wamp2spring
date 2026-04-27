@@ -28,16 +28,14 @@ public class AbortMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		AbortMessage abortMessage = new AbortMessage(WampError.NO_SUCH_REGISTRATION,
-				"No such registration");
+		AbortMessage abortMessage = new AbortMessage(WampError.NO_SUCH_REGISTRATION, "No such registration");
 
 		assertThat(abortMessage.getCode()).isEqualTo(3);
 		assertThat(abortMessage.getMessage()).isEqualTo("No such registration");
 		assertThat(abortMessage.getReason()).isEqualTo("wamp.error.no_such_registration");
 
 		String json = serializeToJson(abortMessage);
-		assertThat(json).isEqualTo(
-				"[3,{\"message\":\"No such registration\"},\"wamp.error.no_such_registration\"]");
+		assertThat(json).isEqualTo("[3,{\"message\":\"No such registration\"},\"wamp.error.no_such_registration\"]");
 
 		abortMessage = new AbortMessage(WampError.NO_SUCH_REGISTRATION);
 
@@ -54,16 +52,14 @@ public class AbortMessageTest extends BaseMessageTest {
 	public void deserializeTest() throws IOException {
 		String json = "[3, {\"message\": \"The realm does not exist.\"}, \"wamp.error.no_such_realm\"]";
 
-		AbortMessage abortMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		AbortMessage abortMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(abortMessage.getCode()).isEqualTo(3);
 		assertThat(abortMessage.getMessage()).isEqualTo("The realm does not exist.");
 		assertThat(abortMessage.getReason()).isEqualTo("wamp.error.no_such_realm");
 
 		json = "[3, {}, \"wamp.error.no_such_realm\"]";
 
-		abortMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		abortMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(abortMessage.getCode()).isEqualTo(3);
 		assertThat(abortMessage.getMessage()).isNull();
 		assertThat(abortMessage.getReason()).isEqualTo("wamp.error.no_such_realm");

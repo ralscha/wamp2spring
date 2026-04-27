@@ -46,6 +46,7 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private final CompletableFuture<WelcomeMessage> welcomeMessageFuture;
+
 	private CompletableFuture<List<WampMessage>> messageFuture;
 
 	private final JsonFactory jsonFactory;
@@ -99,12 +100,10 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	}
 
 	@Override
-	protected void handleTextMessage(WebSocketSession session, TextMessage message)
-			throws Exception {
+	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
 		try {
-			WampMessage wampMessage = WampMessage.deserialize(this.jsonFactory,
-					message.asBytes());
+			WampMessage wampMessage = WampMessage.deserialize(this.jsonFactory, message.asBytes());
 
 			if (wampMessage instanceof WelcomeMessage) {
 				this.welcomeMessageFuture.complete((WelcomeMessage) wampMessage);
@@ -125,24 +124,20 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	}
 
 	@Override
-	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message)
-			throws Exception {
+	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
 		try {
 			WampMessage wampMessage = null;
 
 			String acceptedProtocol = session.getAcceptedProtocol();
 			if (acceptedProtocol != null) {
 				if (WampWebSocketHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory,
-							message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.msgpackFactory, message.getPayload().array());
 				}
 				else if (WampWebSocketHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory,
-							message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.smileFactory, message.getPayload().array());
 				}
 				else if (WampWebSocketHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.cborFactory,
-							message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.cborFactory, message.getPayload().array());
 				}
 
 				if (wampMessage instanceof WelcomeMessage) {
@@ -165,20 +160,16 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 		}
 	}
 
-	public WampMessage getWampMessage()
-			throws InterruptedException, ExecutionException, TimeoutException {
-		List<WampMessage> results = this.messageFuture.get(this.timeout,
-				TimeUnit.SECONDS);
+	public WampMessage getWampMessage() throws InterruptedException, ExecutionException, TimeoutException {
+		List<WampMessage> results = this.messageFuture.get(this.timeout, TimeUnit.SECONDS);
 		return results.get(0);
 	}
 
-	public List<WampMessage> getWampMessages()
-			throws InterruptedException, ExecutionException, TimeoutException {
+	public List<WampMessage> getWampMessages() throws InterruptedException, ExecutionException, TimeoutException {
 		return this.messageFuture.get(this.timeout, TimeUnit.SECONDS);
 	}
 
-	public WelcomeMessage getWelcomeMessage()
-			throws InterruptedException, ExecutionException, TimeoutException {
+	public WelcomeMessage getWelcomeMessage() throws InterruptedException, ExecutionException, TimeoutException {
 		return this.welcomeMessageFuture.get(this.timeout, TimeUnit.SECONDS);
 	}
 
@@ -190,4 +181,5 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 			throw new RuntimeException(e);
 		}
 	}
+
 }

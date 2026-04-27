@@ -52,9 +52,8 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 
 	@Bean
 	public WampSubProtocolHandler wampSubProtocolHandler() {
-		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(),
-				cborJsonFactory(), smileJsonFactory(), clientInboundChannel(),
-				this.features);
+		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(), cborJsonFactory(),
+				smileJsonFactory(), clientInboundChannel(), this.features);
 	}
 
 	@Bean
@@ -88,21 +87,18 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 		decoratedHandler = decorateWebSocketHandler(decoratedHandler);
 		for (WampConfigurer wc : this.configurers) {
 			if (wc instanceof WampServletConfigurer) {
-				decoratedHandler = ((WampServletConfigurer) wc)
-						.decorateWebSocketHandler(decoratedHandler);
+				decoratedHandler = ((WampServletConfigurer) wc).decorateWebSocketHandler(decoratedHandler);
 			}
 		}
 
-		WebSocketHandlerRegistration registration = registry.addHandler(decoratedHandler,
-				getWebSocketHandlerPath());
+		WebSocketHandlerRegistration registration = registry.addHandler(decoratedHandler, getWebSocketHandlerPath());
 
 		registration.setHandshakeHandler(getHandshakeHandler());
 
 		configureWebSocketHandlerRegistration(registration);
 		for (WampConfigurer wc : this.configurers) {
 			if (wc instanceof WampServletConfigurer) {
-				((WampServletConfigurer) wc)
-						.configureWebSocketHandlerRegistration(registration);
+				((WampServletConfigurer) wc).configureWebSocketHandlerRegistration(registration);
 			}
 		}
 	}

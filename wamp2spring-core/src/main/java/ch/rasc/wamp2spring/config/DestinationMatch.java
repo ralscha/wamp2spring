@@ -23,6 +23,7 @@ import ch.rasc.wamp2spring.pubsub.MatchPolicy;
  * Matches a topic or a procedure
  */
 public class DestinationMatch {
+
 	private final String destination;
 
 	private final MatchPolicy matchPolicy;
@@ -56,7 +57,6 @@ public class DestinationMatch {
 
 	/**
 	 * Checks if a destination matches with this destination
-	 *
 	 * @param queryDestination the destination
 	 * @return true if the destination matches
 	 */
@@ -76,13 +76,11 @@ public class DestinationMatch {
 	/**
 	 * Checks if a destination matches with this destination. Used for
 	 * MatchPolicy.WILDCARD destinations.
-	 *
 	 * @param components the destination splitted in a String array
 	 * @return true if the destination matches
 	 */
 	public boolean matchesWildcard(String[] components) {
-		if (this.wildcardComponents != null
-				&& components.length == this.wildcardComponents.length) {
+		if (this.wildcardComponents != null && components.length == this.wildcardComponents.length) {
 			for (int i = 0; i < components.length; i++) {
 				String wc = this.wildcardComponents[i];
 				if (wc.length() > 0 && !components[i].equals(wc)) {

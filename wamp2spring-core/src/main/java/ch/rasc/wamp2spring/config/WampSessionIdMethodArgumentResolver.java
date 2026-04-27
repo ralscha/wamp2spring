@@ -25,8 +25,7 @@ import ch.rasc.wamp2spring.message.WampMessageHeader;
 /**
  * Resolves method parameters annotated with @WampSessionid
  */
-public class WampSessionIdMethodArgumentResolver
-		implements HandlerMethodArgumentResolver {
+public class WampSessionIdMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
@@ -34,8 +33,7 @@ public class WampSessionIdMethodArgumentResolver
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, Message<?> message)
-			throws Exception {
+	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		return message.getHeaders().get(WampMessageHeader.WAMP_SESSION_ID.name());
 	}
 

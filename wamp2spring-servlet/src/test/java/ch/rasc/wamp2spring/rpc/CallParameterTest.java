@@ -39,8 +39,7 @@ import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.CompletableFutureWebSocketHandler;
 import ch.rasc.wamp2spring.testsupport.Maps;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = CallParameterTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = CallParameterTest.Config.class)
 public class CallParameterTest extends BaseWampTest {
 
 	@Test
@@ -52,8 +51,7 @@ public class CallParameterTest extends BaseWampTest {
 		assertThat(result.getRequestId()).isEqualTo(1L);
 		assertThat(result.getArgumentsKw()).isNull();
 		assertThat(result.getArguments()).hasSize(1);
-		assertThat((String) result.getArguments().get(0))
-				.startsWith("headerMethod called: ");
+		assertThat((String) result.getArguments().get(0)).startsWith("headerMethod called: ");
 	}
 
 	@Test
@@ -71,8 +69,7 @@ public class CallParameterTest extends BaseWampTest {
 	public void testSessionIdAnnotation() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 
-		try (WebSocketSession wsSession = startWebSocketSession(result,
-				DataFormat.SMILE)) {
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.SMILE)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
 			HelloMessage helloMessage = new HelloMessage("realm", roles);
@@ -89,8 +86,7 @@ public class CallParameterTest extends BaseWampTest {
 			ResultMessage resultMessage = (ResultMessage) wampResult;
 			assertThat(resultMessage.getRequestId()).isEqualTo(22L);
 			assertThat(resultMessage.getArgumentsKw()).isNull();
-			assertThat(resultMessage.getArguments())
-					.containsExactly("session id: " + welcomeMessage.getSessionId());
+			assertThat(resultMessage.getArguments()).containsExactly("session id: " + welcomeMessage.getSessionId());
 		}
 	}
 
@@ -107,8 +103,8 @@ public class CallParameterTest extends BaseWampTest {
 
 	@Test
 	public void testMix() throws Exception {
-		CallMessage callMessage = new CallMessage(4L, "mix", Maps.map("param1", "param1")
-				.map("param2", 2).map("param3", 3.3f).map("param4", "param4").getMap());
+		CallMessage callMessage = new CallMessage(4L, "mix",
+				Maps.map("param1", "param1").map("param2", 2).map("param3", 3.3f).map("param4", "param4").getMap());
 		WampMessage receivedMessage = sendWampMessage(callMessage);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;

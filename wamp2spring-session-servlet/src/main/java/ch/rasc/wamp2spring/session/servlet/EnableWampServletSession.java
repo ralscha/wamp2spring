@@ -30,5 +30,7 @@ import org.springframework.context.annotation.Import;
 @Import(SessionWampServletConfigurer.class)
 @Configuration
 public @interface EnableWampServletSession {
+
 	// nothing here
+
 }

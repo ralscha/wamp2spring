@@ -26,15 +26,12 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
  */
 public class WampSubscriptionDeletedEvent extends WampSubscriptionEvent {
 
-	public WampSubscriptionDeletedEvent(WampMessage wampMessage,
-			SubscriptionDetail subscriptionDetail) {
+	public WampSubscriptionDeletedEvent(WampMessage wampMessage, SubscriptionDetail subscriptionDetail) {
 		super(wampMessage, subscriptionDetail);
 	}
 
-	public WampSubscriptionDeletedEvent(WampDisconnectEvent event,
-			SubscriptionDetail detail) {
-		super(event.getWampSessionId(), event.getWebSocketSessionId(),
-				event.getPrincipal(), detail);
+	public WampSubscriptionDeletedEvent(WampDisconnectEvent event, SubscriptionDetail detail) {
+		super(event.getWampSessionId(), event.getWebSocketSessionId(), event.getPrincipal(), detail);
 	}
 
 }

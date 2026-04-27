@@ -50,29 +50,24 @@ public class WampPublisherTest {
 	@BeforeEach
 	public void setup() {
 		MockitoAnnotations.openMocks(this);
-		Mockito.when(
-				this.clientOutboundChannel.send(ArgumentMatchers.any(WampMessage.class)))
-				.thenReturn(true);
+		Mockito.when(this.clientOutboundChannel.send(ArgumentMatchers.any(WampMessage.class))).thenReturn(true);
 		this.wampPublisher = new WampPublisher(this.clientOutboundChannel);
 	}
 
 	@Test
 	public void testPublishToAll() {
 		this.wampPublisher.publishToAll("topic", 1);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1), null,
-				null);
+		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1), null, null);
 	}
 
 	@Test
 	public void testPublishToAllList() {
 		List<String> value = Arrays.asList("a", "b", "c");
 		this.wampPublisher.publishToAll("topic2", value);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 		PublishMessage publishMessage = this.messageCaptor.getValue();
 		assertPublishMessage(publishMessage, "topic2", value, null, null);
 	}
@@ -84,8 +79,7 @@ public class WampPublisherTest {
 		mapValue.put("two", 2);
 		mapValue.put("three", 3);
 		this.wampPublisher.publishToAll("topic3", mapValue);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
 		assertPublishMessage(publishMessage, "topic3", mapValue, null, null);
@@ -94,23 +88,19 @@ public class WampPublisherTest {
 	@Test
 	public void testPublishTo() {
 		this.wampPublisher.publishTo(Collections.singleton(123L), "topic", 1);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1),
-				Collections.singleton(123L), null);
+		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1), Collections.singleton(123L), null);
 	}
 
 	@Test
 	public void testPublishToOneCollection() {
 		this.wampPublisher.publishTo(124L, "topic1", Arrays.asList(1, 2, 3, 4));
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic1", Arrays.asList(1, 2, 3, 4),
-				Collections.singleton(124L), null);
+		assertPublishMessage(publishMessage, "topic1", Arrays.asList(1, 2, 3, 4), Collections.singleton(124L), null);
 	}
 
 	@Test
@@ -119,23 +109,19 @@ public class WampPublisherTest {
 		data.put("one", 1);
 		data.put("two", 2);
 		this.wampPublisher.publishTo(125L, "topic2", data);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic2", data, Collections.singleton(125L),
-				null);
+		assertPublishMessage(publishMessage, "topic2", data, Collections.singleton(125L), null);
 	}
 
 	@Test
 	public void testPublishToList() {
 		List<String> value = Arrays.asList("a", "b", "c");
 		this.wampPublisher.publishTo(Collections.singleton(123L), "topic2", value);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic2", value, Collections.singleton(123L),
-				null);
+		assertPublishMessage(publishMessage, "topic2", value, Collections.singleton(123L), null);
 	}
 
 	@Test
@@ -145,45 +131,37 @@ public class WampPublisherTest {
 		mapValue.put("two", 2);
 		mapValue.put("three", 3);
 		this.wampPublisher.publishTo(Collections.singleton(123L), "topic3", mapValue);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic3", mapValue,
-				Collections.singleton(123L), null);
+		assertPublishMessage(publishMessage, "topic3", mapValue, Collections.singleton(123L), null);
 	}
 
 	@Test
 	public void testPublishToAllExcept() {
 		this.wampPublisher.publishToAllExcept(Collections.singleton(123L), "topic", 1);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1), null,
-				Collections.singleton(123L));
+		assertPublishMessage(publishMessage, "topic", Collections.singletonList(1), null, Collections.singleton(123L));
 	}
 
 	@Test
 	public void testPublishToAllExceptOne() {
 		this.wampPublisher.publishToAllExcept(124, "topic1", 2);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic1", Collections.singletonList(2), null,
-				Collections.singleton(124L));
+		assertPublishMessage(publishMessage, "topic1", Collections.singletonList(2), null, Collections.singleton(124L));
 	}
 
 	@Test
 	public void testPublishToAllExceptOneCollection() {
 		this.wampPublisher.publishToAllExcept(125, "topic2", Arrays.asList(1, 2, 3));
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic2", Arrays.asList(1, 2, 3), null,
-				Collections.singleton(125L));
+		assertPublishMessage(publishMessage, "topic2", Arrays.asList(1, 2, 3), null, Collections.singleton(125L));
 	}
 
 	@Test
@@ -193,24 +171,19 @@ public class WampPublisherTest {
 		mapValue.put("two", 2);
 		mapValue.put("three", 3);
 		this.wampPublisher.publishToAllExcept(126, "topic3", mapValue);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic3", mapValue, null,
-				Collections.singleton(126L));
+		assertPublishMessage(publishMessage, "topic3", mapValue, null, Collections.singleton(126L));
 	}
 
 	@Test
 	public void testPublishToAllExceptList() {
 		List<String> value = Arrays.asList("a", "b", "c");
-		this.wampPublisher.publishToAllExcept(Collections.singleton(123L), "topic2",
-				value);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		this.wampPublisher.publishToAllExcept(Collections.singleton(123L), "topic2", value);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic2", value, null,
-				Collections.singleton(123L));
+		assertPublishMessage(publishMessage, "topic2", value, null, Collections.singleton(123L));
 	}
 
 	@Test
@@ -219,18 +192,15 @@ public class WampPublisherTest {
 		mapValue.put("one", 1);
 		mapValue.put("two", 2);
 		mapValue.put("three", 3);
-		this.wampPublisher.publishToAllExcept(Collections.singleton(123L), "topic3",
-				mapValue);
-		Mockito.verify(this.clientOutboundChannel, Mockito.times(1))
-				.send(this.messageCaptor.capture());
+		this.wampPublisher.publishToAllExcept(Collections.singleton(123L), "topic3", mapValue);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(this.messageCaptor.capture());
 
 		PublishMessage publishMessage = this.messageCaptor.getValue();
-		assertPublishMessage(publishMessage, "topic3", mapValue, null,
-				Collections.singleton(123L));
+		assertPublishMessage(publishMessage, "topic3", mapValue, null, Collections.singleton(123L));
 	}
 
-	private static <T> void assertPublishMessage(PublishMessage publishMessage,
-			String topic, Map<String, T> value, Set<Long> eligible, Set<Long> exclude) {
+	private static <T> void assertPublishMessage(PublishMessage publishMessage, String topic, Map<String, T> value,
+			Set<Long> eligible, Set<Long> exclude) {
 		assertThat(publishMessage.getCode()).isEqualTo(16);
 		assertThat(publishMessage.getRequestId()).isGreaterThan(0);
 		assertThat(publishMessage.getTopic()).isEqualTo(topic);
@@ -253,8 +223,8 @@ public class WampPublisherTest {
 		assertThat(publishMessage.getArgumentsKw()).containsAllEntriesOf(value);
 	}
 
-	private static <T> void assertPublishMessage(PublishMessage publishMessage,
-			String topic, List<T> values, Set<Long> eligible, Set<Long> exclude) {
+	private static <T> void assertPublishMessage(PublishMessage publishMessage, String topic, List<T> values,
+			Set<Long> eligible, Set<Long> exclude) {
 		assertThat(publishMessage.getCode()).isEqualTo(16);
 		assertThat(publishMessage.getRequestId()).isGreaterThan(0);
 		assertThat(publishMessage.getTopic()).isEqualTo(topic);

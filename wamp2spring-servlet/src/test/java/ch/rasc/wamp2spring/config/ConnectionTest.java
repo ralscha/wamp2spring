@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Collections;
-
-import org.junit.jupiter.api.Assertions;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -37,8 +37,7 @@ import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ConnectionTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = ConnectionTest.Config.class)
 public class ConnectionTest extends BaseWampTest {
 
 	@Test
@@ -47,16 +46,15 @@ public class ConnectionTest extends BaseWampTest {
 
 			wc.connect(wampEndpointUrl());
 
-			// send hello message after session is established. this should close
-			// the connection
-			wc.sendMessage(new HelloMessage("theRealm", Collections.EMPTY_LIST));
-
+			// send hello message after session is established — server must reply
+			// with ABORT (protocol_violation) and close the connection
+			AbortMessage abortMessage = wc.sendMessageWithResult(new HelloMessage("theRealm", List.of()));
+			assertThat(abortMessage.getReason()).isEqualTo(WampError.PROTOCOL_VIOLATION.getExternalValue());
+			// wait for the server to finish closing the connection
 			wc.waitForNothing();
 			try {
-				wc.sendMessage(
-						new PublishMessage.Builder(1L, "crud.user.create").build());
-				Assertions.fail(
-						"sendMessage should fail because the connection should be closed");
+				wc.sendMessage(new PublishMessage.Builder(1L, "crud.user.create").build());
+				fail("sendMessage should fail because the connection should be closed");
 			}
 			catch (Exception e) {
 				assertThat(e).isInstanceOf(IllegalStateException.class);
@@ -74,8 +72,7 @@ public class ConnectionTest extends BaseWampTest {
 
 			wc.waitForNothing();
 			try {
-				wc.sendMessage(
-						new PublishMessage.Builder(1L, "crud.user.create").build());
+				wc.sendMessage(new PublishMessage.Builder(1L, "crud.user.create").build());
 				fail("sendMessage should fail because the connection should be closed");
 			}
 			catch (Exception e) {
@@ -91,16 +88,13 @@ public class ConnectionTest extends BaseWampTest {
 
 			wc.connect(wampEndpointUrl());
 
-			GoodbyeMessage goodbyeMessage = wc
-					.sendMessageWithResult(new GoodbyeMessage(WampError.NOT_AUTHORIZED));
+			GoodbyeMessage goodbyeMessage = wc.sendMessageWithResult(new GoodbyeMessage(WampError.NOT_AUTHORIZED));
 			assertThat(goodbyeMessage.getCode()).isEqualTo(6);
 			assertThat(goodbyeMessage.getMessage()).isNull();
-			assertThat(goodbyeMessage.getReason())
-					.isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
+			assertThat(goodbyeMessage.getReason()).isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
 
 			try {
-				wc.sendMessage(
-						new PublishMessage.Builder(1L, "crud.user.create").build());
+				wc.sendMessage(new PublishMessage.Builder(1L, "crud.user.create").build());
 				fail("sendMessage should fail because the connection should be closed");
 			}
 			catch (Exception e) {
@@ -113,6 +107,9 @@ public class ConnectionTest extends BaseWampTest {
 	@EnableAutoConfiguration
 	@EnableServletWamp
 	static class Config {
+
 		// nothing here
+
 	}
+
 }

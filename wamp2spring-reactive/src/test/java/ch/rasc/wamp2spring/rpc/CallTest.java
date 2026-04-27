@@ -36,8 +36,7 @@ import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = CallTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = CallTest.Config.class)
 @TestPropertySource(properties = "spring.main.web-application-type=reactive")
 public class CallTest extends BaseWampTest {
 
@@ -46,8 +45,7 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testReturnValue() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(1L, "callService.sum", Arrays.asList(3, 4)));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(1L, "callService.sum", Arrays.asList(3, 4)));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(1L);
@@ -59,8 +57,7 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testDifferentProcedureName() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(2L, "sum2", Arrays.asList(11, 22)));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(2L, "sum2", Arrays.asList(11, 22)));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(2L);
@@ -68,8 +65,7 @@ public class CallTest extends BaseWampTest {
 		assertThat(result.getArguments()).containsExactly(33);
 		assertThat(this.callService.isCalled("sumDifferent1")).isTrue();
 
-		receivedMessage = sendWampMessage(
-				new CallMessage(3L, "sum3", Arrays.asList(4, 5)));
+		receivedMessage = sendWampMessage(new CallMessage(3L, "sum3", Arrays.asList(4, 5)));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(3L);
@@ -105,8 +101,7 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testCallMessageArgument() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(5L, "callService.call"), DataFormat.JSON);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(5L, "callService.call"), DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);
@@ -117,8 +112,7 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testNoParams() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(6L, "callService.noParams"), DataFormat.CBOR);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(6L, "callService.noParams"), DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(6L);
@@ -129,9 +123,8 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testException() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L,
-				"callService.error", Collections.singletonList("theArgument")),
-				DataFormat.CBOR);
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(7L, "callService.error", Collections.singletonList("theArgument")), DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage error = (ErrorMessage) receivedMessage;
 		assertThat(error.getRequestId()).isEqualTo(7L);
@@ -144,9 +137,8 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testDto() throws Exception {
 		TestDto dto = new TestDto(1, "Hi");
-		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L,
-				"callService.callWithDto", Collections.singletonList(dto)),
-				DataFormat.MSGPACK);
+		WampMessage receivedMessage = sendWampMessage(
+				new CallMessage(8L, "callService.callWithDto", Collections.singletonList(dto)), DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
@@ -159,8 +151,7 @@ public class CallTest extends BaseWampTest {
 	public void testDtoAndCallMessageArgument() throws Exception {
 		TestDto dto = new TestDto(2, "Hi");
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(9L, "callService.callWithDtoAndMessage",
-						Arrays.asList(dto, "the_second_argument")),
+				new CallMessage(9L, "callService.callWithDtoAndMessage", Arrays.asList(dto, "the_second_argument")),
 				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
@@ -172,8 +163,8 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testReturnedList() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(9L, "callService.callAndReturnList"), DataFormat.JSON);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(9L, "callService.callAndReturnList"),
+				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
@@ -184,13 +175,12 @@ public class CallTest extends BaseWampTest {
 
 	@Test
 	public void testReturnedMap() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(9L, "callService.callAndReturnMap"), DataFormat.JSON);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(9L, "callService.callAndReturnMap"),
+				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(9L);
-		assertThat(result.getArgumentsKw()).hasSize(2).containsEntry("0.0", 1.0)
-				.containsEntry("1.0", 2.0);
+		assertThat(result.getArgumentsKw()).hasSize(2).containsEntry("0.0", 1.0).containsEntry("1.0", 2.0);
 		assertThat(result.getArguments()).isEmpty();
 		assertThat(this.callService.isCalled("callAndReturnMap")).isTrue();
 	}
@@ -198,8 +188,7 @@ public class CallTest extends BaseWampTest {
 	@Test
 	public void testCallWithException() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(10L, "callService.callWithException",
-						Collections.singletonList("theArgument")),
+				new CallMessage(10L, "callService.callWithException", Collections.singletonList("theArgument")),
 				DataFormat.JSON);
 		assertThat(receivedMessage).isInstanceOf(ErrorMessage.class);
 		ErrorMessage result = (ErrorMessage) receivedMessage;

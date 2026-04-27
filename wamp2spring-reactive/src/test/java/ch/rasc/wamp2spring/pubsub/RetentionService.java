@@ -36,4 +36,5 @@ public class RetentionService {
 	public PublishMessage.Builder publishMessageBuilder(String topic) {
 		return this.wampPublisher.publishMessageBuilder(topic);
 	}
+
 }

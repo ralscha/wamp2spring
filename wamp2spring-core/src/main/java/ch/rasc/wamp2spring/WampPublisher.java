@@ -47,6 +47,7 @@ import ch.rasc.wamp2spring.util.IdGenerator;
  */
 @SuppressWarnings("unchecked")
 public class WampPublisher {
+
 	private final MessageChannel clientInboundChannel;
 
 	private final AtomicLong atomicLong = new AtomicLong();
@@ -68,49 +69,42 @@ public class WampPublisher {
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic
-	 *
 	 * @param topic the topic to send the event to
 	 * @param arguments a variable number of event arguments
 	 */
 	public <T> void publishToAll(String topic, @Nullable T... arguments) {
-		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.build());
+		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments)).build());
 	}
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic
-	 *
 	 * @param topic the topic to send the event to
 	 * @param arguments a collection of event arguments
 	 */
 	public <T> void publishToAll(String topic, @Nullable Collection<T> arguments) {
-		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.build());
+		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments)).build());
 	}
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic
-	 *
 	 * @param topic the topic to send the event to
 	 * @param arguments a map with event arguments
 	 */
 	public <T> void publishToAll(String topic, @Nullable Map<String, T> arguments) {
-		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
-				.build());
+		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments).build());
 	}
 
 	/**
 	 * Creates a new event and sends it to a specific group of Subscribers of the topic
-	 *
 	 * @param eligibleWampSessionIds the collection of WAMP session ids to send the event
 	 * to
 	 * @param topic the topic to send the event to
 	 * @param arguments a variable number of event arguments
 	 */
-	public <T> void publishTo(Collection<Long> eligibleWampSessionIds, String topic,
-			@Nullable T... arguments) {
+	public <T> void publishTo(Collection<Long> eligibleWampSessionIds, String topic, @Nullable T... arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.eligible(CollectionHelper.toSet(eligibleWampSessionIds)).build());
+			.eligible(CollectionHelper.toSet(eligibleWampSessionIds))
+			.build());
 	}
 
 	/**
@@ -122,12 +116,12 @@ public class WampPublisher {
 	public <T> void publishTo(Collection<Long> eligibleWampSessionIds, String topic,
 			@Nullable Collection<T> arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.eligible(CollectionHelper.toSet(eligibleWampSessionIds)).build());
+			.eligible(CollectionHelper.toSet(eligibleWampSessionIds))
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to a specific group of Subscribers of the topic
-	 *
 	 * @param eligibleWampSessionIds
 	 * @param topic the topic to send the event to
 	 * @param arguments a map with event arguments
@@ -135,135 +129,128 @@ public class WampPublisher {
 	public <T> void publishTo(Collection<Long> eligibleWampSessionIds, String topic,
 			@Nullable Map<String, T> arguments) {
 		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
-				.eligible(CollectionHelper.toSet(eligibleWampSessionIds)).build());
+			.eligible(CollectionHelper.toSet(eligibleWampSessionIds))
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to a one specific Subscriber of the topic
-	 *
 	 * @param eligibleWampSessionId
 	 * @param topic the topic to send the event to
 	 * @param arguments a variable number of event arguments
 	 */
-	public <T> void publishTo(long eligibleWampSessionId, String topic,
-			@Nullable T... arguments) {
+	public <T> void publishTo(long eligibleWampSessionId, String topic, @Nullable T... arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.addEligible(eligibleWampSessionId).build());
+			.addEligible(eligibleWampSessionId)
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to a one specific Subscriber of the topic
-	 *
 	 * @param eligibleWampSessionId
 	 * @param topic the topic to send the event to
 	 * @param arguments a collection of event arguments
 	 */
-	public <T> void publishTo(long eligibleWampSessionId, String topic,
+	public <T> void publishTo(long eligibleWampSessionId, String topic, @Nullable Collection<T> arguments) {
+		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
+			.addEligible(eligibleWampSessionId)
+			.build());
+	}
+
+	/**
+	 * Creates a new event and sends it to a one specific Subscriber of the topic
+	 * @param eligibleWampSessionId
+	 * @param topic the topic to send the event to
+	 * @param arguments a map with event arguments
+	 */
+	public <T> void publishTo(long eligibleWampSessionId, String topic, @Nullable Map<String, T> arguments) {
+		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
+			.addEligible(eligibleWampSessionId)
+			.build());
+	}
+
+	/**
+	 * Creates a new event and sends it to all Subscribers of the topic except to
+	 * Subscribers that are listed in the provided collection of WAMP session ids
+	 * @param excludeWampSessionIds
+	 * @param topic the topic to send the event to
+	 * @param arguments a variable number of event arguments
+	 */
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic, @Nullable T... arguments) {
+		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
+			.exclude(CollectionHelper.toSet(excludeWampSessionIds))
+			.build());
+	}
+
+	/**
+	 * Creates a new event and sends it to all Subscribers of the topic except to
+	 * Subscribers that are listed in the provided collection of WAMP session ids
+	 * @param excludeWampSessionIds
+	 * @param topic the topic to send the event to
+	 * @param arguments a collection of event arguments
+	 */
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic,
 			@Nullable Collection<T> arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.addEligible(eligibleWampSessionId).build());
+			.exclude(CollectionHelper.toSet(excludeWampSessionIds))
+			.build());
 	}
 
 	/**
-	 * Creates a new event and sends it to a one specific Subscriber of the topic
-	 *
-	 * @param eligibleWampSessionId
+	 * Creates a new event and sends it to all Subscribers of the topic except to
+	 * Subscribers that are listed in the provided collection of WAMP session ids
+	 * @param excludeWampSessionIds
 	 * @param topic the topic to send the event to
 	 * @param arguments a map with event arguments
 	 */
-	public <T> void publishTo(long eligibleWampSessionId, String topic,
+	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds, String topic,
 			@Nullable Map<String, T> arguments) {
 		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
-				.addEligible(eligibleWampSessionId).build());
-	}
-
-	/**
-	 * Creates a new event and sends it to all Subscribers of the topic except to
-	 * Subscribers that are listed in the provided collection of WAMP session ids
-	 *
-	 * @param excludeWampSessionIds
-	 * @param topic the topic to send the event to
-	 * @param arguments a variable number of event arguments
-	 */
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
-			String topic, @Nullable T... arguments) {
-		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
-	}
-
-	/**
-	 * Creates a new event and sends it to all Subscribers of the topic except to
-	 * Subscribers that are listed in the provided collection of WAMP session ids
-	 *
-	 * @param excludeWampSessionIds
-	 * @param topic the topic to send the event to
-	 * @param arguments a collection of event arguments
-	 */
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
-			String topic, @Nullable Collection<T> arguments) {
-		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
-	}
-
-	/**
-	 * Creates a new event and sends it to all Subscribers of the topic except to
-	 * Subscribers that are listed in the provided collection of WAMP session ids
-	 *
-	 * @param excludeWampSessionIds
-	 * @param topic the topic to send the event to
-	 * @param arguments a map with event arguments
-	 */
-	public <T> void publishToAllExcept(Collection<Long> excludeWampSessionIds,
-			String topic, @Nullable Map<String, T> arguments) {
-		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
-				.exclude(CollectionHelper.toSet(excludeWampSessionIds)).build());
+			.exclude(CollectionHelper.toSet(excludeWampSessionIds))
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic except to the
 	 * Subscriber with the provided WAMP session id
-	 *
 	 * @param excludeWampSessionId
 	 * @param topic the topic to send the event to
 	 * @param arguments a variable number of event arguments
 	 */
-	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
-			@Nullable T... arguments) {
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic, @Nullable T... arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.addExclude(excludeWampSessionId).build());
+			.addExclude(excludeWampSessionId)
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic except to the
 	 * Subscriber with the provided WAMP session id
-	 *
 	 * @param excludeWampSessionId
 	 * @param topic the topic to send the event to
 	 * @param arguments a collection of event arguments
 	 */
-	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
-			@Nullable Collection<T> arguments) {
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic, @Nullable Collection<T> arguments) {
 		publish(publishMessageBuilder(topic).arguments(CollectionHelper.toList(arguments))
-				.addExclude(excludeWampSessionId).build());
+			.addExclude(excludeWampSessionId)
+			.build());
 	}
 
 	/**
 	 * Creates a new event and sends it to all Subscribers of the topic except to the
 	 * Subscriber with the provided WAMP session id
-	 *
 	 * @param excludeWampSessionId
 	 * @param topic the topic to send the event to
 	 * @param arguments a map with event arguments
 	 */
-	public <T> void publishToAllExcept(long excludeWampSessionId, String topic,
-			@Nullable Map<String, T> arguments) {
+	public <T> void publishToAllExcept(long excludeWampSessionId, String topic, @Nullable Map<String, T> arguments) {
 		publish(publishMessageBuilder(topic).arguments((Map<String, Object>) arguments)
-				.addExclude(excludeWampSessionId).build());
+			.addExclude(excludeWampSessionId)
+			.build());
 	}
 
 	/**
 	 * Creates a new builder for a {@link PublishMessage}
-	 *
 	 * @param topic the topic
 	 * @return the {@link PublishMessage} builder instance
 	 */

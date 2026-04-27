@@ -28,8 +28,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic",
-				MatchPolicy.PREFIX, false);
+		SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic", MatchPolicy.PREFIX, false);
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(1);
@@ -68,8 +67,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.isGetRetained()).isTrue();
 
 		json = serializeToJson(subscribeMessage);
-		assertThat(json).isEqualTo(
-				"[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]");
+		assertThat(json).isEqualTo("[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]");
 	}
 
 	@Test
@@ -86,8 +84,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{},\"topic2\"]";
-		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
@@ -96,8 +93,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{\"get_retained\":false},\"topic2\"]";
-		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
@@ -106,8 +102,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.isGetRetained()).isFalse();
 
 		json = "[32,2,{\"get_retained\":true},\"topic2\"]";
-		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);
@@ -116,8 +111,7 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.isGetRetained()).isTrue();
 
 		json = "[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]";
-		subscribeMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(subscribeMessage.getCode()).isEqualTo(32);
 		assertThat(subscribeMessage.getRequestId()).isEqualTo(2);

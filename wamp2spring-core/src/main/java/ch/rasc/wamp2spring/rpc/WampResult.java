@@ -58,8 +58,7 @@ public class WampResult {
 		this(null, resultsKw);
 	}
 
-	public WampResult(@Nullable Collection<Object> results,
-			@Nullable Map<String, Object> resultsKw) {
+	public WampResult(@Nullable Collection<Object> results, @Nullable Map<String, Object> resultsKw) {
 		this.results = CollectionHelper.toList(results);
 		this.resultsKw = resultsKw;
 	}
@@ -102,8 +101,7 @@ public class WampResult {
 
 	@Override
 	public String toString() {
-		return "WampResult [results=" + this.results + ", resultsKw=" + this.resultsKw
-				+ "]";
+		return "WampResult [results=" + this.results + ", resultsKw=" + this.resultsKw + "]";
 	}
 
 }

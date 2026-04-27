@@ -55,13 +55,12 @@ public class SubscribeMessage extends WampMessage {
 		this(requestId, topic, match, false, null);
 	}
 
-	public SubscribeMessage(long requestId, String topic, MatchPolicy match,
-			boolean getRetained) {
+	public SubscribeMessage(long requestId, String topic, MatchPolicy match, boolean getRetained) {
 		this(requestId, topic, match, getRetained, null);
 	}
 
-	public SubscribeMessage(long requestId, String topic, MatchPolicy match,
-			boolean getRetained, Map<String, Object> options) {
+	public SubscribeMessage(long requestId, String topic, MatchPolicy match, boolean getRetained,
+			Map<String, Object> options) {
 		super(CODE);
 		this.requestId = requestId;
 		this.matchPolicy = match;
@@ -161,9 +160,8 @@ public class SubscribeMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "SubscribeMessage [requestId=" + this.requestId + ", matchPolicy="
-				+ this.matchPolicy + ", topic=" + this.topic + ", getRetained="
-				+ this.getRetained + "]";
+		return "SubscribeMessage [requestId=" + this.requestId + ", matchPolicy=" + this.matchPolicy + ", topic="
+				+ this.topic + ", getRetained=" + this.getRetained + "]";
 	}
 
 }

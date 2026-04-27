@@ -37,12 +37,10 @@ public class PrincipalMethodArgumentResolver implements HandlerMethodArgumentRes
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, Message<?> message)
-			throws Exception {
+	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		Principal user = ((WampMessage) message).getPrincipal();
 		if (user == null) {
-			throw new MessageHandlingException(message,
-					"No \"PRINCIPAL\" header in message");
+			throw new MessageHandlingException(message, "No \"PRINCIPAL\" header in message");
 		}
 		return user;
 	}

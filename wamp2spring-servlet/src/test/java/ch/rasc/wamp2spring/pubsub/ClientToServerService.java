@@ -80,8 +80,7 @@ public class ClientToServerService {
 	}
 
 	@WampListener
-	public void listenerWithDtoAndMessage(TestDto testDto, EventMessage eventMessage,
-			String secondArgument) {
+	public void listenerWithDtoAndMessage(TestDto testDto, EventMessage eventMessage, String secondArgument) {
 		this.called.add("listenerWithDtoAndMessage");
 		assertThat(eventMessage).isNotNull();
 		assertThat(testDto.getName()).isEqualTo("Hi");

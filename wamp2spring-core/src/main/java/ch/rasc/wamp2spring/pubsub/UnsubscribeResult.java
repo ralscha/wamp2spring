@@ -31,8 +31,7 @@ class UnsubscribeResult {
 	@Nullable
 	private final WampError error;
 
-	public UnsubscribeResult(long wampSessionId, Subscription subscription,
-			boolean deleted) {
+	public UnsubscribeResult(long wampSessionId, Subscription subscription, boolean deleted) {
 		this.wampSessionId = wampSessionId;
 		this.subscription = subscription;
 		this.deleted = deleted;

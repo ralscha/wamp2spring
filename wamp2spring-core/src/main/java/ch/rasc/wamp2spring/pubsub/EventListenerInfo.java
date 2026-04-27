@@ -18,14 +18,14 @@ package ch.rasc.wamp2spring.pubsub;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 class EventListenerInfo {
+
 	private final String[] topic;
 
 	private final MatchPolicy match;
 
 	private final InvocableHandlerMethod handlerMethod;
 
-	EventListenerInfo(InvocableHandlerMethod handlerMethod, String[] topic,
-			MatchPolicy match) {
+	EventListenerInfo(InvocableHandlerMethod handlerMethod, String[] topic, MatchPolicy match) {
 		this.handlerMethod = handlerMethod;
 		this.topic = topic;
 		this.match = match;

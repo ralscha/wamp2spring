@@ -26,6 +26,7 @@ import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.message.CallMessage;
 
 public class CallService {
+
 	private final Set<String> called = new HashSet<>();
 
 	@WampProcedure
@@ -84,8 +85,7 @@ public class CallService {
 	}
 
 	@WampProcedure
-	public String callWithDtoAndMessage(TestDto testDto, CallMessage callMessage,
-			String secondArgument) {
+	public String callWithDtoAndMessage(TestDto testDto, CallMessage callMessage, String secondArgument) {
 		this.called.add("callWithDtoAndMessage");
 		assertThat(callMessage).isNotNull();
 		assertThat(testDto.getName()).isEqualTo("Hi");
@@ -98,8 +98,7 @@ public class CallService {
 	public String callWithException(String argument) throws WampException {
 		this.called.add("callWithException");
 		assertThat(argument).isEqualTo("theArgument");
-		throw new WampException.Builder().arguments(Collections.singletonList("arg1"))
-				.build("the error message");
+		throw new WampException.Builder().arguments(Collections.singletonList("arg1")).build("the error message");
 	}
 
 	public boolean isCalled(String method) {

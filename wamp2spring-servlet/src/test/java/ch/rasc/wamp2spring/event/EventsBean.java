@@ -30,39 +30,32 @@ public class EventsBean {
 
 	@EventListener
 	public void sessionEstablished(WampSessionEstablishedEvent evt) {
-		this.methodCounter.computeIfAbsent("sessionEstablished", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("sessionEstablished", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
 	public void disconnected(WampDisconnectEvent evt) {
-		this.methodCounter.computeIfAbsent("disconnected", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("disconnected", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
 	public void procedureRegistered(WampProcedureRegisteredEvent evt) {
-		this.methodCounter.computeIfAbsent("procedureRegistered", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("procedureRegistered", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
 	public void procedureUnregistered(WampProcedureUnregisteredEvent evt) {
-		this.methodCounter
-				.computeIfAbsent("procedureUnregistered", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("procedureUnregistered", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
 	public void subscriptionCreated(WampSubscriptionCreatedEvent evt) {
-		this.methodCounter.computeIfAbsent("subscriptionCreated", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("subscriptionCreated", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
 	public void subscriptionDeleted(WampSubscriptionDeletedEvent evt) {
-		this.methodCounter.computeIfAbsent("subscriptionDeleted", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("subscriptionDeleted", k -> new ArrayList<>()).add(evt);
 	}
 
 	@EventListener
@@ -72,8 +65,7 @@ public class EventsBean {
 
 	@EventListener
 	public void unsubscribed(WampSubscriptionUnsubscribedEvent evt) {
-		this.methodCounter.computeIfAbsent("unsubscribed", k -> new ArrayList<>())
-				.add(evt);
+		this.methodCounter.computeIfAbsent("unsubscribed", k -> new ArrayList<>()).add(evt);
 	}
 
 	public Map<String, List<WampEvent>> getMethodCounter() {

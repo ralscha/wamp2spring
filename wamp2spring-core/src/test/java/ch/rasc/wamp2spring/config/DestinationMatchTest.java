@@ -56,11 +56,9 @@ public class DestinationMatchTest {
 		assertThat(dm.matches("crud.user.delete")).isEqualTo(false);
 		assertThat(dm.matches("crud.delete")).isEqualTo(false);
 		assertThat(dm.matches("crud.update")).isEqualTo(false);
-		assertThat(dm.matchesWildcard(new String[] { "crud", "user", "update" }))
-				.isEqualTo(true);
-		assertThat(dm.matchesWildcard(new String[] { "crud", "user", "delete" }))
-				.isEqualTo(false);
-		assertThat(dm.matchesWildcard(new String[] { "crud", "update" }))
-				.isEqualTo(false);
+		assertThat(dm.matchesWildcard(new String[] { "crud", "user", "update" })).isEqualTo(true);
+		assertThat(dm.matchesWildcard(new String[] { "crud", "user", "delete" })).isEqualTo(false);
+		assertThat(dm.matchesWildcard(new String[] { "crud", "update" })).isEqualTo(false);
 	}
+
 }

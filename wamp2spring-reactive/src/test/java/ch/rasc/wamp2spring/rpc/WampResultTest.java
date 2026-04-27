@@ -36,8 +36,7 @@ import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.Maps;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = WampResultTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = WampResultTest.Config.class)
 @TestPropertySource(properties = "spring.main.web-application-type=reactive")
 public class WampResultTest extends BaseWampTest {
 
@@ -46,8 +45,7 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testArgumentOne() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(1L, "sum", Arrays.asList(6, 9)));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(1L, "sum", Arrays.asList(6, 9)));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(1L);
@@ -59,8 +57,7 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testArgumentTwo() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(2L, "two", Arrays.asList("ralph", "hplar")));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(2L, "two", Arrays.asList("ralph", "hplar")));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(2L);
@@ -72,8 +69,7 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testEmpty() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"),
-				DataFormat.CBOR);
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(3L, "empty"), DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(3L);
@@ -85,14 +81,12 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testArgumentTwoKw() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(4L, "twoKw", Arrays.asList("time", "emit")),
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(4L, "twoKw", Arrays.asList("time", "emit")),
 				DataFormat.CBOR);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(4L);
-		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("1", "TIME"),
-				MapEntry.entry("2", "EMIT"));
+		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("1", "TIME"), MapEntry.entry("2", "EMIT"));
 		assertThat(result.getArguments()).isEmpty();
 
 		assertThat(this.wampResultService.isCalled("twoKw")).isTrue();
@@ -101,14 +95,12 @@ public class WampResultTest extends BaseWampTest {
 	@Test
 	public void testMix() throws Exception {
 		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(5L, "mix",
-						Maps.map("amount", "123.25").map("text", "cookie").getMap()),
+				new CallMessage(5L, "mix", Maps.map("amount", "123.25").map("text", "cookie").getMap()),
 				DataFormat.MSGPACK);
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(5L);
-		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("5%", 129.4),
-				MapEntry.entry("10%", 135.6));
+		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("5%", 129.4), MapEntry.entry("10%", 135.6));
 		assertThat(result.getArguments()).containsExactly("c", "o", "o");
 
 		assertThat(this.wampResultService.isCalled("mixedResult")).isTrue();
@@ -116,28 +108,24 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testDto() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(6L, "toDto", Arrays.asList(123L, "name")));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(6L, "toDto", Arrays.asList(123L, "name")));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(6L);
 		assertThat(result.getArgumentsKw()).isNull();
-		assertThat(result.getArguments())
-				.containsExactly(Maps.map("id", 123).map("name", "name").getMap());
+		assertThat(result.getArguments()).containsExactly(Maps.map("id", 123).map("name", "name").getMap());
 
 		assertThat(this.wampResultService.isCalled("toDto")).isTrue();
 	}
 
 	@Test
 	public void testTwoDto() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(7L, "toTwoDto", Arrays.asList(123L, "name")));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(7L, "toTwoDto", Arrays.asList(123L, "name")));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(7L);
 		assertThat(result.getArgumentsKw()).isNull();
-		assertThat(result.getArguments()).containsOnly(
-				Maps.map("id", 123).map("name", "name").getMap(),
+		assertThat(result.getArguments()).containsOnly(Maps.map("id", 123).map("name", "name").getMap(),
 				Maps.map("id", 1123).map("name", "name").getMap());
 
 		assertThat(this.wampResultService.isCalled("toTwoDto")).isTrue();
@@ -145,13 +133,11 @@ public class WampResultTest extends BaseWampTest {
 
 	@Test
 	public void testDtoKw() throws Exception {
-		WampMessage receivedMessage = sendWampMessage(
-				new CallMessage(8L, "toDtoKw", Arrays.asList(1234L, "joe")));
+		WampMessage receivedMessage = sendWampMessage(new CallMessage(8L, "toDtoKw", Arrays.asList(1234L, "joe")));
 		assertThat(receivedMessage).isInstanceOf(ResultMessage.class);
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(8L);
-		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("id", 1234),
-				MapEntry.entry("name", "joe"));
+		assertThat(result.getArgumentsKw()).containsOnly(MapEntry.entry("id", 1234), MapEntry.entry("name", "joe"));
 		assertThat(result.getArguments()).isEmpty();
 
 		assertThat(this.wampResultService.isCalled("toDtoKw")).isTrue();

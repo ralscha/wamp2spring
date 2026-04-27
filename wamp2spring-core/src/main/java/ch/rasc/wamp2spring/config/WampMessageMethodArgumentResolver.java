@@ -33,8 +33,7 @@ public class WampMessageMethodArgumentResolver implements HandlerMethodArgumentR
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, Message<?> message)
-			throws Exception {
+	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		return message;
 	}
 

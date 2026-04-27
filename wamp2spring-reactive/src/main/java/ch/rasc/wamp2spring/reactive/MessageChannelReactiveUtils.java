@@ -31,7 +31,6 @@ import reactor.core.scheduler.Schedulers;
  * Utilities for adaptation {@link MessageChannel}s to the {@link Publisher}s.
  *
  * @author Artem Bilan
- *
  * @since 5.0
  */
 public final class MessageChannelReactiveUtils {
@@ -45,30 +44,24 @@ public final class MessageChannelReactiveUtils {
 			return (Publisher<Message<T>>) messageChannel;
 		}
 		if (messageChannel instanceof SubscribableChannel) {
-			return adaptSubscribableChannelToPublisher(
-					(SubscribableChannel) messageChannel);
+			return adaptSubscribableChannelToPublisher((SubscribableChannel) messageChannel);
 		}
 		if (messageChannel instanceof PollableChannel) {
 			return adaptPollableChannelToPublisher((PollableChannel) messageChannel);
 		}
-		throw new IllegalArgumentException(
-				"The 'messageChannel' must be an instance of Publisher, "
-						+ "SubscribableChannel or PollableChannel, not: "
-						+ messageChannel);
+		throw new IllegalArgumentException("The 'messageChannel' must be an instance of Publisher, "
+				+ "SubscribableChannel or PollableChannel, not: " + messageChannel);
 	}
 
-	private static <T> Publisher<Message<T>> adaptSubscribableChannelToPublisher(
-			SubscribableChannel inputChannel) {
+	private static <T> Publisher<Message<T>> adaptSubscribableChannelToPublisher(SubscribableChannel inputChannel) {
 		return new SubscribableChannelPublisherAdapter<>(inputChannel);
 	}
 
-	private static <T> Publisher<Message<T>> adaptPollableChannelToPublisher(
-			PollableChannel inputChannel) {
+	private static <T> Publisher<Message<T>> adaptPollableChannelToPublisher(PollableChannel inputChannel) {
 		return new PollableChannelPublisherAdapter<>(inputChannel);
 	}
 
-	private static final class SubscribableChannelPublisherAdapter<T>
-			implements Publisher<Message<T>> {
+	private static final class SubscribableChannelPublisherAdapter<T> implements Publisher<Message<T>> {
 
 		private final SubscribableChannel channel;
 
@@ -83,14 +76,12 @@ public final class MessageChannelReactiveUtils {
 				MessageHandler messageHandler = emitter::next;
 				this.channel.subscribe(messageHandler);
 				emitter.onCancel(() -> this.channel.unsubscribe(messageHandler));
-			}, FluxSink.OverflowStrategy.IGNORE)
-					.subscribe((Subscriber<? super Message<?>>) subscriber);
+			}, FluxSink.OverflowStrategy.IGNORE).subscribe((Subscriber<? super Message<?>>) subscriber);
 		}
 
 	}
 
-	private static final class PollableChannelPublisherAdapter<T>
-			implements Publisher<Message<T>> {
+	private static final class PollableChannelPublisherAdapter<T> implements Publisher<Message<T>> {
 
 		private final PollableChannel channel;
 
@@ -103,12 +94,10 @@ public final class MessageChannelReactiveUtils {
 		public void subscribe(Subscriber<? super Message<T>> subscriber) {
 			Flux.<Message<T>>create(sink -> sink.onRequest(n -> {
 				Message<?> m;
-				while (!sink.isCancelled() && n-- > 0
-						&& (m = this.channel.receive()) != null) {
+				while (!sink.isCancelled() && n-- > 0 && (m = this.channel.receive()) != null) {
 					sink.next((Message<T>) m);
 				}
-			}), FluxSink.OverflowStrategy.IGNORE).subscribeOn(Schedulers.boundedElastic())
-					.subscribe(subscriber);
+			}), FluxSink.OverflowStrategy.IGNORE).subscribeOn(Schedulers.boundedElastic()).subscribe(subscriber);
 		}
 
 	}

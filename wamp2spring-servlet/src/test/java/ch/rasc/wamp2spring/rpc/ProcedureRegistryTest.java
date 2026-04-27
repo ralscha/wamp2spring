@@ -59,9 +59,9 @@ public class ProcedureRegistryTest {
 		assertThat(result).isEqualTo(-1);
 
 		Map<String, Procedure> procedures = (Map<String, Procedure>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "procedures");
-		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "registrations");
+			.getField(this.procedureRegistry, "procedures");
+		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils.getField(this.procedureRegistry,
+				"registrations");
 		assertThat(registrations).hasSize(1);
 		assertThat(registrations.get(regId)).isEqualTo("service.add");
 		assertThat(procedures).hasSize(1);
@@ -80,9 +80,9 @@ public class ProcedureRegistryTest {
 		assertThat(regId).isNotEqualTo(-1);
 
 		Map<String, Procedure> procedures = (Map<String, Procedure>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "procedures");
-		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "registrations");
+			.getField(this.procedureRegistry, "procedures");
+		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils.getField(this.procedureRegistry,
+				"registrations");
 		assertThat(registrations).hasSize(1);
 		assertThat(registrations.get(regId)).isEqualTo("service.add");
 		assertThat(procedures).hasSize(1);
@@ -111,9 +111,9 @@ public class ProcedureRegistryTest {
 		assertThat(regId).isNotEqualTo(-1);
 
 		Map<String, Procedure> procedures = (Map<String, Procedure>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "procedures");
-		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "registrations");
+			.getField(this.procedureRegistry, "procedures");
+		Map<Long, String> registrations = (Map<Long, String>) ReflectionTestUtils.getField(this.procedureRegistry,
+				"registrations");
 
 		this.procedureRegistry.unregisterWebSocketSession("two");
 		assertThat(registrations).hasSize(1);
@@ -147,7 +147,7 @@ public class ProcedureRegistryTest {
 		assertThat(im.getWebSocketSessionId()).isEqualTo("one");
 
 		Map<Long, CallProc> pendingInvocations = (Map<Long, CallProc>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "pendingInvocations");
+			.getField(this.procedureRegistry, "pendingInvocations");
 		assertThat(pendingInvocations).containsOnlyKeys(im.getRequestId());
 		CallProc cp = pendingInvocations.get(im.getRequestId());
 		assertThat(cp.callMessage).isEqualTo(callMessage);
@@ -165,7 +165,7 @@ public class ProcedureRegistryTest {
 		assertThat(er.getWebSocketSessionId()).isEqualTo("two");
 
 		Map<Long, CallMessage> pendingInvocations = (Map<Long, CallMessage>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "pendingInvocations");
+			.getField(this.procedureRegistry, "pendingInvocations");
 		assertThat(pendingInvocations).isEmpty();
 	}
 
@@ -187,12 +187,11 @@ public class ProcedureRegistryTest {
 		assertThat(im.getWebSocketSessionId()).isEqualTo("one");
 
 		YieldMessage yieldMessage = new YieldMessage(im.getRequestId(), null, null);
-		CallMessage callMessage2 = this.procedureRegistry
-				.removeInvocationCall(yieldMessage);
+		CallMessage callMessage2 = this.procedureRegistry.removeInvocationCall(yieldMessage);
 		assertThat(callMessage).isEqualTo(callMessage2);
 
 		Map<Long, CallMessage> pendingInvocations = (Map<Long, CallMessage>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "pendingInvocations");
+			.getField(this.procedureRegistry, "pendingInvocations");
 		assertThat(pendingInvocations).isEmpty();
 	}
 
@@ -213,14 +212,12 @@ public class ProcedureRegistryTest {
 		assertThat(im.getRegistrationId()).isEqualTo(regId);
 		assertThat(im.getWebSocketSessionId()).isEqualTo("one");
 
-		ErrorMessage errorMessage = new ErrorMessage(im.getCode(), im.getRequestId(),
-				"error", null, null);
-		CallMessage callMessage2 = this.procedureRegistry
-				.removeInvocationCall(errorMessage);
+		ErrorMessage errorMessage = new ErrorMessage(im.getCode(), im.getRequestId(), "error", null, null);
+		CallMessage callMessage2 = this.procedureRegistry.removeInvocationCall(errorMessage);
 		assertThat(callMessage).isEqualTo(callMessage2);
 
 		Map<Long, CallMessage> pendingInvocations = (Map<Long, CallMessage>) ReflectionTestUtils
-				.getField(this.procedureRegistry, "pendingInvocations");
+			.getField(this.procedureRegistry, "pendingInvocations");
 		assertThat(pendingInvocations).isEmpty();
 
 		errorMessage = new ErrorMessage(im.getCode(), 111L, "error", null, null);

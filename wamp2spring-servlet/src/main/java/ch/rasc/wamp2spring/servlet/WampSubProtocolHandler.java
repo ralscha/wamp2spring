@@ -59,8 +59,7 @@ import ch.rasc.wamp2spring.util.IdGenerator;
 /**
  * A WebSocket {@link SubProtocolHandler} implementation for the WAMP v2 protocol.
  */
-public class WampSubProtocolHandler
-		implements SubProtocolHandler, ApplicationEventPublisherAware {
+public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEventPublisherAware {
 
 	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
 
@@ -72,8 +71,8 @@ public class WampSubProtocolHandler
 
 	public static final String SMILE_PROTOCOL = "wamp.2.smile";
 
-	private static final List<String> supportedProtocols = Arrays.asList(MSGPACK_PROTOCOL,
-			JSON_PROTOCOL, CBOR_PROTOCOL, SMILE_PROTOCOL);
+	private static final List<String> supportedProtocols = Arrays.asList(MSGPACK_PROTOCOL, JSON_PROTOCOL, CBOR_PROTOCOL,
+			SMILE_PROTOCOL);
 
 	private final JsonFactory jsonFactory;
 
@@ -91,9 +90,8 @@ public class WampSubProtocolHandler
 
 	private ApplicationEventPublisher applicationEventPublisher;
 
-	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory,
-			JsonFactory cborFactory, JsonFactory smileFactory,
-			MessageChannel clientInboundChannel, Features features) {
+	public WampSubProtocolHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory, JsonFactory cborFactory,
+			JsonFactory smileFactory, MessageChannel clientInboundChannel, Features features) {
 		this.jsonFactory = jsonFactory;
 		this.msgpackFactory = msgpackFactory;
 		this.cborFactory = cborFactory;
@@ -128,15 +126,14 @@ public class WampSubProtocolHandler
 	 * Handle incoming WebSocket messages from clients.
 	 */
 	@Override
-	public void handleMessageFromClient(WebSocketSession session,
-			WebSocketMessage<?> webSocketMessage, MessageChannel outputChannel) {
+	public void handleMessageFromClient(WebSocketSession session, WebSocketMessage<?> webSocketMessage,
+			MessageChannel outputChannel) {
 
 		try {
 			WampMessage wampMessage = null;
 
 			if (webSocketMessage instanceof TextMessage) {
-				wampMessage = WampMessage.deserialize(this.jsonFactory,
-						((TextMessage) webSocketMessage).asBytes());
+				wampMessage = WampMessage.deserialize(this.jsonFactory, ((TextMessage) webSocketMessage).asBytes());
 			}
 			else if (webSocketMessage instanceof BinaryMessage) {
 				BinaryMessage binaryMessage = (BinaryMessage) webSocketMessage;
@@ -155,20 +152,16 @@ public class WampSubProtocolHandler
 				String acceptedProtocol = session.getAcceptedProtocol();
 				if (acceptedProtocol == null) {
 					if (logger.isErrorEnabled()) {
-						logger.error(
-								"Deserialization failed because no accepted protocol "
-										+ webSocketMessage + " in session "
-										+ session.getId());
+						logger.error("Deserialization failed because no accepted protocol " + webSocketMessage
+								+ " in session " + session.getId());
 					}
 					return;
 				}
 				if (WampSubProtocolHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory,
-							payloadBytes);
+					wampMessage = WampMessage.deserialize(this.msgpackFactory, payloadBytes);
 				}
 				else if (WampSubProtocolHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory,
-							payloadBytes);
+					wampMessage = WampMessage.deserialize(this.smileFactory, payloadBytes);
 				}
 				else if (WampSubProtocolHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
 					wampMessage = WampMessage.deserialize(this.cborFactory, payloadBytes);
@@ -180,51 +173,64 @@ public class WampSubProtocolHandler
 
 			if (wampMessage == null) {
 				if (logger.isErrorEnabled()) {
-					logger.error("Deserialization failed for message " + webSocketMessage
-							+ " in session " + session.getId());
+					logger.error("Deserialization failed for message " + webSocketMessage + " in session "
+							+ session.getId());
+				}
+				try {
+					AbortMessage abort = new AbortMessage(WampError.PROTOCOL_VIOLATION,
+							"Deserialization of incoming message failed.");
+					handleMessageToClient(session, abort);
+					session.close(CloseStatus.PROTOCOL_ERROR);
+				}
+				catch (IOException closeEx) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Failed to close session after deserialization error", closeEx);
+					}
 				}
 				return;
 			}
 
-			wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
-					session.getId());
+			wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
 			wampMessage.setHeader(WampMessageHeader.PRINCIPAL, session.getPrincipal());
-			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, session
-					.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name()));
+			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
+					session.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name()));
 
 			if (wampMessage instanceof HelloMessage) {
 				// If this is a helloMessage sent during a running session close the
 				// WebSocket connection
 				if (wampMessage.getWampSessionId() != null) {
 					logger.error("HelloMessage received during running session");
+					handleMessageToClient(session, new AbortMessage(WampError.PROTOCOL_VIOLATION,
+							"Received HELLO message after session was established."));
 					session.close(CloseStatus.PROTOCOL_ERROR);
+					return;
 				}
 
 				long newWampSessionId = IdGenerator.newRandomId(this.wampSessionIds);
 				this.wampSessionIds.add(newWampSessionId);
-				session.getAttributes().put(WampMessageHeader.WAMP_SESSION_ID.name(),
-						newWampSessionId);
+				session.getAttributes().put(WampMessageHeader.WAMP_SESSION_ID.name(), newWampSessionId);
 
-				WelcomeMessage welcomeMessage = new WelcomeMessage(
-						(HelloMessage) wampMessage, newWampSessionId, this.roles);
+				WelcomeMessage welcomeMessage = new WelcomeMessage((HelloMessage) wampMessage, newWampSessionId,
+						this.roles);
 				handleMessageToClient(session, welcomeMessage);
 
-				this.applicationEventPublisher
-						.publishEvent(new WampSessionEstablishedEvent(welcomeMessage));
+				this.applicationEventPublisher.publishEvent(new WampSessionEstablishedEvent(welcomeMessage));
 			}
 			else if (wampMessage instanceof AbortMessage) {
 				session.close(CloseStatus.GOING_AWAY);
 			}
 			else if (wampMessage instanceof GoodbyeMessage) {
-				GoodbyeMessage goodbyeMessage = new GoodbyeMessage(
-						WampError.GOODBYE_AND_OUT);
+				GoodbyeMessage goodbyeMessage = new GoodbyeMessage(WampError.GOODBYE_AND_OUT);
 				handleMessageToClient(session, goodbyeMessage);
 				session.close(CloseStatus.GOING_AWAY);
 			}
 			else {
 				if (wampMessage.getWampSessionId() == null) {
 					logger.error("Session not established");
+					handleMessageToClient(session, new AbortMessage(WampError.PROTOCOL_VIOLATION,
+							"Received message before session was established."));
 					session.close(CloseStatus.PROTOCOL_ERROR);
+					return;
 				}
 
 				outputChannel.send(wampMessage);
@@ -232,8 +238,7 @@ public class WampSubProtocolHandler
 		}
 		catch (IOException e) {
 			if (logger.isErrorEnabled()) {
-				logger.error("Failed to parse " + webSocketMessage + " in session "
-						+ session.getId(), e);
+				logger.error("Failed to parse " + webSocketMessage + " in session " + session.getId(), e);
 			}
 		}
 
@@ -287,16 +292,15 @@ public class WampSubProtocolHandler
 			catch (Throwable ex) {
 				// Could be part of normal workflow (e.g. browser tab closed)
 				if (logger.isDebugEnabled()) {
-					logger.debug("Failed to send WebSocket message to client in session "
-							+ session.getId(), ex);
+					logger.debug("Failed to send WebSocket message to client in session " + session.getId(), ex);
 				}
 
 				// Is this an outbound invocation message. In that case we need to feed
 				// back
 				// an error message
 				if (message instanceof InvocationMessage) {
-					ErrorMessage errorMessage = new ErrorMessage(
-							(InvocationMessage) message, WampError.NETWORK_FAILURE);
+					ErrorMessage errorMessage = new ErrorMessage((InvocationMessage) message,
+							WampError.NETWORK_FAILURE);
 					this.clientInboundChannel.send(errorMessage);
 				}
 
@@ -310,33 +314,27 @@ public class WampSubProtocolHandler
 			}
 		}
 		else if (logger.isErrorEnabled()) {
-			logger.error(
-					"Failed to send WebSocket message to client because no accepted protocol "
-							+ session.getId());
+			logger.error("Failed to send WebSocket message to client because no accepted protocol " + session.getId());
 		}
 	}
 
 	@Override
 	public String resolveSessionId(Message<?> message) {
-		return (String) message.getHeaders()
-				.get(WampMessageHeader.WEBSOCKET_SESSION_ID.name());
+		return (String) message.getHeaders().get(WampMessageHeader.WEBSOCKET_SESSION_ID.name());
 	}
 
 	@Override
-	public void afterSessionStarted(WebSocketSession session,
-			MessageChannel outputChannel) {
+	public void afterSessionStarted(WebSocketSession session, MessageChannel outputChannel) {
 		// nothing here
 	}
 
 	@Override
-	public void afterSessionEnded(WebSocketSession session, CloseStatus closeStatus,
-			MessageChannel outputChannel) {
+	public void afterSessionEnded(WebSocketSession session, CloseStatus closeStatus, MessageChannel outputChannel) {
 
-		Long wampSessionId = (Long) session.getAttributes()
-				.get(WampMessageHeader.WAMP_SESSION_ID.name());
+		Long wampSessionId = (Long) session.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name());
 		if (wampSessionId != null) {
-			this.applicationEventPublisher.publishEvent(new WampDisconnectEvent(
-					wampSessionId, session.getId(), session.getPrincipal()));
+			this.applicationEventPublisher
+				.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), session.getPrincipal()));
 			this.wampSessionIds.remove(wampSessionId);
 			session.getAttributes().remove(WampMessageHeader.WAMP_SESSION_ID.name());
 		}
@@ -348,8 +346,7 @@ public class WampSubProtocolHandler
 	}
 
 	@Override
-	public void setApplicationEventPublisher(
-			ApplicationEventPublisher applicationEventPublisher) {
+	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 

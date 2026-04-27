@@ -40,23 +40,21 @@ public class UnsubscribedMessageTest extends BaseMessageTest {
 		assertThat(unsubscribedMessage.getSubscriptionId()).isEqualTo(1208L);
 		assertThat(unsubscribedMessage.getReason()).isEqualTo("removed");
 		json = serializeToJson(unsubscribedMessage);
-		assertThat(json)
-				.isEqualTo("[35,2,{\"reason\":\"removed\",\"subscription\":1208}]");
+		assertThat(json).isEqualTo("[35,2,{\"reason\":\"removed\",\"subscription\":1208}]");
 	}
 
 	@Test
 	public void deserializeTest() throws IOException {
 		String json = "[35, 85346237]";
-		UnsubscribedMessage unsubscribedMessage = WampMessage
-				.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		UnsubscribedMessage unsubscribedMessage = WampMessage.deserialize(getJsonFactory(),
+				json.getBytes(StandardCharsets.UTF_8));
 		assertThat(unsubscribedMessage.getCode()).isEqualTo(35);
 		assertThat(unsubscribedMessage.getRequestId()).isEqualTo(85346237L);
 		assertThat(unsubscribedMessage.getSubscriptionId()).isNull();
 		assertThat(unsubscribedMessage.getReason()).isNull();
 
 		json = "[35, 0, {\"subscription\":1213,\"reason\":\"the reason\"}]";
-		unsubscribedMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		unsubscribedMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(unsubscribedMessage.getCode()).isEqualTo(35);
 		assertThat(unsubscribedMessage.getRequestId()).isEqualTo(0);
 		assertThat(unsubscribedMessage.getSubscriptionId()).isEqualTo(1213L);

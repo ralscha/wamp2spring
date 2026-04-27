@@ -86,8 +86,7 @@ public class GoodbyeMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "GoodbyeMessage [message=" + this.message + ", reason=" + this.reason
-				+ "]";
+		return "GoodbyeMessage [message=" + this.message + ", reason=" + this.reason + "]";
 	}
 
 }

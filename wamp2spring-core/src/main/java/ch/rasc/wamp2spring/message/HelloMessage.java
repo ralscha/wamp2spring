@@ -53,9 +53,8 @@ public class HelloMessage extends WampMessage {
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
-					.get("roles");
-			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap
-					.entrySet()) {
+				.get("roles");
+			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
 				WampRole wampRole = new WampRole(entry.getKey());
 				Map<String, Boolean> features = entry.getValue().get("features");
 				if (features != null) {

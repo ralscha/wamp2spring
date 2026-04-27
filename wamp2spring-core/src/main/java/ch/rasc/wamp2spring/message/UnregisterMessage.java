@@ -64,8 +64,7 @@ public class UnregisterMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "UnregisterMessage [requestId=" + this.requestId + ", registrationId="
-				+ this.registrationId + "]";
+		return "UnregisterMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId + "]";
 	}
 
 }

@@ -34,8 +34,7 @@ import ch.rasc.wamp2spring.rpc.TestDto;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ClientToServerTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = ClientToServerTest.Config.class)
 @TestPropertySource(properties = "spring.main.web-application-type=reactive")
 public class ClientToServerTest extends BaseWampTest {
 
@@ -47,8 +46,9 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(1L,
-					"clientToServerService.sum").arguments(Arrays.asList(1, 2)).build();
+			PublishMessage publishMessage = new PublishMessage.Builder(1L, "clientToServerService.sum")
+				.arguments(Arrays.asList(1, 2))
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -61,8 +61,8 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(2L, "sum2")
-					.arguments(Arrays.asList(3, 4)).build();
+			PublishMessage publishMessage = new PublishMessage.Builder(2L, "sum2").arguments(Arrays.asList(3, 4))
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -75,8 +75,8 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(3L, "sum3")
-					.arguments(Arrays.asList(5, 6)).build();
+			PublishMessage publishMessage = new PublishMessage.Builder(3L, "sum3").arguments(Arrays.asList(5, 6))
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -89,9 +89,9 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(4L,
-					"clientToServerService.listener").arguments(Arrays.asList(8, 9))
-							.build();
+			PublishMessage publishMessage = new PublishMessage.Builder(4L, "clientToServerService.listener")
+				.arguments(Arrays.asList(8, 9))
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -104,8 +104,7 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.JSON)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(5L,
-					"clientToServerService.noParams").build();
+			PublishMessage publishMessage = new PublishMessage.Builder(5L, "clientToServerService.noParams").build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -118,8 +117,9 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(6L,
-					"clientToServerService.error").addArgument("theArgument").build();
+			PublishMessage publishMessage = new PublishMessage.Builder(6L, "clientToServerService.error")
+				.addArgument("theArgument")
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -133,8 +133,9 @@ public class ClientToServerTest extends BaseWampTest {
 			wc.connect(wampEndpointUrl());
 
 			TestDto testDto = new TestDto(1, "Hi");
-			PublishMessage publishMessage = new PublishMessage.Builder(7L,
-					"clientToServerService.listenerWithDto").addArgument(testDto).build();
+			PublishMessage publishMessage = new PublishMessage.Builder(7L, "clientToServerService.listenerWithDto")
+				.addArgument(testDto)
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -150,13 +151,13 @@ public class ClientToServerTest extends BaseWampTest {
 			TestDto testDto = new TestDto(2, "Hi");
 			PublishMessage publishMessage = new PublishMessage.Builder(8L,
 					"clientToServerService.listenerWithDtoAndMessage")
-							.addArgument(testDto).addArgument("the_second_argument")
-							.build();
+				.addArgument(testDto)
+				.addArgument("the_second_argument")
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
-			assertThat(this.clientToServerService.isCalled("listenerWithDtoAndMessage"))
-					.isTrue();
+			assertThat(this.clientToServerService.isCalled("listenerWithDtoAndMessage")).isTrue();
 		}
 	}
 
@@ -165,22 +166,19 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(9L,
-					"news.business").addArgument(23).build();
+			PublishMessage publishMessage = new PublishMessage.Builder(9L, "news.business").addArgument(23).build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
 			assertThat(this.clientToServerService.isCalled("prefixListener")).isTrue();
 
-			publishMessage = new PublishMessage.Builder(10L, "news.sport").addArgument(23)
-					.build();
+			publishMessage = new PublishMessage.Builder(10L, "news.sport").addArgument(23).build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
 			assertThat(this.clientToServerService.isCalled("prefixListener")).isTrue();
 
-			publishMessage = new PublishMessage.Builder(10L, "new.world").addArgument(23)
-					.build();
+			publishMessage = new PublishMessage.Builder(10L, "new.world").addArgument(23).build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
@@ -193,29 +191,24 @@ public class ClientToServerTest extends BaseWampTest {
 		try (WampClient wc = new WampClient(DataFormat.MSGPACK)) {
 			wc.connect(wampEndpointUrl());
 
-			PublishMessage publishMessage = new PublishMessage.Builder(9L,
-					"crud.user.create").addArgument("111").build();
+			PublishMessage publishMessage = new PublishMessage.Builder(9L, "crud.user.create").addArgument("111")
+				.build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
-			assertThat(this.clientToServerService.isCalled("crudCreateListener"))
-					.isTrue();
+			assertThat(this.clientToServerService.isCalled("crudCreateListener")).isTrue();
 
-			publishMessage = new PublishMessage.Builder(10L, "crud.company.create")
-					.addArgument("111").build();
+			publishMessage = new PublishMessage.Builder(10L, "crud.company.create").addArgument("111").build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
-			assertThat(this.clientToServerService.isCalled("crudCreateListener"))
-					.isTrue();
+			assertThat(this.clientToServerService.isCalled("crudCreateListener")).isTrue();
 
-			publishMessage = new PublishMessage.Builder(10L, "crud.user.update")
-					.addArgument("111").build();
+			publishMessage = new PublishMessage.Builder(10L, "crud.user.update").addArgument("111").build();
 			wc.sendMessage(publishMessage);
 			wc.waitForNothing();
 
-			assertThat(this.clientToServerService.isCalled("crudCreateListener"))
-					.isFalse();
+			assertThat(this.clientToServerService.isCalled("crudCreateListener")).isFalse();
 		}
 	}
 
@@ -223,10 +216,12 @@ public class ClientToServerTest extends BaseWampTest {
 	@EnableAutoConfiguration
 	@EnableReactiveWamp
 	static class Config {
+
 		@Bean
 		public ClientToServerService clientToServerService() {
 			return new ClientToServerService();
 		}
+
 	}
 
 }

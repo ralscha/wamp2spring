@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
 public class PublishedMessageTest extends BaseMessageTest {
+
 	@Test
 	public void serializeTest() {
 		PublishedMessage publishedMessage = new PublishedMessage(44, 121);
@@ -46,4 +47,5 @@ public class PublishedMessageTest extends BaseMessageTest {
 		assertThat(publishedMessage.getRequestId()).isEqualTo(239714735L);
 		assertThat(publishedMessage.getPublicationId()).isEqualTo(4429313566L);
 	}
+
 }

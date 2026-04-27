@@ -44,8 +44,7 @@ public class ResultMessage extends WampMessage {
 	@Nullable
 	private final Map<String, Object> argumentsKw;
 
-	public ResultMessage(long requestId, @Nullable List<Object> arguments,
-			@Nullable Map<String, Object> argumentsKw) {
+	public ResultMessage(long requestId, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.requestId = requestId;
 		this.arguments = arguments;
@@ -59,8 +58,7 @@ public class ResultMessage extends WampMessage {
 	}
 
 	public ResultMessage(YieldMessage yieldMessage, CallMessage callMessage) {
-		this(callMessage.getRequestId(), yieldMessage.getArguments(),
-				yieldMessage.getArgumentsKw());
+		this(callMessage.getRequestId(), yieldMessage.getArguments(), yieldMessage.getArgumentsKw());
 		setReceiver(callMessage);
 	}
 
@@ -124,8 +122,8 @@ public class ResultMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "ResultMessage [requestId=" + this.requestId + ", arguments="
-				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+		return "ResultMessage [requestId=" + this.requestId + ", arguments=" + this.arguments + ", argumentsKw="
+				+ this.argumentsKw + "]";
 	}
 
 }

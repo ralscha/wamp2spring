@@ -49,6 +49,7 @@ import ch.rasc.wamp2spring.reactive.WampWebSocketHandler;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
 
 public class WampClient implements AutoCloseable {
+
 	private final CompletableFutureWebSocketHandler result;
 
 	private WebSocketSession webSocketSession;
@@ -67,30 +68,30 @@ public class WampClient implements AutoCloseable {
 		this.headers = new WebSocketHttpHeaders();
 
 		switch (dataFormat) {
-		case CBOR:
-			this.jsonFactory = new ObjectMapper(new CBORFactory()).getFactory();
-			this.headers.setSecWebSocketProtocol(WampWebSocketHandler.CBOR_PROTOCOL);
-			break;
-		case MSGPACK:
-			this.jsonFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
-			this.headers.setSecWebSocketProtocol(WampWebSocketHandler.MSGPACK_PROTOCOL);
-			break;
-		case JSON:
-			this.jsonFactory = new MappingJsonFactory(new ObjectMapper());
-			this.headers.setSecWebSocketProtocol(WampWebSocketHandler.JSON_PROTOCOL);
-			break;
-		case SMILE:
-			this.jsonFactory = new ObjectMapper(new SmileFactory()).getFactory();
-			this.headers.setSecWebSocketProtocol(WampWebSocketHandler.SMILE_PROTOCOL);
-			break;
-		default:
-			this.jsonFactory = null;
+			case CBOR:
+				this.jsonFactory = new ObjectMapper(new CBORFactory()).getFactory();
+				this.headers.setSecWebSocketProtocol(WampWebSocketHandler.CBOR_PROTOCOL);
+				break;
+			case MSGPACK:
+				this.jsonFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
+				this.headers.setSecWebSocketProtocol(WampWebSocketHandler.MSGPACK_PROTOCOL);
+				break;
+			case JSON:
+				this.jsonFactory = new MappingJsonFactory(new ObjectMapper());
+				this.headers.setSecWebSocketProtocol(WampWebSocketHandler.JSON_PROTOCOL);
+				break;
+			case SMILE:
+				this.jsonFactory = new ObjectMapper(new SmileFactory()).getFactory();
+				this.headers.setSecWebSocketProtocol(WampWebSocketHandler.SMILE_PROTOCOL);
+				break;
+			default:
+				this.jsonFactory = null;
 		}
 
 	}
 
-	public void connect(URI wampEndpointUrl) throws InterruptedException,
-			ExecutionException, IOException, TimeoutException {
+	public void connect(URI wampEndpointUrl)
+			throws InterruptedException, ExecutionException, IOException, TimeoutException {
 		List<WampRole> roles = new ArrayList<>();
 		roles.add(new WampRole("publisher"));
 		roles.add(new WampRole("subscriber"));
@@ -98,8 +99,7 @@ public class WampClient implements AutoCloseable {
 		HelloMessage helloMessage = new HelloMessage("realm", roles);
 
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
-		this.webSocketSession = webSocketClient
-				.execute(this.result, this.headers, wampEndpointUrl).get();
+		this.webSocketSession = webSocketClient.execute(this.result, this.headers, wampEndpointUrl).get();
 
 		sendMessage(helloMessage);
 		WelcomeMessage welcomeMessage = this.result.getWelcomeMessage();
@@ -127,8 +127,7 @@ public class WampClient implements AutoCloseable {
 
 	@SuppressWarnings("unchecked")
 	public <T extends WampMessage> T sendMessageWithResult(WampMessage msg)
-			throws IOException, InterruptedException, ExecutionException,
-			TimeoutException {
+			throws IOException, InterruptedException, ExecutionException, TimeoutException {
 		sendMessage(msg);
 		T wampMessage = (T) this.result.getWampMessage();
 		this.result.reset();

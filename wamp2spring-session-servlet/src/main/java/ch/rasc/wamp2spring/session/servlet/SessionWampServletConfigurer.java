@@ -28,8 +28,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistra
 
 import ch.rasc.wamp2spring.servlet.WampServletConfigurer;
 
-public class SessionWampServletConfigurer<S extends Session>
-		implements WampServletConfigurer {
+public class SessionWampServletConfigurer<S extends Session> implements WampServletConfigurer {
 
 	@Autowired
 	@SuppressWarnings("rawtypes")
@@ -55,8 +54,7 @@ public class SessionWampServletConfigurer<S extends Session>
 	}
 
 	@Override
-	public void configureWebSocketHandlerRegistration(
-			WebSocketHandlerRegistration registration) {
+	public void configureWebSocketHandlerRegistration(WebSocketHandlerRegistration registration) {
 		registration.addInterceptors(sessionRepositoryInterceptor());
 	}
 
@@ -69,4 +67,5 @@ public class SessionWampServletConfigurer<S extends Session>
 	public WebSocketHandler decorateWebSocketHandler(WebSocketHandler webSocketHandler) {
 		return wsConnectHandlerDecoratorFactory().decorate(webSocketHandler);
 	}
+
 }

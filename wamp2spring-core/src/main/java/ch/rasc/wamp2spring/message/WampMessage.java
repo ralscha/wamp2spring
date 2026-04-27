@@ -54,7 +54,6 @@ public abstract class WampMessage implements Message<Object> {
 
 	/**
 	 * Overwrites or inserts a new header into the message. Null values are ignored
-	 *
 	 * @param header the header
 	 * @param value an arbitrary value. null values are ignored
 	 */
@@ -95,8 +94,7 @@ public abstract class WampMessage implements Message<Object> {
 	}
 
 	protected void setReceiver(WampMessage message) {
-		setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
-				message.getWebSocketSessionId());
+		setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, message.getWebSocketSessionId());
 		setHeader(WampMessageHeader.PRINCIPAL, message.getPrincipal());
 		setHeader(WampMessageHeader.WAMP_SESSION_ID, message.getWampSessionId());
 	}
@@ -119,8 +117,8 @@ public abstract class WampMessage implements Message<Object> {
 
 	@SuppressWarnings("unchecked")
 	@Nullable
-	public static <T extends WampMessage> T deserialize(JsonFactory jsonFactory,
-			byte[] json) throws JsonParseException, IOException {
+	public static <T extends WampMessage> T deserialize(JsonFactory jsonFactory, byte[] json)
+			throws JsonParseException, IOException {
 
 		try (JsonParser jp = jsonFactory.createParser(json)) {
 			if (jp.nextToken() != JsonToken.START_ARRAY) {
@@ -133,48 +131,48 @@ public abstract class WampMessage implements Message<Object> {
 			int code = jp.getValueAsInt();
 
 			switch (code) {
-			case HelloMessage.CODE:
-				return (T) HelloMessage.deserialize(jp);
-			case WelcomeMessage.CODE:
-				return (T) WelcomeMessage.deserialize(jp);
-			case AbortMessage.CODE:
-				return (T) AbortMessage.deserialize(jp);
-			case GoodbyeMessage.CODE:
-				return (T) GoodbyeMessage.deserialize(jp);
-			case ErrorMessage.CODE:
-				return (T) ErrorMessage.deserialize(jp);
-			case PublishMessage.CODE:
-				return (T) PublishMessage.deserialize(jp);
-			case PublishedMessage.CODE:
-				return (T) PublishedMessage.deserialize(jp);
-			case SubscribeMessage.CODE:
-				return (T) SubscribeMessage.deserialize(jp);
-			case SubscribedMessage.CODE:
-				return (T) SubscribedMessage.deserialize(jp);
-			case UnsubscribeMessage.CODE:
-				return (T) UnsubscribeMessage.deserialize(jp);
-			case UnsubscribedMessage.CODE:
-				return (T) UnsubscribedMessage.deserialize(jp);
-			case EventMessage.CODE:
-				return (T) EventMessage.deserialize(jp);
-			case CallMessage.CODE:
-				return (T) CallMessage.deserialize(jp);
-			case ResultMessage.CODE:
-				return (T) ResultMessage.deserialize(jp);
-			case RegisterMessage.CODE:
-				return (T) RegisterMessage.deserialize(jp);
-			case RegisteredMessage.CODE:
-				return (T) RegisteredMessage.deserialize(jp);
-			case UnregisterMessage.CODE:
-				return (T) UnregisterMessage.deserialize(jp);
-			case UnregisteredMessage.CODE:
-				return (T) UnregisteredMessage.deserialize(jp);
-			case YieldMessage.CODE:
-				return (T) YieldMessage.deserialize(jp);
-			case InvocationMessage.CODE:
-				return (T) InvocationMessage.deserialize(jp);
-			default:
-				return null;
+				case HelloMessage.CODE:
+					return (T) HelloMessage.deserialize(jp);
+				case WelcomeMessage.CODE:
+					return (T) WelcomeMessage.deserialize(jp);
+				case AbortMessage.CODE:
+					return (T) AbortMessage.deserialize(jp);
+				case GoodbyeMessage.CODE:
+					return (T) GoodbyeMessage.deserialize(jp);
+				case ErrorMessage.CODE:
+					return (T) ErrorMessage.deserialize(jp);
+				case PublishMessage.CODE:
+					return (T) PublishMessage.deserialize(jp);
+				case PublishedMessage.CODE:
+					return (T) PublishedMessage.deserialize(jp);
+				case SubscribeMessage.CODE:
+					return (T) SubscribeMessage.deserialize(jp);
+				case SubscribedMessage.CODE:
+					return (T) SubscribedMessage.deserialize(jp);
+				case UnsubscribeMessage.CODE:
+					return (T) UnsubscribeMessage.deserialize(jp);
+				case UnsubscribedMessage.CODE:
+					return (T) UnsubscribedMessage.deserialize(jp);
+				case EventMessage.CODE:
+					return (T) EventMessage.deserialize(jp);
+				case CallMessage.CODE:
+					return (T) CallMessage.deserialize(jp);
+				case ResultMessage.CODE:
+					return (T) ResultMessage.deserialize(jp);
+				case RegisterMessage.CODE:
+					return (T) RegisterMessage.deserialize(jp);
+				case RegisteredMessage.CODE:
+					return (T) RegisteredMessage.deserialize(jp);
+				case UnregisterMessage.CODE:
+					return (T) UnregisterMessage.deserialize(jp);
+				case UnregisteredMessage.CODE:
+					return (T) UnregisteredMessage.deserialize(jp);
+				case YieldMessage.CODE:
+					return (T) YieldMessage.deserialize(jp);
+				case InvocationMessage.CODE:
+					return (T) InvocationMessage.deserialize(jp);
+				default:
+					return null;
 			}
 
 		}
@@ -192,6 +190,7 @@ public abstract class WampMessage implements Message<Object> {
 		public Map<String, Object> getRawHeaders() {
 			return super.getRawHeaders();
 		}
+
 	}
 
 }

@@ -28,17 +28,14 @@ public class GoodbyeMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		GoodbyeMessage goodbyeMessage = new GoodbyeMessage(WampError.GOODBYE_AND_OUT,
-				"theMessage");
+		GoodbyeMessage goodbyeMessage = new GoodbyeMessage(WampError.GOODBYE_AND_OUT, "theMessage");
 
 		assertThat(goodbyeMessage.getCode()).isEqualTo(6);
 		assertThat(goodbyeMessage.getMessage()).isEqualTo("theMessage");
-		assertThat(goodbyeMessage.getReason())
-				.isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
+		assertThat(goodbyeMessage.getReason()).isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
 
 		String json = serializeToJson(goodbyeMessage);
-		assertThat(json).isEqualTo(
-				"[6,{\"message\":\"theMessage\"},\"wamp.error.goodbye_and_out\"]");
+		assertThat(json).isEqualTo("[6,{\"message\":\"theMessage\"},\"wamp.close.goodbye_and_out\"]");
 
 		goodbyeMessage = new GoodbyeMessage(WampError.NO_SUCH_PROCEDURE);
 		json = serializeToJson(goodbyeMessage);
@@ -53,13 +50,11 @@ public class GoodbyeMessageTest extends BaseMessageTest {
 				json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(goodbyeMessage.getCode()).isEqualTo(6);
-		assertThat(goodbyeMessage.getMessage())
-				.isEqualTo("The host is shutting down now.");
+		assertThat(goodbyeMessage.getMessage()).isEqualTo("The host is shutting down now.");
 		assertThat(goodbyeMessage.getReason()).isEqualTo("wamp.error.system_shutdown");
 
 		json = "[6,{},\"wamp.error.no_such_procedure\"]";
-		goodbyeMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		goodbyeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 
 		assertThat(goodbyeMessage.getCode()).isEqualTo(6);
 		assertThat(goodbyeMessage.getMessage()).isNull();

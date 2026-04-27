@@ -1,83 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-		<groupId>ch.rasc</groupId>
-		<artifactId>wamp2spring-parent</artifactId>
-		<version>3.0.2-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>ch.rasc</groupId>
+    <artifactId>wamp2spring-parent</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
 
-	<properties>
-	    <main.basedir>${project.parent.basedir}</main.basedir>
-	</properties>
+  <artifactId>wamp2spring-security-core</artifactId>
 
-	<artifactId>wamp2spring-security-core</artifactId>
+  <name>Integration of wamp2spring with Spring Security</name>
+  <description>Integration of wamp2spring with Spring Security</description>
 
-	<name>Integration of wamp2spring with Spring Security</name>
-	<description>Integration of wamp2spring with Spring Security</description>
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
 
+  <dependencies>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-			<version>${spring-security.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-			<version>${spring-security.version}</version>
-		</dependency>	
+    <dependency>
+      <groupId>ch.rasc</groupId>
+      <artifactId>wamp2spring-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-messaging</artifactId>
-			<version>${spring-security.version}</version>
-		</dependency>		
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+      <version>${spring-security.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+      <version>${spring-security.version}</version>
+    </dependency>
 
-		<dependency>
-			<groupId>ch.rasc</groupId>
-			<artifactId>wamp2spring-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-				
-		
-	</dependencies>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-messaging</artifactId>
+      <version>${spring-security.version}</version>
+    </dependency>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.15.0</version>
-				<configuration>
-					<source>17</source>
-					<target>17</target>
-					<testSource>17</testSource>
-					<testTarget>17</testTarget>
-					<encoding>UTF-8</encoding>
-					<parameters>true</parameters>
-				</configuration>
-			</plugin>
-			<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-javadoc-plugin</artifactId>
-			    <version>3.12.0</version>
-			    <executions>
-			        <execution>
-			            <id>attach-javadocs</id>
-			            <goals>
-			                <goal>jar</goal>
-			            </goals>
-			            <configuration>
-			                <sourcepath>${project.build.sourceDirectory}${path.separator}../wamp2spring-core/src/main/java</sourcepath>
-			                <failOnError>false</failOnError>
-			            </configuration>
-			        </execution>
-			    </executions>
-			</plugin>
-       </plugins>
-    </build>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.15.0</version>
+        <configuration>
+          <source>17</source>
+          <target>17</target>
+          <testSource>17</testSource>
+          <testTarget>17</testTarget>
+          <encoding>UTF-8</encoding>
+          <parameters>true</parameters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.12.0</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <sourcepath>${project.build.sourceDirectory}${path.separator}../wamp2spring-core/src/main/java</sourcepath>
+              <failOnError>false</failOnError>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

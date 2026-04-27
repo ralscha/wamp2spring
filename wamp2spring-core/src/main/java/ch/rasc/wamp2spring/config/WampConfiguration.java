@@ -71,18 +71,16 @@ public class WampConfiguration {
 		}
 	}
 
-	protected void configureFeatures(
-			@SuppressWarnings({ "unused", "hiding" }) Features features) {
+	protected void configureFeatures(@SuppressWarnings({ "unused", "hiding" }) Features features) {
 		// nothing here
 	}
 
 	@Autowired(required = false)
 	private EventStore eventStore;
 
-	protected void setImportMetadata(AnnotationMetadata importMetadata,
-			String enableClassName) {
+	protected void setImportMetadata(AnnotationMetadata importMetadata, String enableClassName) {
 		Map<String, Object> attributes = AnnotationAttributes
-				.fromMap(importMetadata.getAnnotationAttributes(enableClassName, false));
+			.fromMap(importMetadata.getAnnotationAttributes(enableClassName, false));
 		if (attributes != null) {
 			Feature[] disableFeatures = (Feature[]) attributes.get("disable");
 			if (disableFeatures != null) {
@@ -186,10 +184,9 @@ public class WampConfiguration {
 	@Bean
 	public MessageHandler pubSubMessageHandler(ApplicationContext applicationContext) {
 		if (this.features.isEnabled(Feature.BROKER)) {
-			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(
-					clientInboundChannel(), brokerChannel(), clientOutboundChannel(),
-					subscriptionRegistry(), handlerMethodService(applicationContext),
-					this.features, eventStore());
+			PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(clientInboundChannel(),
+					brokerChannel(), clientOutboundChannel(), subscriptionRegistry(),
+					handlerMethodService(applicationContext), this.features, eventStore());
 			return pubSubMessageHandler;
 		}
 		return new NoOpMessageHandler();
@@ -203,17 +200,15 @@ public class WampConfiguration {
 	@Bean
 	public MessageHandler rpcMessageHandler(ApplicationContext applicationContext) {
 		if (this.features.isEnabled(Feature.DEALER)) {
-			RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(
-					clientInboundChannel(), clientOutboundChannel(), procedureRegistry(),
-					handlerMethodService(applicationContext), this.features);
+			RpcMessageHandler rpcMessageHandler = new RpcMessageHandler(clientInboundChannel(), clientOutboundChannel(),
+					procedureRegistry(), handlerMethodService(applicationContext), this.features);
 			return rpcMessageHandler;
 		}
 		return new NoOpMessageHandler();
 	}
 
 	@Bean
-	public HandlerMethodService handlerMethodService(
-			ApplicationContext applicationContext) {
+	public HandlerMethodService handlerMethodService(ApplicationContext applicationContext) {
 		List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<>();
 
 		addArgumentResolvers(argumentResolvers);
@@ -221,8 +216,7 @@ public class WampConfiguration {
 			wc.addArgumentResolvers(argumentResolvers);
 		}
 
-		return new HandlerMethodService(conversionService(), argumentResolvers,
-				new ObjectMapper(), applicationContext);
+		return new HandlerMethodService(conversionService(), argumentResolvers, new ObjectMapper(), applicationContext);
 	}
 
 	protected void addArgumentResolvers(
@@ -253,4 +247,5 @@ public class WampConfiguration {
 	public WampPublisher wampEventPublisher() {
 		return new WampPublisher(brokerChannel());
 	}
+
 }

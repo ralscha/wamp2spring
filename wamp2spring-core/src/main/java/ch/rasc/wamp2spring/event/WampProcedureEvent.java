@@ -26,20 +26,19 @@ import ch.rasc.wamp2spring.message.WampMessage;
  * {@link WampProcedureUnregisteredEvent} event.
  */
 public abstract class WampProcedureEvent extends WampEvent {
+
 	private final String procedure;
 
 	private final long registrationId;
 
-	public WampProcedureEvent(WampMessage wampMessage, String procedure,
-			long registrationId) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(),
-				wampMessage.getPrincipal());
+	public WampProcedureEvent(WampMessage wampMessage, String procedure, long registrationId) {
+		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
 		this.procedure = procedure;
 		this.registrationId = registrationId;
 	}
 
-	public WampProcedureEvent(Long wampSessionId, String webSocketSessionId,
-			@Nullable Principal principal, String procedure, long registrationId) {
+	public WampProcedureEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal,
+			String procedure, long registrationId) {
 		super(wampSessionId, webSocketSessionId, principal);
 		this.procedure = procedure;
 		this.registrationId = registrationId;

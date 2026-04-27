@@ -62,8 +62,7 @@ import ch.rasc.wamp2spring.message.YieldMessage;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
-public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
-		InitializingBean, ApplicationContextAware {
+public class RpcMessageHandler implements MessageHandler, SmartLifecycle, InitializingBean, ApplicationContextAware {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
@@ -87,9 +86,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 	private final Features features;
 
-	public RpcMessageHandler(SubscribableChannel clientInboundChannel,
-			MessageChannel clientOutboundChannel, ProcedureRegistry procedureRegistry,
-			HandlerMethodService handlerMethodService, Features features) {
+	public RpcMessageHandler(SubscribableChannel clientInboundChannel, MessageChannel clientOutboundChannel,
+			ProcedureRegistry procedureRegistry, HandlerMethodService handlerMethodService, Features features) {
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.procedureRegistry = procedureRegistry;
@@ -155,73 +153,61 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 			RegisterMessage registerMessage = (RegisterMessage) message;
 			long registrationId = this.procedureRegistry.register(registerMessage);
 			if (registrationId != -1) {
-				sendMessageToClient(
-						new RegisteredMessage(registerMessage, registrationId));
+				sendMessageToClient(new RegisteredMessage(registerMessage, registrationId));
 
-				this.applicationContext.publishEvent(new WampProcedureRegisteredEvent(
-						registerMessage, registrationId));
+				this.applicationContext.publishEvent(new WampProcedureRegisteredEvent(registerMessage, registrationId));
 			}
 			else {
-				sendMessageToClient(new ErrorMessage(registerMessage,
-						WampError.PROCEDURE_ALREADY_EXISTS));
+				sendMessageToClient(new ErrorMessage(registerMessage, WampError.PROCEDURE_ALREADY_EXISTS));
 			}
 		}
 		else if (message instanceof UnregisterMessage) {
 			UnregisterMessage unregisterMessage = (UnregisterMessage) message;
-			UnregisterResult result = this.procedureRegistry
-					.unregister(unregisterMessage);
+			UnregisterResult result = this.procedureRegistry.unregister(unregisterMessage);
 			if (result.isSuccess()) {
 				sendMessageToClient(new UnregisteredMessage(unregisterMessage));
 
-				this.applicationContext.publishEvent(
-						new WampProcedureUnregisteredEvent(unregisterMessage,
-								result.getProcedure(), result.getRegistrationId()));
+				this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(unregisterMessage,
+						result.getProcedure(), result.getRegistrationId()));
 
 				for (ErrorMessage errorMessage : result.getInvocationErrors()) {
 					handleErrorMessage(errorMessage);
 				}
 			}
 			else {
-				sendMessageToClient(new ErrorMessage(unregisterMessage,
-						WampError.NO_SUCH_REGISTRATION));
+				sendMessageToClient(new ErrorMessage(unregisterMessage, WampError.NO_SUCH_REGISTRATION));
 			}
 		}
 		else if (message instanceof CallMessage) {
 			CallMessage callMessage = (CallMessage) message;
 
-			if (callMessage.isDiscloseMe()
-					&& this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
-				sendMessageToClient(
-						new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
+			if (callMessage.isDiscloseMe() && this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
+				return;
 			}
 
-			InvocableHandlerMethod handlerMethod = this.wampMethods
-					.get(callMessage.getProcedure());
+			InvocableHandlerMethod handlerMethod = this.wampMethods.get(callMessage.getProcedure());
 			if (handlerMethod != null) {
 				callWampMethod(callMessage, handlerMethod);
 			}
 			else {
-				WampMessage errorOrInvocationMessage = this.procedureRegistry
-						.createInvocationMessage(callMessage);
+				WampMessage errorOrInvocationMessage = this.procedureRegistry.createInvocationMessage(callMessage);
 
 				try {
 					this.clientOutboundChannel.send(errorOrInvocationMessage);
 				}
 				catch (Throwable ex) {
 					if (errorOrInvocationMessage instanceof InvocationMessage) {
-						sendMessageToClient(
-								new ErrorMessage(callMessage, WampError.NETWORK_FAILURE));
+						sendMessageToClient(new ErrorMessage(callMessage, WampError.NETWORK_FAILURE));
 					}
 				}
 			}
 		}
 		else if (message instanceof YieldMessage) {
 			YieldMessage yieldMessage = (YieldMessage) message;
-			CallMessage callMessage = this.procedureRegistry
-					.removeInvocationCall(yieldMessage);
+			CallMessage callMessage = this.procedureRegistry.removeInvocationCall(yieldMessage);
 			if (callMessage != null) {
-				ResultMessage resultMessage = new ResultMessage(yieldMessage,
-						callMessage);
+				ResultMessage resultMessage = new ResultMessage(yieldMessage, callMessage);
 				sendMessageToClient(resultMessage);
 			}
 		}
@@ -234,13 +220,12 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 	@EventListener
 	void handleDisconnectEvent(WampDisconnectEvent event) {
 		List<UnregisterResult> unregisterResults = this.procedureRegistry
-				.unregisterWebSocketSession(event.getWebSocketSessionId());
+			.unregisterWebSocketSession(event.getWebSocketSessionId());
 
 		for (UnregisterResult unregisterResult : unregisterResults) {
 
 			this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(event,
-					unregisterResult.getProcedure(),
-					unregisterResult.getRegistrationId()));
+					unregisterResult.getProcedure(), unregisterResult.getRegistrationId()));
 
 			for (ErrorMessage errorMessage : unregisterResult.getInvocationErrors()) {
 				handleErrorMessage(errorMessage);
@@ -249,8 +234,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 	}
 
 	private void handleErrorMessage(ErrorMessage errorMessage) {
-		CallMessage callMessage = this.procedureRegistry
-				.removeInvocationCall(errorMessage);
+		CallMessage callMessage = this.procedureRegistry.removeInvocationCall(errorMessage);
 		if (callMessage != null) {
 			ErrorMessage calErrorMessage = new ErrorMessage(errorMessage, callMessage);
 			sendMessageToClient(calErrorMessage);
@@ -258,11 +242,9 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 	}
 
 	@SuppressWarnings("unchecked")
-	private void callWampMethod(CallMessage callMessage,
-			InvocableHandlerMethod handlerMethod) {
+	private void callWampMethod(CallMessage callMessage, InvocableHandlerMethod handlerMethod) {
 		try {
-			Object returnValue = this.handlerMethodService.invoke(callMessage,
-					handlerMethod);
+			Object returnValue = this.handlerMethodService.invoke(callMessage, handlerMethod);
 
 			List<Object> arguments = null;
 			Map<String, Object> argumentsKw = null;
@@ -282,33 +264,26 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 				arguments = Collections.singletonList(returnValue);
 			}
 
-			ResultMessage resultMessage = new ResultMessage(callMessage, arguments,
-					argumentsKw);
+			ResultMessage resultMessage = new ResultMessage(callMessage, arguments, argumentsKw);
 			sendMessageToClient(resultMessage);
 		}
 		catch (WampException e) {
-			sendMessageToClient(new ErrorMessage(callMessage, e.getUri(),
-					e.getArguments(), e.getArgumentsKw()));
+			sendMessageToClient(new ErrorMessage(callMessage, e.getUri(), e.getArguments(), e.getArgumentsKw()));
 
 			if (this.logger.isDebugEnabled()) {
-				this.logger.debug(
-						"Error while invoking the handlerMethod " + handlerMethod, e);
+				this.logger.debug("Error while invoking the handlerMethod " + handlerMethod, e);
 			}
 		}
 		catch (Exception e) {
-			if ("org.springframework.security.access.AccessDeniedException"
-					.equals(e.getClass().getName())) {
-				sendMessageToClient(
-						new ErrorMessage(callMessage, WampError.NOT_AUTHORIZED));
+			if ("org.springframework.security.access.AccessDeniedException".equals(e.getClass().getName())) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.NOT_AUTHORIZED));
 			}
 			else {
-				sendMessageToClient(
-						new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT));
 			}
 
 			if (this.logger.isErrorEnabled()) {
-				this.logger.error(
-						"Error while invoking the handlerMethod " + handlerMethod, e);
+				this.logger.error("Error while invoking the handlerMethod " + handlerMethod, e);
 			}
 		}
 	}
@@ -324,8 +299,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		for (String beanName : this.applicationContext
-				.getBeanNamesForType(Object.class)) {
+		for (String beanName : this.applicationContext.getBeanNamesForType(Object.class)) {
 			Class<?> handlerType = this.applicationContext.getType(beanName);
 			if (handlerType != null) {
 				final Class<?> userType = ClassUtils.getUserClass(handlerType);
@@ -337,12 +311,10 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 	private void detectWampMethods(String beanName, Class<?> userType) {
 
 		Set<Method> methods = MethodIntrospector.selectMethods(userType,
-				(MethodFilter) method -> AnnotationUtils.findAnnotation(method,
-						WampProcedure.class) != null);
+				(MethodFilter) method -> AnnotationUtils.findAnnotation(method, WampProcedure.class) != null);
 
 		for (Method method : methods) {
-			WampProcedure annotation = AnnotationUtils.findAnnotation(method,
-					WampProcedure.class);
+			WampProcedure annotation = AnnotationUtils.findAnnotation(method, WampProcedure.class);
 
 			InvocableHandlerMethod handlerMethod = new InvocableHandlerMethod(
 					new HandlerMethod(this.applicationContext.getBean(beanName), method));
@@ -362,8 +334,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle,
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
 

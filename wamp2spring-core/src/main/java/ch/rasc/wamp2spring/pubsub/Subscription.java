@@ -27,6 +27,7 @@ import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
 class Subscription {
+
 	private final DestinationMatch topicMatch;
 
 	private final long subscriptionId;
@@ -38,10 +39,9 @@ class Subscription {
 	private final Map<String, Object> options;
 
 	@Nullable
-	private List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
+	private volatile List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
 
-	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId,
-			Map<String, Object> options) {
+	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId, Map<String, Object> options) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
 		this.topicMatch = new DestinationMatch(topic, matchPolicy);

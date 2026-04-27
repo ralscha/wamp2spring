@@ -30,8 +30,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		InvocationMessage invocationMessage = new InvocationMessage(111, 1, null, null,
-				null);
+		InvocationMessage invocationMessage = new InvocationMessage(111, 1, null, null, null);
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(111);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(1);
@@ -41,8 +40,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		String json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo("[68,111,1,{}]");
 
-		invocationMessage = new InvocationMessage(1, 111, null,
-				Arrays.asList("Hello world"), null);
+		invocationMessage = new InvocationMessage(1, 111, null, Arrays.asList("Hello world"), null);
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(1);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(111);
@@ -55,21 +53,18 @@ public class InvocationMessageTest extends BaseMessageTest {
 		Map<String, Object> argumentsKw = new HashMap<>();
 		argumentsKw.put("firstname", "John");
 		argumentsKw.put("surname", "Doe");
-		invocationMessage = new InvocationMessage(1, 111, null, Arrays.asList("johnny"),
-				argumentsKw);
+		invocationMessage = new InvocationMessage(1, 111, null, Arrays.asList("johnny"), argumentsKw);
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(1);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(111);
 		assertThat(invocationMessage.getCaller()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("johnny");
-		assertThat(invocationMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(invocationMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 		json = serializeToJson(invocationMessage);
-		assertThat(json).isEqualTo(
-				"[68,1,111,{},[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
+		assertThat(json).isEqualTo("[68,1,111,{},[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
-		invocationMessage = new InvocationMessage(1, 111, 17218L,
-				Arrays.asList("Hello world"), null);
+		invocationMessage = new InvocationMessage(1, 111, 17218L, Arrays.asList("Hello world"), null);
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(1);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(111);
@@ -94,8 +89,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getArgumentsKw()).isNull();
 
 		json = "[68, 6131533, 9823527, {}, [\"Hello, world!\"]]";
-		invocationMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		invocationMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823527L);
@@ -104,8 +98,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getArgumentsKw()).isNull();
 
 		json = "[68, 6131533, 9823528, {}, [23, 7]]";
-		invocationMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		invocationMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823528L);
@@ -114,19 +107,17 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getArgumentsKw()).isNull();
 
 		json = "[68, 6131533, 9823529, {}, [\"johnny\"], {\"firstname\": \"John\",\"surname\": \"Doe\"}]";
-		invocationMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		invocationMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823529L);
 		assertThat(invocationMessage.getCaller()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("johnny");
-		assertThat(invocationMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(invocationMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 
 		json = "[68, 6131533, 9823528, {\"caller\": 3335656}, [23, 7]]";
-		invocationMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		invocationMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(invocationMessage.getCode()).isEqualTo(68);
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823528L);

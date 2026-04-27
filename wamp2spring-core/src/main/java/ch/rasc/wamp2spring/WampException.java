@@ -26,8 +26,11 @@ import org.springframework.lang.Nullable;
 public class WampException extends Exception {
 
 	public static class Builder {
+
 		private List<Object> arguments;
+
 		private Map<String, Object> argumentsKw;
+
 		private Throwable throwable;
 
 		public Builder arguments(List<Object> param) {
@@ -46,17 +49,19 @@ public class WampException extends Exception {
 		}
 
 		public WampException build(String error) {
-			return new WampException(error, this.arguments, this.argumentsKw,
-					this.throwable);
+			return new WampException(error, this.arguments, this.argumentsKw, this.throwable);
 		}
+
 	}
 
 	private final String uri;
+
 	private final List<Object> arguments;
+
 	private final Map<String, Object> argumentsKw;
 
-	protected WampException(String uri, @Nullable List<Object> arguments,
-			@Nullable Map<String, Object> argumentsKw, @Nullable Throwable throwable) {
+	protected WampException(String uri, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw,
+			@Nullable Throwable throwable) {
 		super(throwable);
 		this.uri = uri;
 		this.arguments = arguments;
@@ -74,4 +79,5 @@ public class WampException extends Exception {
 	public @Nullable Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
+
 }

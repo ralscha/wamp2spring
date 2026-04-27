@@ -28,18 +28,15 @@ public class ErrorMessageTest extends BaseMessageTest {
 
 	@Test
 	public void serializeTest() {
-		ErrorMessage errorMessage = new ErrorMessage(64, 25349185L,
-				"wamp.error.procedure_already_exists", null, null);
+		ErrorMessage errorMessage = new ErrorMessage(64, 25349185L, "wamp.error.procedure_already_exists", null, null);
 		assertThat(errorMessage.getCode()).isEqualTo(8);
 		assertThat(errorMessage.getType()).isEqualTo(64);
 		assertThat(errorMessage.getRequestId()).isEqualTo(25349185L);
-		assertThat(errorMessage.getError())
-				.isEqualTo("wamp.error.procedure_already_exists");
+		assertThat(errorMessage.getError()).isEqualTo("wamp.error.procedure_already_exists");
 		assertThat(errorMessage.getArguments()).isNull();
 		assertThat(errorMessage.getArgumentsKw()).isNull();
 		String json = serializeToJson(errorMessage);
-		assertThat(json)
-				.isEqualTo("[8,64,25349185,{},\"wamp.error.procedure_already_exists\"]");
+		assertThat(json).isEqualTo("[8,64,25349185,{},\"wamp.error.procedure_already_exists\"]");
 
 		errorMessage = new ErrorMessage(66, 788923562L, "wamp.error.no_such_registration",
 				Collections.singletonList("No such registration"), null);
@@ -50,22 +47,17 @@ public class ErrorMessageTest extends BaseMessageTest {
 		assertThat(errorMessage.getArguments()).containsExactly("No such registration");
 		assertThat(errorMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(errorMessage);
-		assertThat(json).isEqualTo(
-				"[8,66,788923562,{},\"wamp.error.no_such_registration\",[\"No such registration\"]]");
+		assertThat(json)
+			.isEqualTo("[8,66,788923562,{},\"wamp.error.no_such_registration\",[\"No such registration\"]]");
 
-		errorMessage = new ErrorMessage(68, 6131533L,
-				"com.myapp.error.object_write_protected",
-				Collections.singletonList("Object is write protected."),
-				Collections.singletonMap("severity", 3));
+		errorMessage = new ErrorMessage(68, 6131533L, "com.myapp.error.object_write_protected",
+				Collections.singletonList("Object is write protected."), Collections.singletonMap("severity", 3));
 		assertThat(errorMessage.getCode()).isEqualTo(8);
 		assertThat(errorMessage.getType()).isEqualTo(68);
 		assertThat(errorMessage.getRequestId()).isEqualTo(6131533L);
-		assertThat(errorMessage.getError())
-				.isEqualTo("com.myapp.error.object_write_protected");
-		assertThat(errorMessage.getArguments())
-				.containsExactly("Object is write protected.");
-		assertThat(errorMessage.getArgumentsKw())
-				.containsExactly(MapEntry.entry("severity", 3));
+		assertThat(errorMessage.getError()).isEqualTo("com.myapp.error.object_write_protected");
+		assertThat(errorMessage.getArguments()).containsExactly("Object is write protected.");
+		assertThat(errorMessage.getArgumentsKw()).containsExactly(MapEntry.entry("severity", 3));
 		json = serializeToJson(errorMessage);
 		assertThat(json).isEqualTo(
 				"[8,68,6131533,{},\"com.myapp.error.object_write_protected\",[\"Object is write protected.\"],{\"severity\":3}]");
@@ -75,19 +67,16 @@ public class ErrorMessageTest extends BaseMessageTest {
 	public void deserializeTest() throws IOException {
 		String json = "[8, 64, 25349185, {}, \"wamp.error.procedure_already_exists\"]";
 
-		ErrorMessage errorMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		ErrorMessage errorMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(errorMessage.getCode()).isEqualTo(8);
 		assertThat(errorMessage.getType()).isEqualTo(64);
 		assertThat(errorMessage.getRequestId()).isEqualTo(25349185L);
-		assertThat(errorMessage.getError())
-				.isEqualTo("wamp.error.procedure_already_exists");
+		assertThat(errorMessage.getError()).isEqualTo("wamp.error.procedure_already_exists");
 		assertThat(errorMessage.getArguments()).isNull();
 		assertThat(errorMessage.getArgumentsKw()).isNull();
 
 		json = "[8, 66, 788923562, {}, \"wamp.error.no_such_registration\",[\"No such registration\"]]";
-		errorMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		errorMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(errorMessage.getCode()).isEqualTo(8);
 		assertThat(errorMessage.getType()).isEqualTo(66);
 		assertThat(errorMessage.getRequestId()).isEqualTo(788923562L);
@@ -96,17 +85,13 @@ public class ErrorMessageTest extends BaseMessageTest {
 		assertThat(errorMessage.getArgumentsKw()).isNull();
 
 		json = "[8, 68, 6131533, {}, \"com.myapp.error.object_write_protected\", [\"Object is write protected.\"], {\"severity\": 3}]";
-		errorMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		errorMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(errorMessage.getCode()).isEqualTo(8);
 		assertThat(errorMessage.getType()).isEqualTo(68);
 		assertThat(errorMessage.getRequestId()).isEqualTo(6131533L);
-		assertThat(errorMessage.getError())
-				.isEqualTo("com.myapp.error.object_write_protected");
-		assertThat(errorMessage.getArguments())
-				.containsExactly("Object is write protected.");
-		assertThat(errorMessage.getArgumentsKw())
-				.containsExactly(MapEntry.entry("severity", 3));
+		assertThat(errorMessage.getError()).isEqualTo("com.myapp.error.object_write_protected");
+		assertThat(errorMessage.getArguments()).containsExactly("Object is write protected.");
+		assertThat(errorMessage.getArgumentsKw()).containsExactly(MapEntry.entry("severity", 3));
 	}
 
 }

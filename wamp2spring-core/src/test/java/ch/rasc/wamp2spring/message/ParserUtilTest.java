@@ -58,35 +58,30 @@ public class ParserUtilTest {
 
 		jp = om.getFactory().createParser("{\"key1\":1,\"key2\":2}");
 		jp.nextToken();
-		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("key1", 1),
-				MapEntry.entry("key2", 2));
+		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("key1", 1), MapEntry.entry("key2", 2));
 
 		jp = om.getFactory().createParser("{\"keyA\":1.1,\"keyB\":2.2}");
 		jp.nextToken();
-		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("keyA", 1.1),
-				MapEntry.entry("keyB", 2.2));
+		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("keyA", 1.1), MapEntry.entry("keyB", 2.2));
 
 		jp = om.getFactory().createParser("{\"k1\":\"one\",\"k2\":\"two\"}");
 		jp.nextToken();
-		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", "one"),
-				MapEntry.entry("k2", "two"));
+		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", "one"), MapEntry.entry("k2", "two"));
 
 		jp = om.getFactory().createParser("{\"k1\":true,\"k2\":false, \"k3\":null}");
 		jp.nextToken();
-		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", true),
-				MapEntry.entry("k2", false), MapEntry.entry("k3", null));
+		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", true), MapEntry.entry("k2", false),
+				MapEntry.entry("k3", null));
 
-		jp = om.getFactory().createParser(
-				"{\"o1\":{\"a1\":1,\"a2\":2},\"o2\":{\"b1\":11,\"b2\":22},\"o3\":{\"c1\":111,\"c2\":222}}");
+		jp = om.getFactory()
+			.createParser("{\"o1\":{\"a1\":1,\"a2\":2},\"o2\":{\"b1\":11,\"b2\":22},\"o3\":{\"c1\":111,\"c2\":222}}");
 		jp.nextToken();
 		Map<String, Object> m = ParserUtil.readObject(jp);
 		assertThat(m).containsKeys("o1", "o2", "o3");
-		assertThat((Map<String, Object>) m.get("o1"))
-				.containsOnly(MapEntry.entry("a1", 1), MapEntry.entry("a2", 2));
-		assertThat((Map<String, Object>) m.get("o2"))
-				.containsOnly(MapEntry.entry("b1", 11), MapEntry.entry("b2", 22));
-		assertThat((Map<String, Object>) m.get("o3"))
-				.containsOnly(MapEntry.entry("c1", 111), MapEntry.entry("c2", 222));
+		assertThat((Map<String, Object>) m.get("o1")).containsOnly(MapEntry.entry("a1", 1), MapEntry.entry("a2", 2));
+		assertThat((Map<String, Object>) m.get("o2")).containsOnly(MapEntry.entry("b1", 11), MapEntry.entry("b2", 22));
+		assertThat((Map<String, Object>) m.get("o3")).containsOnly(MapEntry.entry("c1", 111),
+				MapEntry.entry("c2", 222));
 	}
 
 }

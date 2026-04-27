@@ -29,25 +29,20 @@ public class CollectionHelperTest {
 	@Test
 	public void testToListTArray() {
 		assertThat(CollectionHelper.toList()).isNull();
-		assertThat(CollectionHelper.toList(1)).isInstanceOf(List.class)
-				.containsExactly(1);
-		assertThat(CollectionHelper.toList(1, 2, 3)).isInstanceOf(List.class)
-				.containsExactly(1, 2, 3);
+		assertThat(CollectionHelper.toList(1)).isInstanceOf(List.class).containsExactly(1);
+		assertThat(CollectionHelper.toList(1, 2, 3)).isInstanceOf(List.class).containsExactly(1, 2, 3);
 	}
 
 	@Test
 	public void testToListCollectionOfT() {
 		assertThat(CollectionHelper.toList((List<String>) null)).isNull();
-		assertThat(CollectionHelper.toList(Arrays.asList(1))).isInstanceOf(List.class)
-				.containsExactly(1);
-		assertThat(CollectionHelper.toList(Arrays.asList(1, 2, 3)))
-				.isInstanceOf(List.class).containsExactly(1, 2, 3);
+		assertThat(CollectionHelper.toList(Arrays.asList(1))).isInstanceOf(List.class).containsExactly(1);
+		assertThat(CollectionHelper.toList(Arrays.asList(1, 2, 3))).isInstanceOf(List.class).containsExactly(1, 2, 3);
 
 		Set<Long> set = new HashSet<>();
 		set.add(11L);
 		set.add(22L);
-		assertThat(CollectionHelper.toList(set)).isInstanceOf(List.class)
-				.containsOnly(11L, 22L);
+		assertThat(CollectionHelper.toList(set)).isInstanceOf(List.class).containsOnly(11L, 22L);
 	}
 
 	@Test
@@ -56,12 +51,10 @@ public class CollectionHelperTest {
 		Set<Long> set = new HashSet<>();
 		set.add(33L);
 		set.add(44L);
-		assertThat(CollectionHelper.toSet(set)).isInstanceOf(Set.class).containsOnly(33L,
-				44L);
-		assertThat(CollectionHelper.toSet(Arrays.asList(1L))).isInstanceOf(Set.class)
-				.containsExactly(1L);
-		assertThat(CollectionHelper.toSet(Arrays.asList(1L, 2L, 3L)))
-				.isInstanceOf(Set.class).containsExactly(1L, 2L, 3L);
+		assertThat(CollectionHelper.toSet(set)).isInstanceOf(Set.class).containsOnly(33L, 44L);
+		assertThat(CollectionHelper.toSet(Arrays.asList(1L))).isInstanceOf(Set.class).containsExactly(1L);
+		assertThat(CollectionHelper.toSet(Arrays.asList(1L, 2L, 3L))).isInstanceOf(Set.class)
+			.containsExactly(1L, 2L, 3L);
 	}
 
 }

@@ -44,8 +44,7 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 public class PreferBinaryHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
-	protected String selectProtocol(List<String> requestedProtocols,
-			WebSocketHandler webSocketHandler) {
+	protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
 
 		if (requestedProtocols.contains(WampSubProtocolHandler.MSGPACK_PROTOCOL)) {
 			return WampSubProtocolHandler.MSGPACK_PROTOCOL;

@@ -19,13 +19,11 @@ package ch.rasc.wamp2spring.config;
  * Enumeration of all implemented features in wamp2spring
  */
 public enum Feature {
-	DEALER("dealer"), BROKER("broker"),
-	DEALER_CALLER_IDENTIFICATION("caller_identification"),
+
+	DEALER("dealer"), BROKER("broker"), DEALER_CALLER_IDENTIFICATION("caller_identification"),
 	BROKER_SUBSCRIBER_BLACKWHITE_LISTING("subscriber_blackwhite_listing"),
-	BROKER_PUBLISHER_EXCLUSION("publisher_exclusion"),
-	BROKER_PUBLISHER_IDENTIFICATION("publisher_identification"),
-	BROKER_PATTERN_BASED_SUBSCRIPTION("pattern_based_subscription"),
-	BROKER_EVENT_RETENTION("event_retention");
+	BROKER_PUBLISHER_EXCLUSION("publisher_exclusion"), BROKER_PUBLISHER_IDENTIFICATION("publisher_identification"),
+	BROKER_PATTERN_BASED_SUBSCRIPTION("pattern_based_subscription"), BROKER_EVENT_RETENTION("event_retention");
 
 	private final String externalValue;
 

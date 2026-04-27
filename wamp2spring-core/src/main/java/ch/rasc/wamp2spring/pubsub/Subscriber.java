@@ -20,6 +20,7 @@ import java.util.Objects;
 import org.springframework.lang.Nullable;
 
 final class Subscriber {
+
 	private final String webSocketSessionId;
 
 	private final long wampSessionId;

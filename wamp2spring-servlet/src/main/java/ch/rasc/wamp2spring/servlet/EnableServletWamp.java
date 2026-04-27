@@ -71,8 +71,10 @@ import ch.rasc.wamp2spring.config.Feature;
 @Documented
 @Import(WampServletConfiguration.class)
 public @interface EnableServletWamp {
+
 	/**
 	 * Disable listed features. By default every supported feature is enabled.
 	 */
 	Feature[] disable() default {};
+
 }

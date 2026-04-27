@@ -43,8 +43,7 @@ import ch.rasc.wamp2spring.servlet.EnableServletWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ServerToClientTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = ServerToClientTest.Config.class)
 public class ServerToClientTest extends BaseWampTest {
 
 	@Autowired
@@ -56,13 +55,11 @@ public class ServerToClientTest extends BaseWampTest {
 			wc.connect(wampEndpointUrl());
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
-			SubscribedMessage subscribedMessage = wc
-					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage = wc.sendMessageWithResult(subscribeMessage);
 
 			this.serverToClientService.getWampPublisher().publishToAll("topic");
 			EventMessage eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
@@ -80,15 +77,13 @@ public class ServerToClientTest extends BaseWampTest {
 			wc.connect(wampEndpointUrl());
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
-			SubscribedMessage subscribedMessage = wc
-					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage = wc.sendMessageWithResult(subscribeMessage);
 
 			WampPublisher wampPublisher = this.serverToClientService.getWampPublisher();
 
 			wampPublisher.publishToAll("topic", 1);
 			EventMessage eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
@@ -97,8 +92,7 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wampPublisher.publishToAll("topic", "one", "two");
 			eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
@@ -107,8 +101,7 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wampPublisher.publishToAll("topic", Arrays.asList(1.1, 2.2, 3.3));
 			eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
@@ -121,15 +114,13 @@ public class ServerToClientTest extends BaseWampTest {
 			map.put("age", 27);
 			wampPublisher.publishToAll("topic", map);
 			eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.getArguments()).isEmpty();
-			assertThat(eventMessage.getArgumentsKw()).containsOnly(
-					MapEntry.entry("id", 1), MapEntry.entry("name", "john"),
-					MapEntry.entry("age", 27));
+			assertThat(eventMessage.getArgumentsKw()).containsOnly(MapEntry.entry("id", 1),
+					MapEntry.entry("name", "john"), MapEntry.entry("age", 27));
 
 			map = new HashMap<>();
 			map.put("id", 2);
@@ -137,23 +128,22 @@ public class ServerToClientTest extends BaseWampTest {
 			set.add(17);
 			set.add(19);
 			PublishMessage publishMessage = wampPublisher.publishMessageBuilder("topic")
-					.arguments(set).arguments(map).build();
+				.arguments(set)
+				.arguments(map)
+				.build();
 			wampPublisher.publish(publishMessage);
 			eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
 			assertThat(eventMessage.getArguments()).containsOnly(17, 19);
-			assertThat(eventMessage.getArgumentsKw())
-					.containsOnly(MapEntry.entry("id", 2));
+			assertThat(eventMessage.getArgumentsKw()).containsOnly(MapEntry.entry("id", 2));
 
 			TestDto testDto = new TestDto(23, "name");
 			wampPublisher.publishToAll("topic", testDto);
 			eventMessage = (EventMessage) wc.getWampMessage();
-			assertThat(eventMessage.getSubscriptionId())
-					.isEqualTo(subscribedMessage.getSubscriptionId());
+			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscribedMessage.getSubscriptionId());
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage.getTopic()).isNull();
 			assertThat(eventMessage.getPublisher()).isNull();
@@ -167,20 +157,17 @@ public class ServerToClientTest extends BaseWampTest {
 
 	@Test
 	public void testPrefix() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.JSON);
-				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON); WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
-			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(
-					new SubscribeMessage(1, "news", MatchPolicy.PREFIX));
+			SubscribedMessage subscribedMessage1 = wc1
+				.sendMessageWithResult(new SubscribeMessage(1, "news", MatchPolicy.PREFIX));
 			wc2.sendMessageWithResult(new SubscribeMessage(1, "news", MatchPolicy.EXACT));
 
-			this.serverToClientService.getWampPublisher().publishToAll("news.business",
-					"argument");
+			this.serverToClientService.getWampPublisher().publishToAll("news.business", "argument");
 			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("news.business");
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -189,11 +176,9 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishToAll("news.sport",
-					"bike");
+			this.serverToClientService.getWampPublisher().publishToAll("news.sport", "bike");
 			eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("news.sport");
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -202,8 +187,7 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishToAll("new.world",
-					"eclipse");
+			this.serverToClientService.getWampPublisher().publishToAll("new.world", "eclipse");
 			wc1.waitForNothing();
 			wc2.waitForNothing();
 		}
@@ -211,21 +195,17 @@ public class ServerToClientTest extends BaseWampTest {
 
 	@Test
 	public void testWildcard() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.JSON);
-				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON); WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
-			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(
-					new SubscribeMessage(1, "crud..create", MatchPolicy.WILDCARD));
-			wc2.sendMessageWithResult(
-					new SubscribeMessage(1, "crud..create", MatchPolicy.EXACT));
+			SubscribedMessage subscribedMessage1 = wc1
+				.sendMessageWithResult(new SubscribeMessage(1, "crud..create", MatchPolicy.WILDCARD));
+			wc2.sendMessageWithResult(new SubscribeMessage(1, "crud..create", MatchPolicy.EXACT));
 
-			this.serverToClientService.getWampPublisher().publishToAll("crud.user.create",
-					1);
+			this.serverToClientService.getWampPublisher().publishToAll("crud.user.create", 1);
 			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("crud.user.create");
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -234,11 +214,9 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher()
-					.publishToAll("crud.company.create", "tower");
+			this.serverToClientService.getWampPublisher().publishToAll("crud.company.create", "tower");
 			eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isEqualTo("crud.company.create");
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -247,8 +225,7 @@ public class ServerToClientTest extends BaseWampTest {
 
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishToAll("crud.user.update",
-					"2");
+			this.serverToClientService.getWampPublisher().publishToAll("crud.user.update", "2");
 			wc1.waitForNothing();
 			wc2.waitForNothing();
 		}
@@ -256,22 +233,17 @@ public class ServerToClientTest extends BaseWampTest {
 
 	@Test
 	public void testEligible() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.JSON);
-				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON); WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
-			SubscribedMessage subscribedMessage1 = wc1
-					.sendMessageWithResult(subscribeMessage);
-			SubscribedMessage subscribedMessage2 = wc2
-					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage2 = wc2.sendMessageWithResult(subscribeMessage);
 
-			this.serverToClientService.getWampPublisher()
-					.publishTo(wc1.getWampSessionId(), "topic", 1, 2, 3);
+			this.serverToClientService.getWampPublisher().publishTo(wc1.getWampSessionId(), "topic", 1, 2, 3);
 			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -279,11 +251,9 @@ public class ServerToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getArgumentsKw()).isNull();
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher()
-					.publishTo(wc2.getWampSessionId(), "topic", 5);
+			this.serverToClientService.getWampPublisher().publishTo(wc2.getWampSessionId(), "topic", 5);
 			EventMessage eventMessage2 = (EventMessage) wc2.getWampMessage();
-			assertThat(eventMessage2.getSubscriptionId())
-					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getSubscriptionId()).isEqualTo(subscribedMessage2.getSubscriptionId());
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
@@ -291,12 +261,10 @@ public class ServerToClientTest extends BaseWampTest {
 			assertThat(eventMessage2.getArgumentsKw()).isNull();
 			wc1.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishTo(
-					Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()),
-					"topic", 6);
+			this.serverToClientService.getWampPublisher()
+				.publishTo(Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()), "topic", 6);
 			eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
@@ -304,16 +272,14 @@ public class ServerToClientTest extends BaseWampTest {
 			assertThat(eventMessage1.getArgumentsKw()).isNull();
 
 			eventMessage2 = (EventMessage) wc2.getWampMessage();
-			assertThat(eventMessage2.getSubscriptionId())
-					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getSubscriptionId()).isEqualTo(subscribedMessage2.getSubscriptionId());
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
 			assertThat(eventMessage2.getArguments()).containsExactly(6);
 			assertThat(eventMessage2.getArgumentsKw()).isNull();
 
-			this.serverToClientService.getWampPublisher().publishTo(Arrays.asList(-1L),
-					"topic", 7);
+			this.serverToClientService.getWampPublisher().publishTo(Arrays.asList(-1L), "topic", 7);
 			wc1.waitForNothing();
 			wc2.waitForNothing();
 		}
@@ -321,68 +287,57 @@ public class ServerToClientTest extends BaseWampTest {
 
 	@Test
 	public void testExclude() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.JSON);
-				WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
+		try (WampClient wc1 = new WampClient(DataFormat.JSON); WampClient wc2 = new WampClient(DataFormat.MSGPACK)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
-			SubscribedMessage subscribedMessage1 = wc1
-					.sendMessageWithResult(subscribeMessage);
-			SubscribedMessage subscribedMessage2 = wc2
-					.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage1 = wc1.sendMessageWithResult(subscribeMessage);
+			SubscribedMessage subscribedMessage2 = wc2.sendMessageWithResult(subscribeMessage);
 
-			this.serverToClientService.getWampPublisher().publishToAllExcept(
-					wc2.getWampSessionId(), "topic", Collections.singletonMap("id", 111));
+			this.serverToClientService.getWampPublisher()
+				.publishToAllExcept(wc2.getWampSessionId(), "topic", Collections.singletonMap("id", 111));
 			EventMessage eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
 			assertThat(eventMessage1.getArguments()).isEmpty();
-			assertThat(eventMessage1.getArgumentsKw())
-					.containsOnly(MapEntry.entry("id", 111));
+			assertThat(eventMessage1.getArgumentsKw()).containsOnly(MapEntry.entry("id", 111));
 			wc2.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishToAllExcept(
-					wc1.getWampSessionId(), "topic", Collections.singletonMap("id", 112));
+			this.serverToClientService.getWampPublisher()
+				.publishToAllExcept(wc1.getWampSessionId(), "topic", Collections.singletonMap("id", 112));
 			EventMessage eventMessage2 = (EventMessage) wc2.getWampMessage();
-			assertThat(eventMessage2.getSubscriptionId())
-					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getSubscriptionId()).isEqualTo(subscribedMessage2.getSubscriptionId());
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
 			assertThat(eventMessage2.getArguments()).isEmpty();
-			assertThat(eventMessage2.getArgumentsKw())
-					.containsOnly(MapEntry.entry("id", 112));
+			assertThat(eventMessage2.getArgumentsKw()).containsOnly(MapEntry.entry("id", 112));
 			wc1.waitForNothing();
 
-			this.serverToClientService.getWampPublisher().publishToAllExcept(
-					Arrays.asList(-1L), "topic", Collections.singletonMap("id", 113));
+			this.serverToClientService.getWampPublisher()
+				.publishToAllExcept(Arrays.asList(-1L), "topic", Collections.singletonMap("id", 113));
 			eventMessage1 = (EventMessage) wc1.getWampMessage();
-			assertThat(eventMessage1.getSubscriptionId())
-					.isEqualTo(subscribedMessage1.getSubscriptionId());
+			assertThat(eventMessage1.getSubscriptionId()).isEqualTo(subscribedMessage1.getSubscriptionId());
 			assertThat(eventMessage1.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage1.getTopic()).isNull();
 			assertThat(eventMessage1.getPublisher()).isNull();
 			assertThat(eventMessage1.getArguments()).isEmpty();
-			assertThat(eventMessage1.getArgumentsKw())
-					.containsOnly(MapEntry.entry("id", 113));
+			assertThat(eventMessage1.getArgumentsKw()).containsOnly(MapEntry.entry("id", 113));
 
 			eventMessage2 = (EventMessage) wc2.getWampMessage();
-			assertThat(eventMessage2.getSubscriptionId())
-					.isEqualTo(subscribedMessage2.getSubscriptionId());
+			assertThat(eventMessage2.getSubscriptionId()).isEqualTo(subscribedMessage2.getSubscriptionId());
 			assertThat(eventMessage2.getPublicationId()).isGreaterThan(0L);
 			assertThat(eventMessage2.getTopic()).isNull();
 			assertThat(eventMessage2.getPublisher()).isNull();
 			assertThat(eventMessage2.getArguments()).isEmpty();
-			assertThat(eventMessage2.getArgumentsKw())
-					.containsOnly(MapEntry.entry("id", 113));
+			assertThat(eventMessage2.getArgumentsKw()).containsOnly(MapEntry.entry("id", 113));
 
-			this.serverToClientService.getWampPublisher().publishToAllExcept(
-					Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()),
-					"topic", Collections.singletonMap("id", 114));
+			this.serverToClientService.getWampPublisher()
+				.publishToAllExcept(Arrays.asList(wc1.getWampSessionId(), wc2.getWampSessionId()), "topic",
+						Collections.singletonMap("id", 114));
 			wc1.waitForNothing();
 			wc2.waitForNothing();
 		}
@@ -392,9 +347,12 @@ public class ServerToClientTest extends BaseWampTest {
 	@EnableAutoConfiguration
 	@EnableServletWamp
 	static class Config {
+
 		@Bean
 		public ServerToClientService serverToClientService(WampPublisher wampPublisher) {
 			return new ServerToClientService(wampPublisher);
 		}
+
 	}
+
 }

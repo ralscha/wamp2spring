@@ -36,8 +36,7 @@ public class WampSubscribeMessageMatcher implements MessageMatcher<Object> {
 			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
 			String topic = subscribeMessage.getTopic();
 			if (this.topicMatch.getMatchPolicy() != MatchPolicy.PREFIX) {
-				return subscribeMessage.getMatchPolicy() == this.topicMatch
-						.getMatchPolicy()
+				return subscribeMessage.getMatchPolicy() == this.topicMatch.getMatchPolicy()
 						&& topic.equals(this.topicMatch.getDestination());
 			}
 			return topic.startsWith(this.topicMatch.getDestination());

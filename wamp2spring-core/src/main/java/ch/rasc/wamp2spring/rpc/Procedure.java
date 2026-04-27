@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import ch.rasc.wamp2spring.message.RegisterMessage;
 
 public class Procedure {
+
 	private final String procedure;
 
 	private final String webSocketSessionId;
@@ -75,10 +76,9 @@ public class Procedure {
 
 	@Override
 	public String toString() {
-		return "Procedure [procedure=" + this.procedure + ", webSocketSessionId="
-				+ this.webSocketSessionId + ", discloseCaller=" + this.discloseCaller
-				+ ", registrationId=" + this.registrationId + ", pendingInvocations="
-				+ this.pendingInvocations + "]";
+		return "Procedure [procedure=" + this.procedure + ", webSocketSessionId=" + this.webSocketSessionId
+				+ ", discloseCaller=" + this.discloseCaller + ", registrationId=" + this.registrationId
+				+ ", pendingInvocations=" + this.pendingInvocations + "]";
 	}
 
 }

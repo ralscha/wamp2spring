@@ -48,8 +48,7 @@ public class FeaturesTest {
 		assertThat(feat.isDisabled(Feature.DEALER)).isFalse();
 		assertThat(feat.isDisabled(Feature.BROKER)).isFalse();
 		assertThat(feat.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)).isTrue();
-		assertThat(feat.isDisabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING))
-				.isFalse();
+		assertThat(feat.isDisabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)).isFalse();
 		assertThat(feat.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION)).isFalse();
 		assertThat(feat.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)).isTrue();
 		assertThat(feat.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)).isFalse();
@@ -59,8 +58,7 @@ public class FeaturesTest {
 	@Test
 	public void testEnabledDealerFeatures() {
 		Features feat = new Features();
-		assertThat(feat.enabledDealerFeatures())
-				.containsExactly(Feature.DEALER_CALLER_IDENTIFICATION);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALLER_IDENTIFICATION);
 
 		feat.disable(Feature.DEALER_CALLER_IDENTIFICATION);
 		assertThat(feat.enabledDealerFeatures()).isEmpty();
@@ -69,36 +67,28 @@ public class FeaturesTest {
 	@Test
 	public void testEnabledBrokerFeatures() {
 		Features feat = new Features();
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(
-				Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING,
-				Feature.BROKER_PUBLISHER_EXCLUSION,
-				Feature.BROKER_PUBLISHER_IDENTIFICATION,
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
-				Feature.BROKER_EVENT_RETENTION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING,
+				Feature.BROKER_PUBLISHER_EXCLUSION, Feature.BROKER_PUBLISHER_IDENTIFICATION,
+				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION);
 
 		feat.disable(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING);
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(
-				Feature.BROKER_PUBLISHER_EXCLUSION,
-				Feature.BROKER_PUBLISHER_IDENTIFICATION,
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PUBLISHER_EXCLUSION,
+				Feature.BROKER_PUBLISHER_IDENTIFICATION, Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
 				Feature.BROKER_EVENT_RETENTION);
 
 		feat.disable(Feature.BROKER_PUBLISHER_EXCLUSION);
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(
-				Feature.BROKER_PUBLISHER_IDENTIFICATION,
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
-				Feature.BROKER_EVENT_RETENTION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PUBLISHER_IDENTIFICATION,
+				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION);
 
 		feat.disable(Feature.BROKER_PUBLISHER_IDENTIFICATION);
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
 				Feature.BROKER_EVENT_RETENTION);
 
 		feat.disable(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION);
-		assertThat(feat.enabledBrokerFeatures())
-				.containsExactly(Feature.BROKER_EVENT_RETENTION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_EVENT_RETENTION);
 
 		feat.disable(Feature.BROKER_EVENT_RETENTION);
 		assertThat(feat.enabledBrokerFeatures()).isEmpty();
 	}
+
 }

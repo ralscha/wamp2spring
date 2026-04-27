@@ -15,7 +15,6 @@
  */
 package ch.rasc.wamp2spring.security.reactive;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -25,14 +24,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.support.AbstractMessageChannel;
-import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
-import org.springframework.security.access.vote.AffirmativeBased;
-import org.springframework.security.config.annotation.ObjectPostProcessor;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
-import org.springframework.security.messaging.access.expression.MessageExpressionVoter;
-import org.springframework.security.messaging.access.intercept.ChannelSecurityInterceptor;
-import org.springframework.security.messaging.access.intercept.MessageSecurityMetadataSource;
+import org.springframework.security.messaging.access.intercept.AuthorizationChannelInterceptor;
 import org.springframework.security.messaging.context.AuthenticationPrincipalArgumentResolver;
 import org.springframework.security.messaging.context.SecurityContextChannelInterceptor;
 
@@ -40,8 +36,7 @@ import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.reactive.WampReactiveConfigurer;
 import ch.rasc.wamp2spring.security.WampMessageSecurityMetadataSourceRegistry;
 
-public abstract class AbstractSecurityWampReactiveConfigurer
-		implements WampReactiveConfigurer {
+public abstract class AbstractSecurityWampReactiveConfigurer implements WampReactiveConfigurer {
 
 	private SecurityExpressionHandler<Message<Object>> defaultExpressionHandler = new DefaultMessageSecurityExpressionHandler<>();
 
@@ -51,14 +46,13 @@ public abstract class AbstractSecurityWampReactiveConfigurer
 	private final WampMessageSecurityMetadataSourceRegistry inboundRegistry = new WampMessageSecurityMetadataSourceRegistry();
 
 	@Override
-	public void addArgumentResolvers(
-			List<HandlerMethodArgumentResolver> argumentResolvers) {
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 		argumentResolvers.add(new AuthenticationPrincipalArgumentResolver());
 	}
 
 	@Override
 	public void configureClientInboundChannel(AbstractMessageChannel channel) {
-		ChannelSecurityInterceptor inboundChannelSecurity = inboundChannelSecurity();
+		AuthorizationChannelInterceptor inboundChannelSecurity = inboundChannelSecurity();
 		channel.addInterceptor(securityContextChannelInterceptor());
 		if (this.inboundRegistry.containsMapping()) {
 			channel.addInterceptor(inboundChannelSecurity);
@@ -66,18 +60,8 @@ public abstract class AbstractSecurityWampReactiveConfigurer
 	}
 
 	@Bean
-	public ChannelSecurityInterceptor inboundChannelSecurity() {
-		ChannelSecurityInterceptor channelSecurityInterceptor = new ChannelSecurityInterceptor(
-				inboundMessageSecurityMetadataSource());
-		MessageExpressionVoter<Object> voter = new MessageExpressionVoter<>();
-		voter.setExpressionHandler(getMessageExpressionHandler());
-
-		List<AccessDecisionVoter<? extends Object>> voters = new ArrayList<>();
-		voters.add(voter);
-
-		AffirmativeBased manager = new AffirmativeBased(voters);
-		channelSecurityInterceptor.setAccessDecisionManager(manager);
-		return channelSecurityInterceptor;
+	public AuthorizationChannelInterceptor inboundChannelSecurity() {
+		return new AuthorizationChannelInterceptor(inboundAuthorizationManager());
 	}
 
 	@Bean
@@ -86,20 +70,18 @@ public abstract class AbstractSecurityWampReactiveConfigurer
 	}
 
 	@Bean
-	public MessageSecurityMetadataSource inboundMessageSecurityMetadataSource() {
+	public AuthorizationManager<Message<?>> inboundAuthorizationManager() {
 		this.inboundRegistry.expressionHandler(getMessageExpressionHandler());
 		configureInbound(this.inboundRegistry);
-		return this.inboundRegistry.createMetadataSource();
+		return this.inboundRegistry.createAuthorizationManager();
 	}
 
-	protected void configureInbound(
-			@SuppressWarnings("unused") WampMessageSecurityMetadataSourceRegistry messages) {
+	protected void configureInbound(@SuppressWarnings("unused") WampMessageSecurityMetadataSourceRegistry messages) {
 		// by default nothing here
 	}
 
 	@Autowired(required = false)
-	public void setMessageExpressionHandler(
-			List<SecurityExpressionHandler<Message<Object>>> expressionHandlers) {
+	public void setMessageExpressionHandler(List<SecurityExpressionHandler<Message<Object>>> expressionHandlers) {
 		if (expressionHandlers.size() == 1) {
 			this.expressionHandler = expressionHandlers.get(0);
 		}
@@ -107,8 +89,7 @@ public abstract class AbstractSecurityWampReactiveConfigurer
 
 	@Autowired(required = false)
 	public void setObjectPostProcessor(ObjectPostProcessor<Object> objectPostProcessor) {
-		this.defaultExpressionHandler = objectPostProcessor
-				.postProcess(this.defaultExpressionHandler);
+		this.defaultExpressionHandler = objectPostProcessor.postProcess(this.defaultExpressionHandler);
 	}
 
 	private SecurityExpressionHandler<Message<Object>> getMessageExpressionHandler() {
@@ -117,4 +98,5 @@ public abstract class AbstractSecurityWampReactiveConfigurer
 		}
 		return this.expressionHandler;
 	}
+
 }

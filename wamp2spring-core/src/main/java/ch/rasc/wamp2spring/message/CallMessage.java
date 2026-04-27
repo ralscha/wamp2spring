@@ -56,8 +56,7 @@ public class CallMessage extends WampMessage {
 		this(request, procedure, arguments, null, false);
 	}
 
-	public CallMessage(long request, String procedure,
-			@Nullable Map<String, Object> argumentsKw) {
+	public CallMessage(long request, String procedure, @Nullable Map<String, Object> argumentsKw) {
 		this(request, procedure, null, argumentsKw, false);
 	}
 
@@ -152,9 +151,8 @@ public class CallMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "CallMessage [requestId=" + this.requestId + ", procedure="
-				+ this.procedure + ", discloseMe=" + this.discloseMe + ", arguments="
-				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+		return "CallMessage [requestId=" + this.requestId + ", procedure=" + this.procedure + ", discloseMe="
+				+ this.discloseMe + ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

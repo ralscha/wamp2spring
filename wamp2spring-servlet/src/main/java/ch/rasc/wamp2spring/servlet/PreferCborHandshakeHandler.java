@@ -43,8 +43,7 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 public class PreferCborHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
-	protected String selectProtocol(List<String> requestedProtocols,
-			WebSocketHandler webSocketHandler) {
+	protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
 
 		if (requestedProtocols.contains(WampSubProtocolHandler.CBOR_PROTOCOL)) {
 			return WampSubProtocolHandler.CBOR_PROTOCOL;

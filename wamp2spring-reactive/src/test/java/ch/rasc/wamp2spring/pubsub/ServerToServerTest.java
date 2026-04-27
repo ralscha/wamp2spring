@@ -32,8 +32,7 @@ import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = ServerToServerTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = ServerToServerTest.Config.class)
 @TestPropertySource(properties = "spring.main.web-application-type=reactive")
 public class ServerToServerTest extends BaseWampTest {
 
@@ -43,8 +42,7 @@ public class ServerToServerTest extends BaseWampTest {
 	@Test
 	public void test() throws Exception {
 		WampPublisher wp = this.serverToServerService.getWampPublisher();
-		wp.publish(wp.publishMessageBuilder("sum").notExcludeMe().addArgument(1)
-				.addArgument(2).build());
+		wp.publish(wp.publishMessageBuilder("sum").notExcludeMe().addArgument(1).addArgument(2).build());
 		TimeUnit.SECONDS.sleep(2);
 		assertThat(this.serverToServerService.isCalled()).isTrue();
 	}
@@ -53,9 +51,12 @@ public class ServerToServerTest extends BaseWampTest {
 	@EnableAutoConfiguration
 	@EnableReactiveWamp
 	static class Config {
+
 		@Bean
 		public ServerToServerService serverToServerService(WampPublisher wampPublisher) {
 			return new ServerToServerService(wampPublisher);
 		}
+
 	}
+
 }

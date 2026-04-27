@@ -20,16 +20,21 @@ package ch.rasc.wamp2spring;
  */
 public enum WampError {
 
-	NO_SUCH_PROCEDURE("wamp.error.no_such_procedure"),
-	PROCEDURE_ALREADY_EXISTS("wamp.error.procedure_already_exists"),
-	NO_SUCH_REGISTRATION("wamp.error.no_such_registration"),
-	NO_SUCH_SUBSCRIPTION("wamp.error.no_such_subscription"),
-	GOODBYE_AND_OUT("wamp.error.goodbye_and_out"),
-	NETWORK_FAILURE("wamp.error.network_failure"),
-	INVALID_ARGUMENT("wamp.error.invalid_argument"),
-	NOT_AUTHORIZED("wamp.error.not_authorized"),
-	OPTION_NOT_ALLOWED("wamp.error.option_not_allowed"),
-	DISCLOSE_ME_DISALLOWED("wamp.error.option_disallowed.disclose_me");
+	// Basic Profile - error URIs (spec §8)
+	NO_SUCH_PROCEDURE("wamp.error.no_such_procedure"), PROCEDURE_ALREADY_EXISTS("wamp.error.procedure_already_exists"),
+	NO_SUCH_REGISTRATION("wamp.error.no_such_registration"), NO_SUCH_SUBSCRIPTION("wamp.error.no_such_subscription"),
+	INVALID_URI("wamp.error.invalid_uri"), INVALID_ARGUMENT("wamp.error.invalid_argument"),
+	NOT_AUTHORIZED("wamp.error.not_authorized"), AUTHORIZATION_FAILED("wamp.error.authorization_failed"),
+	NO_SUCH_REALM("wamp.error.no_such_realm"), PROTOCOL_VIOLATION("wamp.error.protocol_violation"),
+	NETWORK_FAILURE("wamp.error.network_failure"), OPTION_NOT_ALLOWED("wamp.error.option_not_allowed"),
+	DISCLOSE_ME_DISALLOWED("wamp.error.option_disallowed.disclose_me"),
+
+	// Advanced Profile - error URIs (spec §18)
+	NO_SUCH_SESSION("wamp.error.no_such_session"), CANCELED("wamp.error.canceled"),
+
+	// Session close reasons - wamp.close.* namespace (spec §8 / §18)
+	GOODBYE_AND_OUT("wamp.close.goodbye_and_out"), SYSTEM_SHUTDOWN("wamp.close.system_shutdown"),
+	CLOSE_REALM("wamp.close.close_realm"), CLOSE_KILLED("wamp.close.killed");
 
 	private final String externalValue;
 

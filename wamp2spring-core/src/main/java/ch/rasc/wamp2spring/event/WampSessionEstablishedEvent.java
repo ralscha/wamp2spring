@@ -23,8 +23,7 @@ import ch.rasc.wamp2spring.message.WampMessage;
 public class WampSessionEstablishedEvent extends WampEvent {
 
 	public WampSessionEstablishedEvent(WampMessage wampMessage) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(),
-				wampMessage.getPrincipal());
+		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
 	}
 
 }

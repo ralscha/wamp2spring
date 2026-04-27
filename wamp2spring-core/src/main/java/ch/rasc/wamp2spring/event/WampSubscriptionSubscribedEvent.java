@@ -24,8 +24,8 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
  */
 public class WampSubscriptionSubscribedEvent extends WampSubscriptionEvent {
 
-	public WampSubscriptionSubscribedEvent(WampMessage wampMessage,
-			SubscriptionDetail subscriptionDetail) {
+	public WampSubscriptionSubscribedEvent(WampMessage wampMessage, SubscriptionDetail subscriptionDetail) {
 		super(wampMessage, subscriptionDetail);
 	}
+
 }

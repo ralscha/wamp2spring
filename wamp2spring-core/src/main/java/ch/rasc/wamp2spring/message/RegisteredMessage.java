@@ -69,8 +69,7 @@ public class RegisteredMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "RegisteredMessage [requestId=" + this.requestId + ", registrationId="
-				+ this.registrationId + "]";
+		return "RegisteredMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId + "]";
 	}
 
 }

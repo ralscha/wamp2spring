@@ -26,17 +26,16 @@ import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
  * Base class for the subscription events.
  */
 public abstract class WampSubscriptionEvent extends WampEvent {
+
 	private final SubscriptionDetail subscriptionDetail;
 
-	public WampSubscriptionEvent(WampMessage wampMessage,
-			SubscriptionDetail subscriptionDetail) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(),
-				wampMessage.getPrincipal());
+	public WampSubscriptionEvent(WampMessage wampMessage, SubscriptionDetail subscriptionDetail) {
+		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
 		this.subscriptionDetail = subscriptionDetail;
 	}
 
-	public WampSubscriptionEvent(Long wampSessionId, String webSocketSessionId,
-			@Nullable Principal principal, SubscriptionDetail subscriptionDetail) {
+	public WampSubscriptionEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal,
+			SubscriptionDetail subscriptionDetail) {
 		super(wampSessionId, webSocketSessionId, principal);
 		this.subscriptionDetail = subscriptionDetail;
 	}

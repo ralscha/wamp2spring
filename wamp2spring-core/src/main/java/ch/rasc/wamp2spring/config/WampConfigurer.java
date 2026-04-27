@@ -27,12 +27,12 @@ import org.springframework.messaging.support.AbstractMessageChannel;
  * Used together with EnableServletWamp or EnableReactiveWamp
  */
 public interface WampConfigurer {
+
 	/**
 	 * Configures the {@link org.springframework.messaging.MessageChannel} used for
 	 * incoming messages from WebSocket clients.
 	 */
-	default void configureClientInboundChannel(
-			@SuppressWarnings("unused") AbstractMessageChannel channel) {
+	default void configureClientInboundChannel(@SuppressWarnings("unused") AbstractMessageChannel channel) {
 		// nothing here
 	}
 
@@ -42,8 +42,7 @@ public interface WampConfigurer {
 	 * This does not override the built-in argument resolvers.
 	 * @param argumentResolvers the resolvers to register (initially an empty list)
 	 */
-	default void addArgumentResolvers(
-			List<HandlerMethodArgumentResolver> argumentResolvers) {
+	default void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
 		// nothing here
 	}
 

@@ -23,8 +23,7 @@ class SubscribeResult {
 
 	private final boolean created;
 
-	public SubscribeResult(long wampSessionId, Subscription subscription,
-			boolean created) {
+	public SubscribeResult(long wampSessionId, Subscription subscription, boolean created) {
 		this.wampSessionId = wampSessionId;
 		this.subscription = subscription;
 		this.created = created;

@@ -45,8 +45,7 @@ public class UnsubscribedMessage extends WampMessage {
 		this(requestId, null, null);
 	}
 
-	public UnsubscribedMessage(long requestId, @Nullable Long subscriptionId,
-			@Nullable String reason) {
+	public UnsubscribedMessage(long requestId, @Nullable Long subscriptionId, @Nullable String reason) {
 		super(CODE);
 		this.requestId = requestId;
 		this.subscriptionId = subscriptionId;
@@ -112,8 +111,8 @@ public class UnsubscribedMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "UnsubscribedMessage [requestId=" + this.requestId + ", subscriptionId="
-				+ this.subscriptionId + ", reason=" + this.reason + "]";
+		return "UnsubscribedMessage [requestId=" + this.requestId + ", subscriptionId=" + this.subscriptionId
+				+ ", reason=" + this.reason + "]";
 	}
 
 }

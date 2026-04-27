@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 
 public class WampResultService {
+
 	private final Set<String> called = new HashSet<>();
 
 	@WampProcedure(name = "sum")
@@ -70,21 +71,17 @@ public class WampResultService {
 	@WampProcedure(name = "twoKw")
 	public WampResult twoKw(String first, String second) {
 		this.called.add("twoKw");
-		return WampResult.createKw("1", first.toUpperCase()).add("2",
-				second.toUpperCase());
+		return WampResult.createKw("1", first.toUpperCase()).add("2", second.toUpperCase());
 	}
 
 	@WampProcedure(name = "mix")
 	public WampResult mixedResult(BigDecimal amount, String text) {
 		this.called.add("mixedResult");
-		return WampResult
-				.createKw("5%",
-						amount.multiply(new BigDecimal("1.05")).setScale(1,
-								RoundingMode.HALF_UP))
-				.add("10%",
-						amount.multiply(new BigDecimal("1.1")).setScale(1,
-								RoundingMode.HALF_UP))
-				.add(text.charAt(0)).add(text.charAt(1)).add(text.charAt(2));
+		return WampResult.createKw("5%", amount.multiply(new BigDecimal("1.05")).setScale(1, RoundingMode.HALF_UP))
+			.add("10%", amount.multiply(new BigDecimal("1.1")).setScale(1, RoundingMode.HALF_UP))
+			.add(text.charAt(0))
+			.add(text.charAt(1))
+			.add(text.charAt(2));
 	}
 
 	public boolean isCalled(String method) {

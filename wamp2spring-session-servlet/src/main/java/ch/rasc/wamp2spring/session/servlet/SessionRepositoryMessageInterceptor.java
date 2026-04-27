@@ -50,8 +50,7 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		if (messageMatches(message)) {
-			String sessionId = (String) message.getHeaders()
-					.get(SPRING_SESSION_ID_ATTR_NAME);
+			String sessionId = (String) message.getHeaders().get(SPRING_SESSION_ID_ATTR_NAME);
 			if (sessionId != null) {
 				S session = this.sessionRepository.findById(sessionId);
 				if (session != null) {
@@ -66,14 +65,13 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 
 	private static boolean messageMatches(Message<?> message) {
 		return !(message instanceof AbortMessage) && !(message instanceof ErrorMessage)
-				&& !(message instanceof GoodbyeMessage)
-				&& !(message instanceof HelloMessage)
+				&& !(message instanceof GoodbyeMessage) && !(message instanceof HelloMessage)
 				&& !(message instanceof WelcomeMessage);
 	}
 
 	@Override
-	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-			WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
+			Map<String, Object> attributes) throws Exception {
 		if (request instanceof ServletServerHttpRequest) {
 			ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
 			HttpSession session = servletRequest.getServletRequest().getSession(false);
@@ -85,8 +83,8 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 	}
 
 	@Override
-	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-			WebSocketHandler wsHandler, Exception exception) {
+	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
+			Exception exception) {
 		// nothing here
 	}
 

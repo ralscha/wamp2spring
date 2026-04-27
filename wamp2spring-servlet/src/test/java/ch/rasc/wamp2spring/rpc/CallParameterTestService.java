@@ -31,16 +31,14 @@ import ch.rasc.wamp2spring.message.CallMessage;
 public class CallParameterTestService {
 
 	@WampProcedure(value = "headerMethod")
-	public String headerMethod(
-			@Header(value = "WEBSOCKET_SESSION_ID") String webSocketSessionId) {
+	public String headerMethod(@Header(value = "WEBSOCKET_SESSION_ID") String webSocketSessionId) {
 		return "headerMethod called: " + webSocketSessionId;
 	}
 
 	@WampProcedure(value = "headersMethod")
 	public String headersMethod(@Headers Map<String, Object> headers) {
 		assertThat(headers).hasSize(3);
-		assertThat(headers).containsKeys("WAMP_SESSION_ID", "WEBSOCKET_SESSION_ID",
-				"WAMP_MESSAGE_CODE");
+		assertThat(headers).containsKeys("WAMP_SESSION_ID", "WEBSOCKET_SESSION_ID", "WAMP_MESSAGE_CODE");
 
 		return "headersMethod called";
 	}
@@ -56,8 +54,7 @@ public class CallParameterTestService {
 	}
 
 	@WampProcedure(name = "mix")
-	public String mix(String param1, CallMessage message, int param2,
-			@Headers Map<String, Object> headers,
+	public String mix(String param1, CallMessage message, int param2, @Headers Map<String, Object> headers,
 			@Header(value = "WAMP_MESSAGE_CODE") long code, float param3, String param4) {
 
 		assertThat(param1).isEqualTo("param1");

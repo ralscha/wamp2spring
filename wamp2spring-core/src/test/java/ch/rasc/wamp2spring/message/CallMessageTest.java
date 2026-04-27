@@ -53,21 +53,18 @@ public class CallMessageTest extends BaseMessageTest {
 		Map<String, Object> argumentsKw = new HashMap<>();
 		argumentsKw.put("firstname", "John");
 		argumentsKw.put("surname", "Doe");
-		callMessage = new CallMessage(1, "call", Arrays.asList("johnny"), argumentsKw,
-				false);
+		callMessage = new CallMessage(1, "call", Arrays.asList("johnny"), argumentsKw, false);
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
 		assertThat(callMessage.getArguments()).containsExactly("johnny");
-		assertThat(callMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(callMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 		json = serializeToJson(callMessage);
-		assertThat(json).isEqualTo(
-				"[48,1,{},\"call\",[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
+		assertThat(json).isEqualTo("[48,1,{},\"call\",[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
-		callMessage = new CallMessage(1, "call", Arrays.asList("Hello world"), null,
-				true);
+		callMessage = new CallMessage(1, "call", Arrays.asList("Hello world"), null, true);
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
@@ -75,16 +72,14 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getArguments()).containsExactly("Hello world");
 		assertThat(callMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(callMessage);
-		assertThat(json)
-				.isEqualTo("[48,1,{\"disclose_me\":true},\"call\",[\"Hello world\"]]");
+		assertThat(json).isEqualTo("[48,1,{\"disclose_me\":true},\"call\",[\"Hello world\"]]");
 	}
 
 	@Test
 	public void deserializeTest() throws IOException {
 		String json = "[48, 7814135, {}, \"com.myapp.ping\"]";
 
-		CallMessage callMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		CallMessage callMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.ping");
@@ -93,8 +88,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getArgumentsKw()).isNull();
 
 		json = " [48, 7814135, {}, \"com.myapp.echo\", [\"Hello, world!\"]]";
-		callMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		callMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.echo");
@@ -103,8 +97,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getArgumentsKw()).isNull();
 
 		json = "[48, 7814135, {}, \"com.myapp.add2\", [23, 7]]";
-		callMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		callMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.add2");
@@ -113,19 +106,17 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getArgumentsKw()).isNull();
 
 		json = "[48, 7814135, {}, \"com.myapp.user.new\", [\"johnny\"],{\"firstname\": \"John\", \"surname\": \"Doe\"}]";
-		callMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		callMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.user.new");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
 		assertThat(callMessage.getArguments()).containsExactly("johnny");
-		assertThat(callMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(callMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 
 		json = "[48, 7814135, {\"disclose_me\":true}, \"com.myapp.add2\", [23, 7]]";
-		callMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		callMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(callMessage.getCode()).isEqualTo(48);
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.add2");

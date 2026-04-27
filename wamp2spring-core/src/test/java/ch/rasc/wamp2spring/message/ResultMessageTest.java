@@ -53,11 +53,10 @@ public class ResultMessageTest extends BaseMessageTest {
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
 		assertThat(resultMessage.getArguments()).containsExactly("johnny");
-		assertThat(resultMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(resultMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 		json = serializeToJson(resultMessage);
-		assertThat(json).isEqualTo(
-				"[50,111,{},[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
+		assertThat(json).isEqualTo("[50,111,{},[\"johnny\"],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
 		argumentsKw = new HashMap<>();
 		argumentsKw.put("firstname", "John");
@@ -66,11 +65,10 @@ public class ResultMessageTest extends BaseMessageTest {
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
 		assertThat(resultMessage.getArguments()).isNull();
-		assertThat(resultMessage.getArgumentsKw()).containsExactly(
-				MapEntry.entry("firstname", "John"), MapEntry.entry("surname", "Doe"));
+		assertThat(resultMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
+				MapEntry.entry("surname", "Doe"));
 		json = serializeToJson(resultMessage);
-		assertThat(json)
-				.isEqualTo("[50,111,{},[],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
+		assertThat(json).isEqualTo("[50,111,{},[],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
 
 	}
 
@@ -78,46 +76,41 @@ public class ResultMessageTest extends BaseMessageTest {
 	public void deserializeTest() throws IOException {
 		String json = "[50, 7814135, {}]";
 
-		ResultMessage resultMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		ResultMessage resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(resultMessage.getArguments()).isNull();
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [\"Hello, world!\"]]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(resultMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [30]]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(resultMessage.getArguments()).containsExactly(30);
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [], {\"userid\": 123, \"karma\": 10}]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(resultMessage.getArguments()).isEmpty();
-		assertThat(resultMessage.getArgumentsKw())
-				.containsOnly(MapEntry.entry("userid", 123), MapEntry.entry("karma", 10));
+		assertThat(resultMessage.getArgumentsKw()).containsOnly(MapEntry.entry("userid", 123),
+				MapEntry.entry("karma", 10));
 
 		json = "[50, 7814135, {}, [\"a\",\"b\",\"c\"], {\"userid\": 123, \"karma\": 10}]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(),
-				json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(resultMessage.getArguments()).containsExactly("a", "b", "c");
-		assertThat(resultMessage.getArgumentsKw())
-				.containsOnly(MapEntry.entry("userid", 123), MapEntry.entry("karma", 10));
+		assertThat(resultMessage.getArgumentsKw()).containsOnly(MapEntry.entry("userid", 123),
+				MapEntry.entry("karma", 10));
 	}
 
 }

@@ -46,8 +46,7 @@ public class WelcomeMessage extends WampMessage {
 		this.realm = realm;
 	}
 
-	public WelcomeMessage(HelloMessage helloMessage, long sessionId,
-			List<WampRole> roles) {
+	public WelcomeMessage(HelloMessage helloMessage, long sessionId, List<WampRole> roles) {
 		this(sessionId, roles, null);
 		setReceiver(helloMessage);
 		setHeader(WampMessageHeader.WAMP_SESSION_ID, sessionId);
@@ -64,9 +63,8 @@ public class WelcomeMessage extends WampMessage {
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
-					.get("roles");
-			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap
-					.entrySet()) {
+				.get("roles");
+			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
 				WampRole wampRole = new WampRole(entry.getKey());
 				Map<String, Boolean> features = entry.getValue().get("features");
 				if (features != null) {
@@ -125,8 +123,7 @@ public class WelcomeMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles
-				+ ", realm=" + this.realm + "]";
+		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles + ", realm=" + this.realm + "]";
 	}
 
 }

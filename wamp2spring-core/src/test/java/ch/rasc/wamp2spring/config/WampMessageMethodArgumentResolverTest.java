@@ -36,8 +36,7 @@ public class WampMessageMethodArgumentResolverTest {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		Method testMethod = getClass().getDeclaredMethod("handleMessage",
-				CallMessage.class, String.class);
+		Method testMethod = getClass().getDeclaredMethod("handleMessage", CallMessage.class, String.class);
 		this.resolver = new WampMessageMethodArgumentResolver();
 		this.messageParameter = new MethodParameter(testMethod, 0);
 		this.stringParameter = new MethodParameter(testMethod, 1);
@@ -52,8 +51,7 @@ public class WampMessageMethodArgumentResolverTest {
 	@Test
 	public void resolveArgumentTest() throws Exception {
 		CallMessage callMessage = new CallMessage(1, "call");
-		assertThat(this.resolver.resolveArgument(this.messageParameter, callMessage))
-				.isEqualTo(callMessage);
+		assertThat(this.resolver.resolveArgument(this.messageParameter, callMessage)).isEqualTo(callMessage);
 	}
 
 	@SuppressWarnings({ "unused" })

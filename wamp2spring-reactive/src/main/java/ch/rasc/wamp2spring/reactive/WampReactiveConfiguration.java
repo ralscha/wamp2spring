@@ -42,9 +42,8 @@ public class WampReactiveConfiguration extends WampConfiguration implements Impo
 
 	@Bean
 	public WampWebSocketHandler wampWebSocketHandler() {
-		return new WampWebSocketHandler(jsonJsonFactory(), msgpackJsonFactory(),
-				cborJsonFactory(), smileJsonFactory(), clientOutboundChannel(),
-				clientInboundChannel(), this.features);
+		return new WampWebSocketHandler(jsonJsonFactory(), msgpackJsonFactory(), cborJsonFactory(), smileJsonFactory(),
+				clientOutboundChannel(), clientInboundChannel(), this.features);
 	}
 
 	@Bean
@@ -52,12 +51,11 @@ public class WampReactiveConfiguration extends WampConfiguration implements Impo
 		Map<String, WebSocketHandler> map = new HashMap<>();
 
 		WampWebSocketHandler wampWebSocketHandler = wampWebSocketHandler();
-		WebSocketHandler decoratedWebSocketHandler = decorateWebSocketHandler(
-				wampWebSocketHandler);
+		WebSocketHandler decoratedWebSocketHandler = decorateWebSocketHandler(wampWebSocketHandler);
 		for (WampConfigurer wc : this.configurers) {
 			if (wc instanceof WampReactiveConfigurer) {
 				decoratedWebSocketHandler = ((WampReactiveConfigurer) wc)
-						.decorateWebSocketHandler(decoratedWebSocketHandler);
+					.decorateWebSocketHandler(decoratedWebSocketHandler);
 			}
 		}
 		map.put(getWebSocketHandlerPath(), decoratedWebSocketHandler);
@@ -86,8 +84,7 @@ public class WampReactiveConfiguration extends WampConfiguration implements Impo
 		return new HandshakeWebSocketService();
 	}
 
-	protected void configureHandlerMapping(
-			@SuppressWarnings("unused") SimpleUrlHandlerMapping mapping) {
+	protected void configureHandlerMapping(@SuppressWarnings("unused") SimpleUrlHandlerMapping mapping) {
 		// nothing here
 	}
 

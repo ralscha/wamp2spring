@@ -27,6 +27,7 @@ import ch.rasc.wamp2spring.message.WampMessage;
  * as the value specified in the constructor
  */
 public class WampMessageMatcher implements MessageMatcher<Object> {
+
 	private final int code;
 
 	public WampMessageMatcher(int code) {

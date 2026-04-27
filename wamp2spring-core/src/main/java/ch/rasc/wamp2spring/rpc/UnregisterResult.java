@@ -22,6 +22,7 @@ import org.springframework.lang.Nullable;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 
 class UnregisterResult {
+
 	private final boolean success;
 
 	@Nullable
@@ -36,8 +37,7 @@ class UnregisterResult {
 		this(success, proc, null);
 	}
 
-	UnregisterResult(boolean success, @Nullable Procedure proc,
-			@Nullable List<ErrorMessage> invocationErrors) {
+	UnregisterResult(boolean success, @Nullable Procedure proc, @Nullable List<ErrorMessage> invocationErrors) {
 		this.success = success;
 		if (proc != null) {
 			this.procedure = proc.getProcedure();

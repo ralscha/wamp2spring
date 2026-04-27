@@ -40,24 +40,20 @@ import ch.rasc.wamp2spring.reactive.EnableReactiveWamp;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.WampClient;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
-		classes = RegisterTest.Config.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = RegisterTest.Config.class)
 @TestPropertySource(properties = "spring.main.web-application-type=reactive")
 public class RegisterTest extends BaseWampTest {
 
 	@Test
 	public void testCallRegisteredProcedure() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.MSGPACK);
-				WampClient wc2 = new WampClient(DataFormat.JSON)) {
+		try (WampClient wc1 = new WampClient(DataFormat.MSGPACK); WampClient wc2 = new WampClient(DataFormat.JSON)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
 			RegisterMessage registerMessage = new RegisterMessage(1, "divide");
-			RegisteredMessage registeredMessage = wc1
-					.sendMessageWithResult(registerMessage);
+			RegisteredMessage registeredMessage = wc1.sendMessageWithResult(registerMessage);
 
-			assertThat(registeredMessage.getRequestId())
-					.isEqualTo(registerMessage.getRequestId());
+			assertThat(registeredMessage.getRequestId()).isEqualTo(registerMessage.getRequestId());
 			long registrationId = registeredMessage.getRegistrationId();
 
 			CallMessage callMessage = new CallMessage(2, "divide", Arrays.asList(10, 5));
@@ -68,8 +64,8 @@ public class RegisterTest extends BaseWampTest {
 			assertThat(invocationMessage.getArgumentsKw()).isNull();
 			assertThat(invocationMessage.getArguments()).containsExactly(10, 5);
 
-			YieldMessage yieldMessage = new YieldMessage(invocationMessage.getRequestId(),
-					Collections.singletonList(2), null);
+			YieldMessage yieldMessage = new YieldMessage(invocationMessage.getRequestId(), Collections.singletonList(2),
+					null);
 			wc1.sendMessage(yieldMessage);
 
 			ResultMessage result = wc2.getWampMessage();
@@ -85,8 +81,7 @@ public class RegisterTest extends BaseWampTest {
 			ErrorMessage error = wc2.sendMessageWithResult(callMessage);
 			assertThat(error.getType()).isEqualTo(CallMessage.CODE);
 			assertThat(error.getRequestId()).isEqualTo(3);
-			assertThat(error.getError())
-					.isEqualTo(WampError.NO_SUCH_PROCEDURE.getExternalValue());
+			assertThat(error.getError()).isEqualTo(WampError.NO_SUCH_PROCEDURE.getExternalValue());
 			assertThat(error.getArguments()).isNull();
 			assertThat(error.getArgumentsKw()).isNull();
 		}
@@ -94,21 +89,17 @@ public class RegisterTest extends BaseWampTest {
 
 	@Test
 	public void testInvocationError() throws Exception {
-		try (WampClient wc1 = new WampClient(DataFormat.CBOR);
-				WampClient wc2 = new WampClient(DataFormat.JSON)) {
+		try (WampClient wc1 = new WampClient(DataFormat.CBOR); WampClient wc2 = new WampClient(DataFormat.JSON)) {
 			wc1.connect(wampEndpointUrl());
 			wc2.connect(wampEndpointUrl());
 
 			RegisterMessage registerMessage = new RegisterMessage(1, "multiply");
-			RegisteredMessage registeredMessage = wc1
-					.sendMessageWithResult(registerMessage);
+			RegisteredMessage registeredMessage = wc1.sendMessageWithResult(registerMessage);
 
-			assertThat(registeredMessage.getRequestId())
-					.isEqualTo(registerMessage.getRequestId());
+			assertThat(registeredMessage.getRequestId()).isEqualTo(registerMessage.getRequestId());
 			long registrationId = registeredMessage.getRegistrationId();
 
-			CallMessage callMessage = new CallMessage(22, "multiply",
-					Arrays.asList(10, 5));
+			CallMessage callMessage = new CallMessage(22, "multiply", Arrays.asList(10, 5));
 			wc2.sendMessage(callMessage);
 
 			InvocationMessage invocationMessage = wc1.getWampMessage();
@@ -116,8 +107,7 @@ public class RegisterTest extends BaseWampTest {
 			assertThat(invocationMessage.getArgumentsKw()).isNull();
 			assertThat(invocationMessage.getArguments()).containsExactly(10, 5);
 
-			ErrorMessage invocationError = new ErrorMessage(invocationMessage,
-					WampError.INVALID_ARGUMENT);
+			ErrorMessage invocationError = new ErrorMessage(invocationMessage, WampError.INVALID_ARGUMENT);
 			wc1.sendMessage(invocationError);
 
 			ErrorMessage callError = wc2.getWampMessage();
@@ -125,8 +115,7 @@ public class RegisterTest extends BaseWampTest {
 
 			assertThat(callError.getType()).isEqualTo(CallMessage.CODE);
 			assertThat(callError.getRequestId()).isEqualTo(22);
-			assertThat(callError.getError())
-					.isEqualTo(WampError.INVALID_ARGUMENT.getExternalValue());
+			assertThat(callError.getError()).isEqualTo(WampError.INVALID_ARGUMENT.getExternalValue());
 			assertThat(callError.getArguments()).isNull();
 			assertThat(callError.getArgumentsKw()).isNull();
 		}
@@ -136,7 +125,9 @@ public class RegisterTest extends BaseWampTest {
 	@EnableAutoConfiguration
 	@EnableReactiveWamp
 	static class Config {
+
 		// nothing here
+
 	}
 
 }

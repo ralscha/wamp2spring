@@ -20,9 +20,13 @@ import java.util.Map;
 public class SubscriptionDetail {
 
 	private final long id;
+
 	private final long createdTimeMillis;
+
 	private final String topic;
+
 	private final MatchPolicy matchPolicy;
+
 	private final Map<String, Object> options;
 
 	public SubscriptionDetail(Subscription subscription) {
@@ -55,9 +59,8 @@ public class SubscriptionDetail {
 
 	@Override
 	public String toString() {
-		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis="
-				+ this.createdTimeMillis + ", topic=" + this.topic + ", matchPolicy="
-				+ this.matchPolicy + ", options=" + this.options + "]";
+		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis + ", topic="
+				+ this.topic + ", matchPolicy=" + this.matchPolicy + ", options=" + this.options + "]";
 	}
 
 }

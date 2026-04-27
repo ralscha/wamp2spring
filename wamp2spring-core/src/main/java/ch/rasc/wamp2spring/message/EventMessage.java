@@ -54,9 +54,8 @@ public class EventMessage extends WampMessage {
 	@Nullable
 	private final Map<String, Object> argumentsKw;
 
-	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic,
-			@Nullable Number publisher, boolean retained,
-			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic, @Nullable Number publisher,
+			boolean retained, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.subscriptionId = subscriptionId;
 		this.publicationId = publicationId;
@@ -67,11 +66,10 @@ public class EventMessage extends WampMessage {
 		this.argumentsKw = argumentsKw;
 	}
 
-	public EventMessage(@Nullable String receiverWebSocketSessionId, long subscription,
-			long publication, @Nullable String topic, @Nullable Number publisher,
-			boolean retained, PublishMessage publishMessage) {
-		this(subscription, publication, topic, publisher, retained,
-				publishMessage.getArguments(), publishMessage.getArgumentsKw());
+	public EventMessage(@Nullable String receiverWebSocketSessionId, long subscription, long publication,
+			@Nullable String topic, @Nullable Number publisher, boolean retained, PublishMessage publishMessage) {
+		this(subscription, publication, topic, publisher, retained, publishMessage.getArguments(),
+				publishMessage.getArgumentsKw());
 
 		if (receiverWebSocketSessionId != null) {
 			setReceiverWebSocketSessionId(receiverWebSocketSessionId);
@@ -108,8 +106,7 @@ public class EventMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new EventMessage(subscription, publication, topic, publisher, retained,
-				arguments, argumentsKw);
+		return new EventMessage(subscription, publication, topic, publisher, retained, arguments, argumentsKw);
 	}
 
 	@Override
@@ -179,10 +176,9 @@ public class EventMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "EventMessage [subscriptionId=" + this.subscriptionId + ", publicationId="
-				+ this.publicationId + ", topic=" + this.topic + ", publisher="
-				+ this.publisher + ", retained=" + this.retained + ", arguments="
-				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+		return "EventMessage [subscriptionId=" + this.subscriptionId + ", publicationId=" + this.publicationId
+				+ ", topic=" + this.topic + ", publisher=" + this.publisher + ", retained=" + this.retained
+				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

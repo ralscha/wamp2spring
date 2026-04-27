@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.pubsub;
 import org.springframework.lang.Nullable;
 
 public enum MatchPolicy {
+
 	EXACT("exact"), PREFIX("prefix"), WILDCARD("wildcard");
 
 	private final String externalValue;
@@ -33,14 +34,14 @@ public enum MatchPolicy {
 	@Nullable
 	public static MatchPolicy fromExtValue(String externalValue) {
 		switch (externalValue) {
-		case "exact":
-			return EXACT;
-		case "prefix":
-			return PREFIX;
-		case "wildcard":
-			return WILDCARD;
-		default:
-			return null;
+			case "exact":
+				return EXACT;
+			case "prefix":
+				return PREFIX;
+			case "wildcard":
+				return WILDCARD;
+			default:
+				return null;
 		}
 	}
 

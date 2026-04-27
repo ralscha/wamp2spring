@@ -38,8 +38,7 @@ public class WampSessionIdMethodArgumentResolverTest {
 
 	@BeforeEach
 	public void setup() throws Exception {
-		Method testMethod = getClass().getDeclaredMethod("handleMessage", Long.TYPE,
-				String.class);
+		Method testMethod = getClass().getDeclaredMethod("handleMessage", Long.TYPE, String.class);
 		this.resolver = new WampSessionIdMethodArgumentResolver();
 		this.wampSessionIdParameter = new MethodParameter(testMethod, 0);
 		this.stringParameter = new MethodParameter(testMethod, 1);
@@ -55,9 +54,7 @@ public class WampSessionIdMethodArgumentResolverTest {
 	public void resolveArgumentTest() throws Exception {
 		CallMessage callMessage = new CallMessage(1, "call");
 		callMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 23L);
-		assertThat(
-				this.resolver.resolveArgument(this.wampSessionIdParameter, callMessage))
-						.isEqualTo(23L);
+		assertThat(this.resolver.resolveArgument(this.wampSessionIdParameter, callMessage)).isEqualTo(23L);
 	}
 
 	@SuppressWarnings({ "unused" })
