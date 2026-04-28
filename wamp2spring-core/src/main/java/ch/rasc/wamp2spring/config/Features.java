@@ -62,6 +62,9 @@ public class Features {
 		if (isEnabled(Feature.DEALER_SHARED_REGISTRATION)) {
 			dealerFeatures.add(Feature.DEALER_SHARED_REGISTRATION);
 		}
+		if (isEnabled(Feature.DEALER_CALL_REROUTE)) {
+			dealerFeatures.add(Feature.DEALER_CALL_REROUTE);
+		}
 		if (isEnabled(Feature.DEALER_REGISTRATION_META_API)) {
 			dealerFeatures.add(Feature.DEALER_REGISTRATION_META_API);
 		}
@@ -93,6 +96,9 @@ public class Features {
 		}
 		if (isEnabled(Feature.BROKER_EVENT_RETENTION)) {
 			brokerFeatures.add(Feature.BROKER_EVENT_RETENTION);
+		}
+		if (isEnabled(Feature.BROKER_EVENT_HISTORY)) {
+			brokerFeatures.add(Feature.BROKER_EVENT_HISTORY);
 		}
 		if (isEnabled(Feature.BROKER_SESSION_META_API)) {
 			brokerFeatures.add(Feature.BROKER_SESSION_META_API);

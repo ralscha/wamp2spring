@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 import ch.rasc.wamp2spring.util.CollectionHelper;
 
@@ -320,43 +320,43 @@ public class PublishMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.acknowledge) {
-			generator.writeBooleanField("acknowledge", this.acknowledge);
+			generator.writeBooleanProperty("acknowledge", this.acknowledge);
 		}
 
 		if (!this.excludeMe) {
-			generator.writeBooleanField("exclude_me", this.excludeMe);
+			generator.writeBooleanProperty("exclude_me", this.excludeMe);
 		}
 
 		if (this.discloseMe) {
-			generator.writeBooleanField("disclose_me", this.discloseMe);
+			generator.writeBooleanProperty("disclose_me", this.discloseMe);
 		}
 
 		if (this.retain) {
-			generator.writeBooleanField("retain", this.retain);
+			generator.writeBooleanProperty("retain", this.retain);
 		}
 
 		if (this.exclude != null) {
-			generator.writeObjectField("exclude", this.exclude);
+			generator.writePOJOProperty("exclude", this.exclude);
 		}
 
 		if (this.eligible != null) {
-			generator.writeObjectField("eligible", this.eligible);
+			generator.writePOJOProperty("eligible", this.eligible);
 		}
 
 		if (this.excludeAuthIds != null) {
-			generator.writeObjectField("exclude_authid", this.excludeAuthIds);
+			generator.writePOJOProperty("exclude_authid", this.excludeAuthIds);
 		}
 
 		if (this.eligibleAuthIds != null) {
-			generator.writeObjectField("eligible_authid", this.eligibleAuthIds);
+			generator.writePOJOProperty("eligible_authid", this.eligibleAuthIds);
 		}
 
 		if (this.excludeAuthRoles != null) {
-			generator.writeObjectField("exclude_authrole", this.excludeAuthRoles);
+			generator.writePOJOProperty("exclude_authrole", this.excludeAuthRoles);
 		}
 
 		if (this.eligibleAuthRoles != null) {
-			generator.writeObjectField("eligible_authrole", this.eligibleAuthRoles);
+			generator.writePOJOProperty("eligible_authrole", this.eligibleAuthRoles);
 		}
 
 		generator.writeEndObject();
@@ -368,12 +368,12 @@ public class PublishMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 

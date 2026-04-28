@@ -21,9 +21,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [RESULT, CALL.Request|id, Details|dict]
@@ -101,7 +101,7 @@ public class ResultMessage extends WampMessage {
 		generator.writeNumber(this.requestId);
 		generator.writeStartObject();
 		if (this.progress) {
-			generator.writeBooleanField("progress", true);
+			generator.writeBooleanProperty("progress", true);
 		}
 		generator.writeEndObject();
 
@@ -111,12 +111,12 @@ public class ResultMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 

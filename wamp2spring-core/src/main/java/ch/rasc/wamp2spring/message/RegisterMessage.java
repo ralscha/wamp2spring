@@ -18,8 +18,8 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.rpc.InvocationPolicy;
@@ -107,13 +107,13 @@ public class RegisterMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.discloseCaller) {
-			generator.writeBooleanField("disclose_caller", this.discloseCaller);
+			generator.writeBooleanProperty("disclose_caller", this.discloseCaller);
 		}
 		if (this.matchPolicy != MatchPolicy.EXACT) {
-			generator.writeStringField("match", this.matchPolicy.getExternalValue());
+			generator.writeStringProperty("match", this.matchPolicy.getExternalValue());
 		}
 		if (this.invokePolicy != InvocationPolicy.SINGLE) {
-			generator.writeStringField("invoke", this.invokePolicy.getExternalValue());
+			generator.writeStringProperty("invoke", this.invokePolicy.getExternalValue());
 		}
 		generator.writeEndObject();
 

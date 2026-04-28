@@ -38,11 +38,11 @@ import org.springframework.messaging.handler.invocation.MethodArgumentResolution
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.fasterxml.jackson.databind.type.TypeBindings;
-import com.fasterxml.jackson.databind.type.TypeFactory;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.type.CollectionType;
+import tools.jackson.databind.type.TypeBindings;
+import tools.jackson.databind.type.TypeFactory;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 

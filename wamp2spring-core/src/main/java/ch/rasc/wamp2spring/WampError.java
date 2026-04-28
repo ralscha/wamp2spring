@@ -32,6 +32,7 @@ public enum WampError {
 
 	// Advanced Profile - error URIs (spec §18)
 	NO_SUCH_SESSION("wamp.error.no_such_session"), CANCELED("wamp.error.canceled"), TIMEOUT("wamp.error.timeout"),
+	UNAVAILABLE("wamp.error.unavailable"), NO_AVAILABLE_CALLEE("wamp.error.no_available_callee"),
 	FEATURE_NOT_SUPPORTED("wamp.error.feature_not_supported"),
 
 	// Session close reasons - wamp.close.* namespace (spec §8 / §18)

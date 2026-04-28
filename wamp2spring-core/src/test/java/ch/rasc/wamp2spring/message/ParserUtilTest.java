@@ -24,56 +24,60 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.ObjectMapper;
 
 public class ParserUtilTest {
 
 	@SuppressWarnings("resource")
 	@Test
-	public void testReadArray() throws JsonParseException, IOException {
+	public void testReadArray() throws IOException {
 		ObjectMapper om = new ObjectMapper();
-		JsonParser jp = om.getFactory().createParser("\"test\"");
+		JsonParser jp = om.createParser("\"test\"");
 		jp.nextToken();
 		assertThat(ParserUtil.readArray(jp)).isNull();
 
-		jp = om.getFactory().createParser("[1,2,3]");
+		jp = om.createParser("[1,2,3]");
 		jp.nextToken();
 		assertThat(ParserUtil.readArray(jp)).containsExactly(1, 2, 3);
 
-		jp = om.getFactory().createParser("[[\"k\",\"l\",\"m\"],[\"a\",\"b\",\"c\"]]");
+		jp = om.createParser("[[\"k\",\"l\",\"m\"],[\"a\",\"b\",\"c\"]]");
 		jp.nextToken();
 		assertThat(ParserUtil.readArray(jp)).containsExactly(Arrays.asList("k", "l", "m"),
 				Arrays.asList("a", "b", "c"));
+
+		jp = om.createParser("[\"\\u0000AQID\"]");
+		jp.nextToken();
+		assertThat((byte[]) Objects.requireNonNull(ParserUtil.readArray(jp)).get(0)).containsExactly((byte) 1, (byte) 2,
+				(byte) 3);
 	}
 
 	@SuppressWarnings({ "resource", "unchecked" })
 	@Test
-	public void testReadObject() throws JsonParseException, IOException {
+	public void testReadObject() throws IOException {
 		ObjectMapper om = new ObjectMapper();
-		JsonParser jp = om.getFactory().createParser("\"test\"");
+		JsonParser jp = om.createParser("\"test\"");
 		jp.nextToken();
 		assertThat(ParserUtil.readArray(jp)).isNull();
 
-		jp = om.getFactory().createParser("{\"key1\":1,\"key2\":2}");
+		jp = om.createParser("{\"key1\":1,\"key2\":2}");
 		jp.nextToken();
 		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("key1", 1), MapEntry.entry("key2", 2));
 
-		jp = om.getFactory().createParser("{\"keyA\":1.1,\"keyB\":2.2}");
+		jp = om.createParser("{\"keyA\":1.1,\"keyB\":2.2}");
 		jp.nextToken();
 		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("keyA", 1.1), MapEntry.entry("keyB", 2.2));
 
-		jp = om.getFactory().createParser("{\"k1\":\"one\",\"k2\":\"two\"}");
+		jp = om.createParser("{\"k1\":\"one\",\"k2\":\"two\"}");
 		jp.nextToken();
 		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", "one"), MapEntry.entry("k2", "two"));
 
-		jp = om.getFactory().createParser("{\"k1\":true,\"k2\":false, \"k3\":null}");
+		jp = om.createParser("{\"k1\":true,\"k2\":false, \"k3\":null}");
 		jp.nextToken();
 		assertThat(ParserUtil.readObject(jp)).containsOnly(MapEntry.entry("k1", true), MapEntry.entry("k2", false),
 				MapEntry.entry("k3", null));
 
-		jp = om.getFactory()
+		jp = om
 			.createParser("{\"o1\":{\"a1\":1,\"a2\":2},\"o2\":{\"b1\":11,\"b2\":22},\"o3\":{\"c1\":111,\"c2\":222}}");
 		jp.nextToken();
 		Map<String, Object> m = Objects.requireNonNull(ParserUtil.readObject(jp));
@@ -82,6 +86,11 @@ public class ParserUtilTest {
 		assertThat((Map<String, Object>) m.get("o2")).containsOnly(MapEntry.entry("b1", 11), MapEntry.entry("b2", 22));
 		assertThat((Map<String, Object>) m.get("o3")).containsOnly(MapEntry.entry("c1", 111),
 				MapEntry.entry("c2", 222));
+
+		jp = om.createParser("{\"blob\":\"\\u0000BAUG\"}");
+		jp.nextToken();
+		assertThat((byte[]) Objects.requireNonNull(ParserUtil.readObject(jp)).get("blob")).containsExactly((byte) 4,
+				(byte) 5, (byte) 6);
 	}
 
 }

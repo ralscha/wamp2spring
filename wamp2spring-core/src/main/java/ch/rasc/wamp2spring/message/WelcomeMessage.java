@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [WELCOME, Session|id, Details|dict]
@@ -121,13 +121,13 @@ public class WelcomeMessage extends WampMessage {
 
 		generator.writeStartObject();
 
-		generator.writeObjectFieldStart("roles");
+		generator.writeObjectPropertyStart("roles");
 		for (WampRole wampRole : this.roles) {
-			generator.writeObjectFieldStart(wampRole.getRole());
+			generator.writeObjectPropertyStart(wampRole.getRole());
 			if (wampRole.hasFeatures()) {
-				generator.writeObjectFieldStart("features");
+				generator.writeObjectPropertyStart("features");
 				for (String feature : wampRole.getFeatures()) {
-					generator.writeBooleanField(feature, true);
+					generator.writeBooleanProperty(feature, true);
 				}
 				generator.writeEndObject();
 			}
@@ -136,22 +136,22 @@ public class WelcomeMessage extends WampMessage {
 		generator.writeEndObject();
 
 		if (this.realm != null) {
-			generator.writeStringField("realm", this.realm);
+			generator.writeStringProperty("realm", this.realm);
 		}
 		if (this.authId != null) {
-			generator.writeStringField("authid", this.authId);
+			generator.writeStringProperty("authid", this.authId);
 		}
 		if (this.authRole != null) {
-			generator.writeStringField("authrole", this.authRole);
+			generator.writeStringProperty("authrole", this.authRole);
 		}
 		if (this.authMethod != null) {
-			generator.writeStringField("authmethod", this.authMethod);
+			generator.writeStringProperty("authmethod", this.authMethod);
 		}
 		if (this.authProvider != null) {
-			generator.writeStringField("authprovider", this.authProvider);
+			generator.writeStringProperty("authprovider", this.authProvider);
 		}
 		if (this.authExtra != null && !this.authExtra.isEmpty()) {
-			generator.writeObjectField("authextra", this.authExtra);
+			generator.writePOJOProperty("authextra", this.authExtra);
 		}
 		generator.writeEndObject();
 	}

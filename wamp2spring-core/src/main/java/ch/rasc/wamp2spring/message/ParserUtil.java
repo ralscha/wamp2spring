@@ -23,8 +23,10 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+
+import ch.rasc.wamp2spring.util.WampJson;
 
 /**
  * JSON parsing helper methods
@@ -87,7 +89,7 @@ public class ParserUtil {
 	@Nullable private static Object getValue(JsonParser jp) throws IOException {
 		return switch (jp.currentToken()) {
 			case VALUE_FALSE, VALUE_TRUE -> jp.getBooleanValue();
-			case VALUE_STRING -> jp.getValueAsString();
+			case VALUE_STRING -> WampJson.decodeBinaryValue(jp.getValueAsString());
 			case VALUE_NUMBER_INT -> switch (jp.getNumberType()) {
 				case INT -> jp.getIntValue();
 				case LONG -> jp.getLongValue();

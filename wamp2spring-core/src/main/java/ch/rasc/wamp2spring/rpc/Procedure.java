@@ -50,6 +50,8 @@ public class Procedure {
 
 	private final boolean registrationRevocationSupported;
 
+	private final boolean callRerouteSupported;
+
 	private final InvocationPolicy invocationPolicy;
 
 	private final long registrationId;
@@ -78,6 +80,7 @@ public class Procedure {
 		this.progressiveCallResultsSupported = supportsProgressiveCallResults(registerMessage.getPeerRoles(),
 				this.callCancelingSupported);
 		this.registrationRevocationSupported = supportsRegistrationRevocation(registerMessage.getPeerRoles());
+		this.callRerouteSupported = supportsCallReroute(registerMessage.getPeerRoles());
 		this.invocationPolicy = registerMessage.getInvokePolicy();
 		this.registrationId = registrationId;
 		this.pendingInvocations = ConcurrentHashMap.newKeySet();
@@ -95,6 +98,10 @@ public class Procedure {
 
 	private static boolean supportsRegistrationRevocation(@Nullable List<WampRole> roles) {
 		return supportsFeature(roles, Feature.DEALER_REGISTRATION_REVOCATION);
+	}
+
+	private static boolean supportsCallReroute(@Nullable List<WampRole> roles) {
+		return supportsFeature(roles, Feature.DEALER_CALL_REROUTE);
 	}
 
 	private static boolean supportsProgressiveCallResults(@Nullable List<WampRole> roles,
@@ -172,6 +179,10 @@ public class Procedure {
 		return this.progressiveCallResultsSupported;
 	}
 
+	public boolean isCallRerouteSupported() {
+		return this.callRerouteSupported;
+	}
+
 	public InvocationPolicy getInvocationPolicy() {
 		return this.invocationPolicy;
 	}
@@ -191,7 +202,8 @@ public class Procedure {
 				+ this.invocationPolicy + ", discloseCaller=" + this.discloseCaller + ", callCancelingSupported="
 				+ this.callCancelingSupported + ", callTimeoutSupported=" + this.callTimeoutSupported
 				+ ", progressiveCallResultsSupported=" + this.progressiveCallResultsSupported
-				+ ", registrationRevocationSupported=" + this.registrationRevocationSupported + ", registrationId="
+				+ ", registrationRevocationSupported=" + this.registrationRevocationSupported
+				+ ", callRerouteSupported=" + this.callRerouteSupported + ", registrationId="
 				+ this.registrationId + ", pendingInvocations=" + this.pendingInvocations + "]";
 	}
 

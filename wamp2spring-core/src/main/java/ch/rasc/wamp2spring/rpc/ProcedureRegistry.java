@@ -180,6 +180,7 @@ public class ProcedureRegistry {
 			}
 			InvocationMessage invocationMessage = new InvocationMessage(procedure, callMessage);
 			CallProc callProc = new CallProc(callMessage, procedure);
+			callProc.markAttempted(procedure);
 			this.pendingInvocations.put(invocationMessage.getRequestId(), callProc);
 			if (callProc.callKey != null) {
 				this.pendingCalls.put(callProc.callKey, invocationMessage.getRequestId());
@@ -379,6 +380,40 @@ public class ProcedureRegistry {
 		return new PendingCall(invocationRequestId, callProc.callMessage, callProc.procedure);
 	}
 
+	@Nullable synchronized InvocationMessage rerouteInvocation(ErrorMessage errorMessage) {
+		CallProc callProc = this.pendingInvocations.remove(errorMessage.getRequestId());
+		if (callProc == null) {
+			return null;
+		}
+
+		callProc.procedure.removePendingInvocation(errorMessage.getRequestId());
+		ProcedureSlot procedureSlot = findProcedureSlot(callProc.callMessage.getRealm(), callProc.callMessage.getProcedure());
+		if (procedureSlot == null) {
+			if (callProc.callKey != null) {
+				this.pendingCalls.remove(callProc.callKey);
+			}
+			return null;
+		}
+
+		Procedure reroutedProcedure = procedureSlot.selectAlternativeProcedure(callProc.procedure,
+				callProc.attemptedCalleeSessionIds);
+		if (reroutedProcedure == null) {
+			if (callProc.callKey != null) {
+				this.pendingCalls.remove(callProc.callKey);
+			}
+			return null;
+		}
+
+		InvocationMessage invocationMessage = new InvocationMessage(reroutedProcedure, callProc.callMessage);
+		callProc.markAttempted(reroutedProcedure);
+		this.pendingInvocations.put(invocationMessage.getRequestId(), callProc);
+		if (callProc.callKey != null) {
+			this.pendingCalls.put(callProc.callKey, invocationMessage.getRequestId());
+		}
+		reroutedProcedure.addPendingInvocation(invocationMessage.getRequestId());
+		return invocationMessage;
+	}
+
 	@Nullable synchronized CallMessage removeInvocationCall(WampMessage yieldOrErrorMessage) {
 		long requestId;
 		if (yieldOrErrorMessage instanceof YieldMessage yieldMessage) {
@@ -407,9 +442,11 @@ public class ProcedureRegistry {
 
 		final CallMessage callMessage;
 
-		final Procedure procedure;
+		Procedure procedure;
 
 		@Nullable final CallKey callKey;
+
+		final java.util.Set<String> attemptedCalleeSessionIds = new java.util.HashSet<>();
 
 		public CallProc(CallMessage callMessage, Procedure procedure) {
 			this.callMessage = callMessage;
@@ -417,6 +454,11 @@ public class ProcedureRegistry {
 			String webSocketSessionId = callMessage.getWebSocketSessionId();
 			this.callKey = webSocketSessionId != null ? new CallKey(webSocketSessionId, callMessage.getRequestId())
 					: null;
+		}
+
+		void markAttempted(Procedure procedure) {
+			this.procedure = procedure;
+			this.attemptedCalleeSessionIds.add(procedure.getWebSocketSessionId());
 		}
 
 	}
@@ -586,6 +628,55 @@ public class ProcedureRegistry {
 				case SINGLE:
 				default:
 					return this.procedures.get(0);
+			}
+		}
+
+		@Nullable Procedure selectAlternativeProcedure(Procedure currentProcedure, java.util.Set<String> excludedCallees) {
+			if (this.procedures.size() <= 1) {
+				return null;
+			}
+
+			int currentIndex = this.procedures.indexOf(currentProcedure);
+			if (currentIndex < 0) {
+				return null;
+			}
+
+			switch (this.invocationPolicy) {
+				case ROUNDROBIN:
+					for (int offset = 1; offset < this.procedures.size(); offset++) {
+						Procedure candidate = this.procedures.get((currentIndex + offset) % this.procedures.size());
+						if (!excludedCallees.contains(candidate.getWebSocketSessionId())) {
+							return candidate;
+						}
+					}
+					return null;
+				case RANDOM:
+					List<Procedure> candidates = this.procedures.stream()
+							.filter(candidate -> !excludedCallees.contains(candidate.getWebSocketSessionId()))
+							.toList();
+					if (candidates.isEmpty()) {
+						return null;
+					}
+					return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+				case FIRST:
+					for (int i = currentIndex + 1; i < this.procedures.size(); i++) {
+						Procedure candidate = this.procedures.get(i);
+						if (!excludedCallees.contains(candidate.getWebSocketSessionId())) {
+							return candidate;
+						}
+					}
+					return null;
+				case LAST:
+					for (int i = currentIndex - 1; i >= 0; i--) {
+						Procedure candidate = this.procedures.get(i);
+						if (!excludedCallees.contains(candidate.getWebSocketSessionId())) {
+							return candidate;
+						}
+					}
+					return null;
+				case SINGLE:
+				default:
+					return null;
 			}
 		}
 

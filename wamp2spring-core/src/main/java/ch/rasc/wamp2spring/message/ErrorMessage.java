@@ -21,9 +21,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 import ch.rasc.wamp2spring.WampError;
 
@@ -155,12 +155,12 @@ public class ErrorMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 

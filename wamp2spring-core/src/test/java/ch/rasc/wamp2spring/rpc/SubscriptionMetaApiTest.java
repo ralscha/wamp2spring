@@ -40,6 +40,7 @@ import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
+import ch.rasc.wamp2spring.pubsub.MemoryEventStore;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
@@ -50,12 +51,13 @@ public class SubscriptionMetaApiTest {
 	@SuppressWarnings("unchecked")
 	public void exposesSubscriptionMetaProcedures() throws WampException {
 		SubscriptionRegistry subscriptionRegistry = new SubscriptionRegistry();
+		MemoryEventStore eventStore = new MemoryEventStore();
 		long ordersExact = subscribe(subscriptionRegistry, 1L, 101L, "ws-1", "com.myapp.orders", MatchPolicy.EXACT);
 		subscribe(subscriptionRegistry, 2L, 202L, "ws-2", "com.myapp.orders", MatchPolicy.EXACT);
 		long ordersPrefix = subscribe(subscriptionRegistry, 3L, 303L, "ws-3", "com.myapp.orders", MatchPolicy.PREFIX);
 
 		SubscriptionMetaApi api = new SubscriptionMetaApi(subscriptionRegistry,
-				new WampPublisher(Mockito.mock(MessageChannel.class)));
+				new WampPublisher(Mockito.mock(MessageChannel.class)), eventStore);
 
 		WampResult listResult = api.list();
 		WampResult lookupResult = api.lookup(new CallMessage(10L, SubscriptionMetaApi.LOOKUP,
@@ -89,6 +91,12 @@ public class SubscriptionMetaApiTest {
 			.isInstanceOf(WampException.class)
 			.extracting(ex -> ((WampException) ex).getUri())
 			.isEqualTo(WampError.NO_SUCH_SUBSCRIPTION.getExternalValue());
+
+		assertThatThrownBy(() -> api
+			.lookup(new CallMessage(16L, SubscriptionMetaApi.LOOKUP, List.of("topic with space", Map.of()))))
+			.isInstanceOf(WampException.class)
+			.extracting(ex -> ((WampException) ex).getUri())
+			.isEqualTo(WampError.INVALID_URI.getExternalValue());
 	}
 
 	@Test
@@ -104,7 +112,8 @@ public class SubscriptionMetaApiTest {
 		assertThat(detail).isNotNull();
 		SubscriptionDetail requiredDetail = Objects.requireNonNull(detail);
 
-		SubscriptionMetaApi api = new SubscriptionMetaApi(subscriptionRegistry, new WampPublisher(brokerChannel));
+		SubscriptionMetaApi api = new SubscriptionMetaApi(subscriptionRegistry, new WampPublisher(brokerChannel),
+				new MemoryEventStore());
 		api.onSubscriptionCreated(new WampSubscriptionCreatedEvent(subscribeMessage, requiredDetail));
 		api.onSubscriptionSubscribed(new WampSubscriptionSubscribedEvent(subscribeMessage, requiredDetail));
 
@@ -126,6 +135,55 @@ public class SubscriptionMetaApiTest {
 		assertThat(publishedMessages.get(1).getArguments()).containsExactly(101L, subscriptionId);
 		assertThat(publishedMessages.get(2).getArguments()).containsExactly(101L, subscriptionId);
 		assertThat(publishedMessages.get(3).getArguments()).containsExactly(101L, subscriptionId);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void returnsSubscriptionEventHistory() throws WampException {
+		SubscriptionRegistry subscriptionRegistry = new SubscriptionRegistry();
+		MemoryEventStore eventStore = new MemoryEventStore();
+		long ordersPrefix = subscribe(subscriptionRegistry, 3L, 303L, "ws-3", "com.myapp.orders", MatchPolicy.PREFIX);
+
+		PublishMessage first = PublishMessage.builder(10L, "com.myapp.orders.us.created")
+			.discloseMe()
+			.addArgument("created")
+			.build();
+		first.setHeader(WampMessageHeader.WAMP_SESSION_ID, 77L);
+		eventStore.storeHistoryEvent(ordersPrefix, 100L, 1_700_000_000_000L, first);
+
+		PublishMessage second = PublishMessage.builder(11L, "com.myapp.orders.eu.created")
+			.eligibleAuthRoles(List.of("ADMIN"))
+			.addArgument("eu")
+			.build();
+		eventStore.storeHistoryEvent(ordersPrefix, 101L, 1_700_000_001_000L, second);
+
+		PublishMessage third = PublishMessage.builder(12L, "com.myapp.orders.us.cancelled")
+			.addEligible(999L)
+			.addArgument("cancelled")
+			.build();
+		eventStore.storeHistoryEvent(ordersPrefix, 102L, 1_700_000_002_000L, third);
+
+		SubscriptionMetaApi api = new SubscriptionMetaApi(subscriptionRegistry,
+				new WampPublisher(Mockito.mock(MessageChannel.class)), eventStore);
+		CallMessage callMessage = new CallMessage(17L, SubscriptionMetaApi.GET_EVENTS, List.of(ordersPrefix),
+				Map.of("from_publication", 100L, "until_publication", 101L, "topic", "com.myapp.orders.us.created"),
+				false);
+		callMessage.setHeader(WampMessageHeader.PRINCIPAL, new TestPrincipal("alice", "ROLE_ADMIN"));
+
+		WampResult result = api.getEvents(callMessage);
+		List<Map<String, Object>> events = (List<Map<String, Object>>) Objects.requireNonNull(result.getResults())
+			.get(0);
+		assertThat(events).hasSize(1);
+
+		Map<String, Object> event = events.get(0);
+		assertThat(event.get("subscription")).isEqualTo(ordersPrefix);
+		assertThat(event.get("publication")).isEqualTo(100L);
+		assertThat(event.get("timestamp")).isEqualTo("2023-11-14T22:13:20Z");
+		assertThat((List<Object>) event.get("args")).containsExactly("created");
+
+		Map<String, Object> details = (Map<String, Object>) event.get("details");
+		assertThat(details).containsEntry("topic", "com.myapp.orders.us.created");
+		assertThat(details).containsEntry("publisher", 77L);
 	}
 
 	private static long subscribe(SubscriptionRegistry subscriptionRegistry, long requestId, long wampSessionId,
@@ -167,6 +225,44 @@ public class SubscriptionMetaApiTest {
 		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
 		message.setHeader(WampMessageHeader.WAMP_SESSION_ID, wampSessionId);
 		return message;
+	}
+
+	@SuppressWarnings({ "UnusedMethod", "EffectivelyPrivate" })
+	private static final class TestPrincipal implements java.security.Principal {
+
+		private final String name;
+
+		private final List<TestAuthority> authorities;
+
+		private TestPrincipal(String name, String... authorities) {
+			this.name = name;
+			this.authorities = java.util.Arrays.stream(authorities).map(TestAuthority::new).toList();
+		}
+
+		@Override
+		public String getName() {
+			return this.name;
+		}
+
+		List<TestAuthority> getAuthorities() {
+			return this.authorities;
+		}
+
+	}
+
+	@SuppressWarnings({ "UnusedMethod", "EffectivelyPrivate" })
+	private static final class TestAuthority {
+
+		private final String authority;
+
+		private TestAuthority(String authority) {
+			this.authority = authority;
+		}
+
+		String getAuthority() {
+			return this.authority;
+		}
+
 	}
 
 }

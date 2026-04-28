@@ -58,8 +58,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <spring.version>7.0.7</spring.version>
     <spring.boot.version>4.0.6</spring.boot.version>
-    <jackson.version>2.21.2</jackson.version>
-    <jackson-dataformat.version>2.21.2</jackson-dataformat.version>
+    <jackson.version>3.1.2</jackson.version>
     <junit.jupiter.version>6.0.3</junit.jupiter.version>
     <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
     <pmd.version>7.24.0</pmd.version>
@@ -67,6 +66,18 @@
     <spring-session.version>4.0.3</spring-session.version>
     <main.basedir>${project.basedir}</main.basedir>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>

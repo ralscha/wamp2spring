@@ -21,9 +21,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [EVENT, SUBSCRIBED.Subscription|id, PUBLISHED.Publication|id, Details|dict] <br>
@@ -48,6 +48,8 @@ public class EventMessage extends WampMessage {
 
 	@Nullable private final String publisherAuthRole;
 
+	@Nullable private final Number publisherTrustLevel;
+
 	private final boolean retained;
 
 	@Nullable private final List<Object> arguments;
@@ -56,12 +58,12 @@ public class EventMessage extends WampMessage {
 
 	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic, @Nullable Number publisher,
 			boolean retained, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
-		this(subscriptionId, publicationId, topic, publisher, null, null, retained, arguments, argumentsKw);
+		this(subscriptionId, publicationId, topic, publisher, null, null, null, retained, arguments, argumentsKw);
 	}
 
 	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic, @Nullable Number publisher,
-			@Nullable String publisherAuthId, @Nullable String publisherAuthRole, boolean retained,
-			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+			@Nullable String publisherAuthId, @Nullable String publisherAuthRole, @Nullable Number publisherTrustLevel,
+			boolean retained, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.subscriptionId = subscriptionId;
 		this.publicationId = publicationId;
@@ -69,6 +71,7 @@ public class EventMessage extends WampMessage {
 		this.publisher = publisher;
 		this.publisherAuthId = publisherAuthId;
 		this.publisherAuthRole = publisherAuthRole;
+		this.publisherTrustLevel = publisherTrustLevel;
 		this.retained = retained;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
@@ -78,7 +81,8 @@ public class EventMessage extends WampMessage {
 			@Nullable String topic, @Nullable Number publisher, boolean retained, PublishMessage publishMessage) {
 		this(subscription, publication, topic, publisher,
 				publishMessage.isDiscloseMe() ? publishMessage.getAuthId() : null,
-				publishMessage.isDiscloseMe() ? publishMessage.getAuthRole() : null, retained,
+				publishMessage.isDiscloseMe() ? publishMessage.getAuthRole() : null,
+				publishMessage.isDiscloseMe() ? publishMessage.getTrustLevel() : null, retained,
 				publishMessage.getArguments(), publishMessage.getArgumentsKw());
 
 		if (receiverWebSocketSessionId != null) {
@@ -98,6 +102,7 @@ public class EventMessage extends WampMessage {
 		Number publisher = null;
 		String publisherAuthId = null;
 		String publisherAuthRole = null;
+		Number publisherTrustLevel = null;
 		boolean retained = false;
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
@@ -105,6 +110,7 @@ public class EventMessage extends WampMessage {
 			publisher = (Number) details.get("publisher");
 			publisherAuthId = (String) details.get("publisher_authid");
 			publisherAuthRole = (String) details.get("publisher_authrole");
+			publisherTrustLevel = (Number) details.get("publisher_trustlevel");
 			retained = (boolean) details.getOrDefault("retained", false);
 		}
 
@@ -121,7 +127,7 @@ public class EventMessage extends WampMessage {
 		}
 
 		return new EventMessage(subscription, publication, topic, publisher, publisherAuthId, publisherAuthRole,
-				retained, arguments, argumentsKw);
+				publisherTrustLevel, retained, arguments, argumentsKw);
 	}
 
 	@Override
@@ -133,19 +139,22 @@ public class EventMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.topic != null) {
-			generator.writeStringField("topic", this.topic);
+			generator.writeStringProperty("topic", this.topic);
 		}
 		if (publisher != null) {
-			generator.writeNumberField("publisher", publisher.longValue());
+			generator.writeNumberProperty("publisher", publisher.longValue());
 		}
 		if (this.publisherAuthId != null) {
-			generator.writeStringField("publisher_authid", this.publisherAuthId);
+			generator.writeStringProperty("publisher_authid", this.publisherAuthId);
 		}
 		if (this.publisherAuthRole != null) {
-			generator.writeStringField("publisher_authrole", this.publisherAuthRole);
+			generator.writeStringProperty("publisher_authrole", this.publisherAuthRole);
+		}
+		if (this.publisherTrustLevel != null) {
+			generator.writeNumberProperty("publisher_trustlevel", this.publisherTrustLevel.longValue());
 		}
 		if (this.retained) {
-			generator.writeBooleanField("retained", this.retained);
+			generator.writeBooleanProperty("retained", this.retained);
 		}
 		generator.writeEndObject();
 
@@ -155,12 +164,12 @@ public class EventMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 
@@ -188,6 +197,10 @@ public class EventMessage extends WampMessage {
 		return this.publisherAuthRole;
 	}
 
+	@Nullable public Number getPublisherTrustLevel() {
+		return this.publisherTrustLevel;
+	}
+
 	public boolean isRetained() {
 		return this.retained;
 	}
@@ -204,8 +217,9 @@ public class EventMessage extends WampMessage {
 	public String toString() {
 		return "EventMessage [subscriptionId=" + this.subscriptionId + ", publicationId=" + this.publicationId
 				+ ", topic=" + this.topic + ", publisher=" + this.publisher + ", publisherAuthId="
-				+ this.publisherAuthId + ", publisherAuthRole=" + this.publisherAuthRole + ", retained=" + this.retained
-				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+				+ this.publisherAuthId + ", publisherAuthRole=" + this.publisherAuthRole + ", publisherTrustLevel="
+				+ this.publisherTrustLevel + ", retained=" + this.retained + ", arguments=" + this.arguments
+				+ ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

@@ -20,8 +20,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [CANCEL, CALL.Request|id, Options|dict]
@@ -71,7 +71,7 @@ public class CancelMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.mode != null) {
-			generator.writeStringField("mode", this.mode);
+			generator.writeStringProperty("mode", this.mode);
 		}
 		generator.writeEndObject();
 	}

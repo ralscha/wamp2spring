@@ -25,26 +25,23 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 
-import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class SessionTestamentMetaApi {
 
 	static final String ADD_TESTAMENT = "wamp.session.add_testament";
 
 	static final String FLUSH_TESTAMENTS = "wamp.session.flush_testaments";
-
-	private static final Pattern URI_PATTERN = Pattern.compile("^([^\\s.#]+\\.)*([^\\s.#]+)$");
 
 	private final ConcurrentMap<Long, SessionTestaments> testaments = new ConcurrentHashMap<>();
 
@@ -292,9 +289,7 @@ public class SessionTestamentMetaApi {
 	}
 
 	private static void validateUri(String uri) throws WampException {
-		if (!URI_PATTERN.matcher(uri).matches()) {
-			throw new WampException.Builder().build(WampError.INVALID_URI.getExternalValue());
-		}
+		WampUriValidator.validatePublishTopic(uri);
 	}
 
 	private enum Scope {

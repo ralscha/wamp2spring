@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.config.DestinationMatch;
@@ -32,6 +33,8 @@ import ch.rasc.wamp2spring.message.PublishMessage;
 public class MemoryEventStore implements EventStore {
 
 	protected final Map<String, PublishMessage> eventRetention = new ConcurrentHashMap<>();
+
+	protected final Map<Long, CopyOnWriteArrayList<EventHistoryEntry>> eventHistory = new ConcurrentHashMap<>();
 
 	@Override
 	public void retain(PublishMessage publishMessage) {
@@ -60,6 +63,27 @@ public class MemoryEventStore implements EventStore {
 		}
 
 		return List.of();
+	}
+
+	@Override
+	public void storeHistoryEvent(long subscriptionId, long publicationId, long timestampMillis,
+			PublishMessage publishMessage) {
+		this.eventHistory.computeIfAbsent(subscriptionId, key -> new CopyOnWriteArrayList<>())
+			.add(new EventHistoryEntry(publicationId, timestampMillis, publishMessage));
+	}
+
+	@Override
+	public List<EventHistoryEntry> getHistory(long subscriptionId) {
+		List<EventHistoryEntry> entries = this.eventHistory.get(subscriptionId);
+		if (entries == null) {
+			return List.of();
+		}
+		return List.copyOf(entries);
+	}
+
+	@Override
+	public void deleteHistory(long subscriptionId) {
+		this.eventHistory.remove(subscriptionId);
 	}
 
 }

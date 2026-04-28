@@ -20,13 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Assertions;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -34,12 +34,10 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.cbor.CBORMapper;
+import tools.jackson.dataformat.smile.SmileMapper;
 
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
@@ -47,6 +45,8 @@ import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 import ch.rasc.wamp2spring.testsupport.BaseWampTest.DataFormat;
+import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.WampJson;
 
 public class WampClient implements AutoCloseable {
 
@@ -54,7 +54,9 @@ public class WampClient implements AutoCloseable {
 
 	private WebSocketSession webSocketSession;
 
-	private final JsonFactory jsonFactory;
+	private final ObjectMapper objectMapper;
+
+	private final DataFormat dataFormat;
 
 	private long wampSessionId;
 
@@ -63,15 +65,16 @@ public class WampClient implements AutoCloseable {
 	private final WebSocketHttpHeaders headers;
 
 	public WampClient(DataFormat dataFormat) {
+		this.dataFormat = dataFormat;
 		this.isBinary = dataFormat != DataFormat.JSON;
 		this.result = new CompletableFutureWebSocketHandler();
 		this.headers = new WebSocketHttpHeaders();
 
-		this.jsonFactory = switch (dataFormat) {
-			case CBOR -> new ObjectMapper(new CBORFactory()).getFactory();
-			case MSGPACK -> new ObjectMapper(new MessagePackFactory()).getFactory();
-			case JSON -> new MappingJsonFactory(new ObjectMapper());
-			case SMILE -> new ObjectMapper(new SmileFactory()).getFactory();
+		this.objectMapper = switch (dataFormat) {
+			case CBOR -> new CBORMapper();
+			case MSGPACK -> WampJson.createJsonObjectMapper();
+			case JSON -> WampJson.createJsonObjectMapper();
+			case SMILE -> new SmileMapper();
 		};
 		String protocol = switch (dataFormat) {
 			case CBOR -> WampSubProtocolHandler.CBOR_PROTOCOL;
@@ -102,18 +105,22 @@ public class WampClient implements AutoCloseable {
 
 	public void sendMessage(WampMessage msg) throws IOException {
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				JsonGenerator generator = this.jsonFactory.createGenerator(bos)) {
+				JsonGenerator generator = this.objectMapper.createGenerator(bos)) {
 			generator.writeStartArray();
 
 			msg.serialize(generator);
 			generator.writeEndArray();
 			generator.close();
+			byte[] payload = bos.toByteArray();
+			if (this.dataFormat == DataFormat.MSGPACK) {
+				payload = MessagePackCodec.fromJson(payload, this.objectMapper);
+			}
 
 			if (this.isBinary) {
-				this.webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
+				this.webSocketSession.sendMessage(new BinaryMessage(ByteBuffer.wrap(payload)));
 			}
 			else {
-				this.webSocketSession.sendMessage(new TextMessage(bos.toByteArray()));
+				this.webSocketSession.sendMessage(new TextMessage(payload));
 			}
 		}
 	}

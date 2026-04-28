@@ -89,6 +89,12 @@ public class RegistrationMetaApiTest {
 			.isInstanceOf(WampException.class)
 			.extracting(ex -> ((WampException) ex).getUri())
 			.isEqualTo(WampError.NO_SUCH_REGISTRATION.getExternalValue());
+
+		assertThatThrownBy(
+				() -> api.lookup(new CallMessage(16L, RegistrationMetaApi.LOOKUP, List.of("wamp.custom", Map.of()))))
+			.isInstanceOf(WampException.class)
+			.extracting(ex -> ((WampException) ex).getUri())
+			.isEqualTo(WampError.INVALID_URI.getExternalValue());
 	}
 
 	@Test

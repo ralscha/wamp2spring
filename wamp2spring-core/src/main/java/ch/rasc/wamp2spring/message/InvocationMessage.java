@@ -22,9 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.rpc.Procedure;
@@ -58,6 +58,8 @@ public class InvocationMessage extends WampMessage {
 
 	@Nullable private final String callerAuthRole;
 
+	@Nullable private final Number callerTrustLevel;
+
 	@Nullable private final Long timeout;
 
 	private final boolean receiveProgress;
@@ -66,19 +68,20 @@ public class InvocationMessage extends WampMessage {
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller, @Nullable Long timeout,
 			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
-		this(requestId, registrationId, caller, null, null, null, false, timeout, arguments, argumentsKw);
+		this(requestId, registrationId, caller, null, null, null, null, false, timeout, arguments, argumentsKw);
 	}
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller,
 			@Nullable String callerAuthId, @Nullable String callerAuthRole, @Nullable Long timeout,
 			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
-		this(requestId, registrationId, caller, null, callerAuthId, callerAuthRole, false, timeout, arguments,
+		this(requestId, registrationId, caller, null, callerAuthId, callerAuthRole, null, false, timeout, arguments,
 				argumentsKw);
 	}
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller, @Nullable String procedure,
-			@Nullable String callerAuthId, @Nullable String callerAuthRole, boolean receiveProgress,
-			@Nullable Long timeout, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+			@Nullable String callerAuthId, @Nullable String callerAuthRole, @Nullable Number callerTrustLevel,
+			boolean receiveProgress, @Nullable Long timeout, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.requestId = requestId;
 		this.registrationId = registrationId;
@@ -86,6 +89,7 @@ public class InvocationMessage extends WampMessage {
 		this.procedure = procedure;
 		this.callerAuthId = callerAuthId;
 		this.callerAuthRole = callerAuthRole;
+		this.callerTrustLevel = callerTrustLevel;
 		this.receiveProgress = receiveProgress;
 		this.timeout = timeout;
 		this.arguments = arguments;
@@ -97,6 +101,7 @@ public class InvocationMessage extends WampMessage {
 				getDisclosedCaller(procedure, callMessage),
 				procedure.getMatchPolicy() != MatchPolicy.EXACT ? callMessage.getProcedure() : null,
 				getDisclosedCallerAuthId(procedure, callMessage), getDisclosedCallerAuthRole(procedure, callMessage),
+				getDisclosedCallerTrustLevel(procedure, callMessage),
 				procedure.isProgressiveCallResultsSupported() && callMessage.isReceiveProgress(),
 				procedure.isCallTimeoutSupported() ? callMessage.getTimeout() : null, callMessage.getArguments(),
 				callMessage.getArgumentsKw());
@@ -115,6 +120,7 @@ public class InvocationMessage extends WampMessage {
 		String procedure = null;
 		String callerAuthId = null;
 		String callerAuthRole = null;
+		Number callerTrustLevel = null;
 		boolean receiveProgress = false;
 		Long timeout = null;
 		Map<String, Object> details = ParserUtil.readObject(jp);
@@ -123,6 +129,7 @@ public class InvocationMessage extends WampMessage {
 			procedure = (String) details.get("procedure");
 			callerAuthId = (String) details.get("caller_authid");
 			callerAuthRole = (String) details.get("caller_authrole");
+			callerTrustLevel = (Number) details.get("caller_trustlevel");
 			receiveProgress = (boolean) details.getOrDefault("receive_progress", false);
 			Object timeoutValue = details.get("timeout");
 			if (timeoutValue instanceof Number timeoutNumber) {
@@ -143,7 +150,7 @@ public class InvocationMessage extends WampMessage {
 		}
 
 		return new InvocationMessage(request, registration, caller, procedure, callerAuthId, callerAuthRole,
-				receiveProgress, timeout, arguments, argumentsKw);
+				callerTrustLevel, receiveProgress, timeout, arguments, argumentsKw);
 	}
 
 	@Override
@@ -154,23 +161,26 @@ public class InvocationMessage extends WampMessage {
 		generator.writeStartObject();
 		Number callerValue = this.caller;
 		if (callerValue != null) {
-			generator.writeFieldName("caller");
+			generator.writeName("caller");
 			generator.writeNumber(callerValue.longValue());
 		}
 		if (this.procedure != null) {
-			generator.writeStringField("procedure", this.procedure);
+			generator.writeStringProperty("procedure", this.procedure);
 		}
 		if (this.callerAuthId != null) {
-			generator.writeStringField("caller_authid", this.callerAuthId);
+			generator.writeStringProperty("caller_authid", this.callerAuthId);
 		}
 		if (this.callerAuthRole != null) {
-			generator.writeStringField("caller_authrole", this.callerAuthRole);
+			generator.writeStringProperty("caller_authrole", this.callerAuthRole);
+		}
+		if (this.callerTrustLevel != null) {
+			generator.writeNumberProperty("caller_trustlevel", this.callerTrustLevel.longValue());
 		}
 		if (this.receiveProgress) {
-			generator.writeBooleanField("receive_progress", true);
+			generator.writeBooleanProperty("receive_progress", true);
 		}
 		if (this.timeout != null) {
-			generator.writeNumberField("timeout", this.timeout);
+			generator.writeNumberProperty("timeout", this.timeout);
 		}
 		generator.writeEndObject();
 
@@ -180,12 +190,12 @@ public class InvocationMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 
@@ -221,6 +231,10 @@ public class InvocationMessage extends WampMessage {
 		return this.callerAuthRole;
 	}
 
+	@Nullable public Number getCallerTrustLevel() {
+		return this.callerTrustLevel;
+	}
+
 	@Nullable public Long getTimeout() {
 		return this.timeout;
 	}
@@ -234,8 +248,8 @@ public class InvocationMessage extends WampMessage {
 		return "InvocationMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId
 				+ ", arguments=" + this.arguments + ", caller=" + this.caller + ", procedure=" + this.procedure
 				+ ", callerAuthId=" + this.callerAuthId + ", callerAuthRole=" + this.callerAuthRole
-				+ ", receiveProgress=" + this.receiveProgress + ", timeout=" + this.timeout + ", argumentsKw="
-				+ this.argumentsKw + "]";
+				+ ", callerTrustLevel=" + this.callerTrustLevel + ", receiveProgress=" + this.receiveProgress
+				+ ", timeout=" + this.timeout + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 	@Nullable private static Number getDisclosedCaller(Procedure procedure, CallMessage callMessage) {
@@ -248,6 +262,10 @@ public class InvocationMessage extends WampMessage {
 
 	@Nullable private static String getDisclosedCallerAuthRole(Procedure procedure, CallMessage callMessage) {
 		return shouldDiscloseCaller(procedure, callMessage) ? callMessage.getAuthRole() : null;
+	}
+
+	@Nullable private static Number getDisclosedCallerTrustLevel(Procedure procedure, CallMessage callMessage) {
+		return shouldDiscloseCaller(procedure, callMessage) ? callMessage.getTrustLevel() : null;
 	}
 
 	private static boolean shouldDiscloseCaller(Procedure procedure, CallMessage callMessage) {

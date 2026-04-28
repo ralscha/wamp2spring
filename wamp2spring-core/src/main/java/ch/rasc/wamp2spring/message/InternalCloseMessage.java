@@ -17,7 +17,7 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class InternalCloseMessage extends WampMessage {
 

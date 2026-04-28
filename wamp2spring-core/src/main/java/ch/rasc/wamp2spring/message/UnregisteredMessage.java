@@ -20,9 +20,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [UNREGISTERED, UNREGISTER.Request|id]
@@ -86,10 +86,10 @@ public class UnregisteredMessage extends WampMessage {
 		if (this.registrationId != null || this.reason != null) {
 			generator.writeStartObject();
 			if (this.reason != null) {
-				generator.writeStringField("reason", this.reason);
+				generator.writeStringProperty("reason", this.reason);
 			}
 			if (this.registrationId != null) {
-				generator.writeNumberField("registration", this.registrationId);
+				generator.writeNumberProperty("registration", this.registrationId);
 			}
 			generator.writeEndObject();
 		}

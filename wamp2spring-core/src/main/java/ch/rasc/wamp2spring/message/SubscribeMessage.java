@@ -21,8 +21,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
@@ -109,10 +109,10 @@ public class SubscribeMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.matchPolicy != MatchPolicy.EXACT) {
-			generator.writeStringField("match", this.matchPolicy.getExternalValue());
+			generator.writeStringProperty("match", this.matchPolicy.getExternalValue());
 		}
 		if (this.getRetained) {
-			generator.writeBooleanField("get_retained", this.getRetained);
+			generator.writeBooleanProperty("get_retained", this.getRetained);
 		}
 		generator.writeEndObject();
 

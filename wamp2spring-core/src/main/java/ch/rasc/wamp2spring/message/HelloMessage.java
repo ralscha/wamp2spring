@@ -23,8 +23,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [HELLO, Realm|uri, Details|dict]
@@ -106,13 +106,13 @@ public class HelloMessage extends WampMessage {
 		generator.writeNumber(getCode());
 		generator.writeString(this.realm);
 		generator.writeStartObject();
-		generator.writeObjectFieldStart("roles");
+		generator.writeObjectPropertyStart("roles");
 		for (WampRole wampRole : this.roles) {
-			generator.writeObjectFieldStart(wampRole.getRole());
+			generator.writeObjectPropertyStart(wampRole.getRole());
 			if (wampRole.hasFeatures()) {
-				generator.writeObjectFieldStart("features");
+				generator.writeObjectPropertyStart("features");
 				for (String feature : wampRole.getFeatures()) {
-					generator.writeBooleanField(feature, true);
+					generator.writeBooleanProperty(feature, true);
 				}
 				generator.writeEndObject();
 			}
@@ -120,17 +120,17 @@ public class HelloMessage extends WampMessage {
 		}
 		generator.writeEndObject();
 		if (!this.authMethods.isEmpty()) {
-			generator.writeArrayFieldStart("authmethods");
+			generator.writeArrayPropertyStart("authmethods");
 			for (String authMethod : this.authMethods) {
 				generator.writeString(authMethod);
 			}
 			generator.writeEndArray();
 		}
 		if (this.authId != null) {
-			generator.writeStringField("authid", this.authId);
+			generator.writeStringProperty("authid", this.authId);
 		}
 		if (this.authExtra != null && !this.authExtra.isEmpty()) {
-			generator.writeObjectField("authextra", this.authExtra);
+			generator.writePOJOProperty("authextra", this.authExtra);
 		}
 		generator.writeEndObject();
 	}

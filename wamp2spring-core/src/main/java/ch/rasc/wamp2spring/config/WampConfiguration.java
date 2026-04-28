@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -35,10 +34,9 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.cbor.CBORMapper;
+import tools.jackson.dataformat.smile.SmileMapper;
 
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.pubsub.EventStore;
@@ -46,6 +44,7 @@ import ch.rasc.wamp2spring.pubsub.MemoryEventStore;
 import ch.rasc.wamp2spring.pubsub.PubSubMessageHandler;
 import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
 import ch.rasc.wamp2spring.rpc.ProcedureRegistry;
+import ch.rasc.wamp2spring.rpc.ReflectionMetaApi;
 import ch.rasc.wamp2spring.rpc.RegistrationMetaApi;
 import ch.rasc.wamp2spring.rpc.RpcMessageHandler;
 import ch.rasc.wamp2spring.rpc.SessionMetaApi;
@@ -53,6 +52,7 @@ import ch.rasc.wamp2spring.rpc.SessionRegistry;
 import ch.rasc.wamp2spring.rpc.SessionTestamentMetaApi;
 import ch.rasc.wamp2spring.rpc.SubscriptionMetaApi;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
+import ch.rasc.wamp2spring.util.WampJson;
 
 public class WampConfiguration {
 
@@ -95,23 +95,23 @@ public class WampConfiguration {
 	}
 
 	@Bean
-	public JsonFactory jsonJsonFactory() {
-		return new ObjectMapper().getFactory();
+	public ObjectMapper jsonJsonFactory() {
+		return WampJson.createJsonObjectMapper();
 	}
 
 	@Bean
-	public JsonFactory msgpackJsonFactory() {
-		return new ObjectMapper(new MessagePackFactory()).getFactory();
+	public ObjectMapper msgpackJsonFactory() {
+		return WampJson.createJsonObjectMapper();
 	}
 
 	@Bean
-	public JsonFactory cborJsonFactory() {
-		return new ObjectMapper(new CBORFactory()).getFactory();
+	public ObjectMapper cborJsonFactory() {
+		return new CBORMapper();
 	}
 
 	@Bean
-	public JsonFactory smileJsonFactory() {
-		return new ObjectMapper(new SmileFactory()).getFactory();
+	public ObjectMapper smileJsonFactory() {
+		return new SmileMapper();
 	}
 
 	protected String getWebSocketHandlerPath() {
@@ -244,7 +244,15 @@ public class WampConfiguration {
 	@Bean
 	public Object subscriptionMetaApi() {
 		if (this.features.isEnabled(Feature.BROKER) && this.features.isEnabled(Feature.BROKER_SUBSCRIPTION_META_API)) {
-			return new SubscriptionMetaApi(subscriptionRegistry(), wampEventPublisher());
+			return new SubscriptionMetaApi(subscriptionRegistry(), wampEventPublisher(), eventStore());
+		}
+		return new Object();
+	}
+
+	@Bean
+	public Object reflectionMetaApi() {
+		if (this.features.isEnabled(Feature.BROKER) || this.features.isEnabled(Feature.DEALER)) {
+			return new ReflectionMetaApi(procedureRegistry(), subscriptionRegistry());
 		}
 		return new Object();
 	}
@@ -258,7 +266,8 @@ public class WampConfiguration {
 			wc.addArgumentResolvers(argumentResolvers);
 		}
 
-		return new HandlerMethodService(conversionService(), argumentResolvers, new ObjectMapper(), applicationContext);
+		return new HandlerMethodService(conversionService(), argumentResolvers, WampJson.createJsonObjectMapper(),
+				applicationContext);
 	}
 
 	protected void addArgumentResolvers(

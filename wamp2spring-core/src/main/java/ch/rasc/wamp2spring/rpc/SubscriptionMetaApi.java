@@ -16,9 +16,11 @@
 package ch.rasc.wamp2spring.rpc;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +40,12 @@ import ch.rasc.wamp2spring.event.WampSubscriptionUnsubscribedEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
+import ch.rasc.wamp2spring.pubsub.EventHistoryEntry;
+import ch.rasc.wamp2spring.pubsub.EventStore;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
 import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class SubscriptionMetaApi {
 
@@ -55,6 +60,8 @@ public class SubscriptionMetaApi {
 	static final String LIST_SUBSCRIBERS = "wamp.subscription.list_subscribers";
 
 	static final String COUNT_SUBSCRIBERS = "wamp.subscription.count_subscribers";
+
+	static final String GET_EVENTS = "wamp.subscription.get_events";
 
 	static final String ON_CREATE = "wamp.subscription.on_create";
 
@@ -71,9 +78,13 @@ public class SubscriptionMetaApi {
 
 	private final WampPublisher wampPublisher;
 
-	public SubscriptionMetaApi(SubscriptionRegistry subscriptionRegistry, WampPublisher wampPublisher) {
+	private final EventStore eventStore;
+
+	public SubscriptionMetaApi(SubscriptionRegistry subscriptionRegistry, WampPublisher wampPublisher,
+			EventStore eventStore) {
 		this.subscriptionRegistry = subscriptionRegistry;
 		this.wampPublisher = wampPublisher;
+		this.eventStore = eventStore;
 	}
 
 	public WampResult list() {
@@ -95,16 +106,19 @@ public class SubscriptionMetaApi {
 	}
 
 	@WampProcedure(LOOKUP)
-	public WampResult lookup(CallMessage callMessage) {
-		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(callMessage.getRealm(),
-				stringArgument(callMessage, 0), matchPolicyOption(callMessage));
+	public WampResult lookup(CallMessage callMessage) throws WampException {
+		MatchPolicy matchPolicy = Objects.requireNonNullElse(matchPolicyOption(callMessage), MatchPolicy.EXACT);
+		String topic = stringArgument(callMessage, 0);
+		WampUriValidator.validateSubscriptionTopic(topic, matchPolicy);
+		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(callMessage.getRealm(), topic, matchPolicy);
 		return new WampResult().add(subscriptionId);
 	}
 
 	@WampProcedure(MATCH)
-	public WampResult match(CallMessage callMessage) {
-		return WampResult.create(this.subscriptionRegistry.getMatchSubscriptions(callMessage.getRealm(),
-				stringArgument(callMessage, 0)));
+	public WampResult match(CallMessage callMessage) throws WampException {
+		String topic = stringArgument(callMessage, 0);
+		WampUriValidator.validateSubscriptionTopic(topic, MatchPolicy.EXACT);
+		return WampResult.create(this.subscriptionRegistry.getMatchSubscriptions(callMessage.getRealm(), topic));
 	}
 
 	@WampProcedure(GET)
@@ -127,6 +141,19 @@ public class SubscriptionMetaApi {
 			throw noSuchSubscription();
 		}
 		return WampResult.create(subscriberCount);
+	}
+
+	@WampProcedure(GET_EVENTS)
+	public WampResult getEvents(CallMessage callMessage) throws WampException {
+		SubscriptionDetail detail = requireSubscription(callMessage, longArgument(callMessage, 0));
+		Map<String, Object> options = callMessage.getArgumentsKw() != null ? callMessage.getArgumentsKw() : Map.of();
+		List<EventHistoryEntry> history = this.eventStore.getHistory(detail.getId());
+		List<EventHistoryEntry> filteredHistory = filterHistory(history, detail, callMessage, options);
+		List<Map<String, Object>> eventResults = new ArrayList<>(filteredHistory.size());
+		for (EventHistoryEntry historyEntry : filteredHistory) {
+			eventResults.add(toEventHistory(detail, historyEntry));
+		}
+		return WampResult.create(eventResults);
 	}
 
 	@EventListener
@@ -206,6 +233,226 @@ public class SubscriptionMetaApi {
 			throw new IllegalArgumentException("missing call argument");
 		}
 		return arguments.get(index);
+	}
+
+	private static List<EventHistoryEntry> filterHistory(List<EventHistoryEntry> history, SubscriptionDetail detail,
+			CallMessage callMessage, Map<String, Object> options) throws WampException {
+		if (history.isEmpty()) {
+			return List.of();
+		}
+
+		String requestedTopic = optionalString(options.get("topic"));
+		if (requestedTopic != null) {
+			WampUriValidator.validatePublishTopic(requestedTopic);
+		}
+
+		int startIndex = 0;
+		int endIndex = history.size() - 1;
+
+		Long fromPublication = optionalLong(options.get("from_publication"));
+		if (fromPublication != null) {
+			Integer index = publicationIndex(history, fromPublication);
+			if (index == null) {
+				return List.of();
+			}
+			startIndex = Math.max(startIndex, index);
+		}
+
+		Long afterPublication = optionalLong(options.get("after_publication"));
+		if (afterPublication != null) {
+			Integer index = publicationIndex(history, afterPublication);
+			if (index == null) {
+				return List.of();
+			}
+			startIndex = Math.max(startIndex, index + 1);
+		}
+
+		Long beforePublication = optionalLong(options.get("before_publication"));
+		if (beforePublication != null) {
+			Integer index = publicationIndex(history, beforePublication);
+			if (index == null) {
+				return List.of();
+			}
+			endIndex = Math.min(endIndex, index - 1);
+		}
+
+		Long untilPublication = optionalLong(options.get("until_publication"));
+		if (untilPublication != null) {
+			Integer index = publicationIndex(history, untilPublication);
+			if (index == null) {
+				return List.of();
+			}
+			endIndex = Math.min(endIndex, index);
+		}
+
+		if (startIndex > endIndex) {
+			return List.of();
+		}
+
+		Instant fromTime = optionalInstant(options.get("from_time"));
+		Instant afterTime = optionalInstant(options.get("after_time"));
+		Instant beforeTime = optionalInstant(options.get("before_time"));
+		Instant untilTime = optionalInstant(options.get("until_time"));
+		boolean reverse = optionalBoolean(options.get("reverse"));
+		Integer limit = optionalInteger(options.get("limit"));
+
+		List<EventHistoryEntry> events = new ArrayList<>();
+		for (int i = startIndex; i <= endIndex; i++) {
+			EventHistoryEntry historyEntry = history.get(i);
+			if (matchesEventHistory(historyEntry, detail, callMessage, requestedTopic, fromTime, afterTime, beforeTime,
+					untilTime)) {
+				events.add(historyEntry);
+			}
+		}
+
+		if (reverse) {
+			Collections.reverse(events);
+		}
+
+		if (limit != null && limit < events.size()) {
+			return List.copyOf(events.subList(0, limit));
+		}
+
+		return List.copyOf(events);
+	}
+
+	private static boolean matchesEventHistory(EventHistoryEntry historyEntry, SubscriptionDetail detail,
+			CallMessage callMessage, @Nullable String requestedTopic, @Nullable Instant fromTime,
+			@Nullable Instant afterTime, @Nullable Instant beforeTime, @Nullable Instant untilTime) {
+		PublishMessage publishMessage = historyEntry.getPublishMessage();
+		if (publishMessage.getEligible() != null || publishMessage.getExclude() != null) {
+			return false;
+		}
+
+		String authId = callMessage.getAuthId();
+		if (publishMessage.getEligibleAuthIds() != null
+				&& (authId == null || !publishMessage.getEligibleAuthIds().contains(authId))) {
+			return false;
+		}
+		if (publishMessage.getExcludeAuthIds() != null && authId != null
+				&& publishMessage.getExcludeAuthIds().contains(authId)) {
+			return false;
+		}
+
+		String authRole = callMessage.getAuthRole();
+		if (publishMessage.getEligibleAuthRoles() != null
+				&& (authRole == null || !publishMessage.getEligibleAuthRoles().contains(authRole))) {
+			return false;
+		}
+		if (publishMessage.getExcludeAuthRoles() != null && authRole != null
+				&& publishMessage.getExcludeAuthRoles().contains(authRole)) {
+			return false;
+		}
+
+		if (requestedTopic != null && !requestedTopic.equals(publishMessage.getTopic())) {
+			return false;
+		}
+
+		if (detail.getMatchPolicy() == MatchPolicy.EXACT && !detail.getTopic().equals(publishMessage.getTopic())) {
+			return false;
+		}
+
+		Instant eventInstant = Instant.ofEpochMilli(historyEntry.getTimestampMillis());
+		if (fromTime != null && eventInstant.isBefore(fromTime)) {
+			return false;
+		}
+		if (afterTime != null && !eventInstant.isAfter(afterTime)) {
+			return false;
+		}
+		if (beforeTime != null && !eventInstant.isBefore(beforeTime)) {
+			return false;
+		}
+		if (untilTime != null && eventInstant.isAfter(untilTime)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private static Map<String, Object> toEventHistory(SubscriptionDetail detail, EventHistoryEntry historyEntry) {
+		PublishMessage publishMessage = historyEntry.getPublishMessage();
+		Map<String, Object> event = new LinkedHashMap<>();
+		event.put("timestamp", CREATED_FORMATTER.format(Instant.ofEpochMilli(historyEntry.getTimestampMillis())));
+		event.put("subscription", detail.getId());
+		event.put("publication", historyEntry.getPublicationId());
+		event.put("details", toEventDetails(detail, publishMessage));
+		if (publishMessage.getArguments() != null) {
+			event.put("args", publishMessage.getArguments());
+		}
+		if (publishMessage.getArgumentsKw() != null) {
+			event.put("kwargs", publishMessage.getArgumentsKw());
+		}
+		return event;
+	}
+
+	private static Map<String, Object> toEventDetails(SubscriptionDetail detail, PublishMessage publishMessage) {
+		Map<String, Object> details = new LinkedHashMap<>();
+		if (detail.getMatchPolicy() != MatchPolicy.EXACT) {
+			details.put("topic", publishMessage.getTopic());
+		}
+		if (publishMessage.isDiscloseMe() && publishMessage.getWampSessionId() != null) {
+			details.put("publisher", publishMessage.getWampSessionId());
+			String publisherAuthId = publishMessage.getAuthId();
+			if (publisherAuthId != null) {
+				details.put("publisher_authid", publisherAuthId);
+			}
+			String publisherAuthRole = publishMessage.getAuthRole();
+			if (publisherAuthRole != null) {
+				details.put("publisher_authrole", publisherAuthRole);
+			}
+			Number trustLevel = publishMessage.getTrustLevel();
+			if (trustLevel != null) {
+				details.put("trustlevel", trustLevel);
+			}
+		}
+		return details;
+	}
+
+	@Nullable private static Integer publicationIndex(List<EventHistoryEntry> history, long publicationId) {
+		for (int i = 0; i < history.size(); i++) {
+			if (history.get(i).getPublicationId() == publicationId) {
+				return i;
+			}
+		}
+		return null;
+	}
+
+	@Nullable private static String optionalString(@Nullable Object value) {
+		return value != null ? value.toString() : null;
+	}
+
+	private static boolean optionalBoolean(@Nullable Object value) {
+		if (value instanceof Boolean booleanValue) {
+			return booleanValue;
+		}
+		return value != null && Boolean.parseBoolean(value.toString());
+	}
+
+	@Nullable private static Integer optionalInteger(@Nullable Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Number number) {
+			return number.intValue();
+		}
+		return Integer.parseInt(value.toString());
+	}
+
+	@Nullable private static Long optionalLong(@Nullable Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Number number) {
+			return number.longValue();
+		}
+		return Long.parseLong(value.toString());
+	}
+
+	@Nullable private static Instant optionalInstant(@Nullable Object value) {
+		if (value == null) {
+			return null;
+		}
+		return OffsetDateTime.parse(value.toString()).toInstant();
 	}
 
 	private static Map<String, Object> toMetaDetail(SubscriptionDetail detail) {

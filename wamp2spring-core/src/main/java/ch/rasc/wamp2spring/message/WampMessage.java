@@ -26,11 +26,10 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.ObjectMapper;
 
 public abstract class WampMessage implements Message<Object> {
 
@@ -135,6 +134,10 @@ public abstract class WampMessage implements Message<Object> {
 		return getPrincipal() == null ? "static" : "transport";
 	}
 
+	@Nullable public Number getTrustLevel() {
+		return getHeader(WampMessageHeader.TRUSTLEVEL);
+	}
+
 	/**
 	 * Returns the WAMP session id that this library assigns to each session.
 	 */
@@ -158,6 +161,7 @@ public abstract class WampMessage implements Message<Object> {
 		setHeader(WampMessageHeader.WAMP_PEER_ROLES, message.getPeerRoles());
 		setHeader(WampMessageHeader.AUTH_METHOD, message.getAuthMethod());
 		setHeader(WampMessageHeader.AUTH_PROVIDER, message.getAuthProvider());
+		setHeader(WampMessageHeader.TRUSTLEVEL, message.getTrustLevel());
 	}
 
 	protected void setReceiverWebSocketSessionId(String receiverWebSocketSessionId) {
@@ -221,10 +225,9 @@ public abstract class WampMessage implements Message<Object> {
 	}
 
 	@SuppressWarnings({ "unchecked", "TypeParameterUnusedInFormals" })
-	public static <T extends WampMessage> T deserialize(JsonFactory jsonFactory, byte[] json)
-			throws JsonParseException, IOException {
+	public static <T extends WampMessage> T deserialize(ObjectMapper objectMapper, byte[] json) throws IOException {
 
-		try (JsonParser jp = jsonFactory.createParser(json)) {
+		try (JsonParser jp = objectMapper.createParser(json)) {
 			if (jp.nextToken() != JsonToken.START_ARRAY) {
 				throw new IOException("Not a JSON array");
 			}

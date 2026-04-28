@@ -20,8 +20,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 import ch.rasc.wamp2spring.WampError;
 
@@ -68,7 +68,7 @@ public class GoodbyeMessage extends WampMessage {
 		generator.writeNumber(getCode());
 		generator.writeStartObject();
 		if (this.message != null) {
-			generator.writeStringField("message", this.message);
+			generator.writeStringProperty("message", this.message);
 		}
 		generator.writeEndObject();
 		generator.writeString(this.reason);

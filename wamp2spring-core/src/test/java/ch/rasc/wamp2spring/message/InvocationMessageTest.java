@@ -88,13 +88,14 @@ public class InvocationMessageTest extends BaseMessageTest {
 				Arrays.asList("Hello world"), null);
 		assertThat(invocationMessage.getCallerAuthId()).isEqualTo("caller1");
 		assertThat(invocationMessage.getCallerAuthRole()).isEqualTo("admin");
+		assertThat(invocationMessage.getCallerTrustLevel()).isNull();
 		assertThat(invocationMessage.getProcedure()).isNull();
 		json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo(
 				"[68,1,111,{\"caller\":17218,\"caller_authid\":\"caller1\",\"caller_authrole\":\"admin\"},[\"Hello world\"]]");
 
-		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", false,
-				null, Arrays.asList("Hello world"), null);
+		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", null,
+				false, null, Arrays.asList("Hello world"), null);
 		assertThat(invocationMessage.getProcedure()).isEqualTo("com.myapp.orders.create");
 		json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo(
@@ -105,12 +106,13 @@ public class InvocationMessageTest extends BaseMessageTest {
 		json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo("[68,1,111,{\"caller\":17218,\"timeout\":5000},[\"Hello world\"]]");
 
-		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", true,
-				null, Arrays.asList("Hello world"), null);
+		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", 9,
+				true, null, Arrays.asList("Hello world"), null);
 		assertThat(invocationMessage.isReceiveProgress()).isTrue();
+		assertThat(invocationMessage.getCallerTrustLevel()).isEqualTo(9);
 		json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo(
-				"[68,1,111,{\"caller\":17218,\"procedure\":\"com.myapp.orders.create\",\"caller_authid\":\"caller1\",\"caller_authrole\":\"admin\",\"receive_progress\":true},[\"Hello world\"]]");
+				"[68,1,111,{\"caller\":17218,\"procedure\":\"com.myapp.orders.create\",\"caller_authid\":\"caller1\",\"caller_authrole\":\"admin\",\"caller_trustlevel\":9,\"receive_progress\":true},[\"Hello world\"]]");
 	}
 
 	@Test
@@ -183,9 +185,14 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getProcedure()).isNull();
 		assertThat(invocationMessage.getCallerAuthId()).isEqualTo("caller1");
 		assertThat(invocationMessage.getCallerAuthRole()).isEqualTo("admin");
+		assertThat(invocationMessage.getCallerTrustLevel()).isNull();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getArguments()).containsExactly(23, 7);
 		assertThat(invocationMessage.getArgumentsKw()).isNull();
+
+		json = "[68, 6131533, 9823528, {\"caller\": 3335656, \"caller_trustlevel\": 5}, [23, 7]]";
+		invocationMessage = deserializeInvocationMessage(json);
+		assertThat(invocationMessage.getCallerTrustLevel()).isEqualTo(5);
 
 		json = "[68, 6131533, 9823528, {\"caller\": 3335656, \"procedure\": \"com.myapp.orders.create\"}, [23, 7]]";
 		invocationMessage = deserializeInvocationMessage(json);

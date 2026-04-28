@@ -36,7 +36,7 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolverComposite;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.config.PrincipalMethodArgumentResolver;
 import ch.rasc.wamp2spring.config.WampMessageMethodArgumentResolver;

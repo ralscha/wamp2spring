@@ -39,6 +39,7 @@ import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class RegistrationMetaApi {
 
@@ -93,16 +94,19 @@ public class RegistrationMetaApi {
 	}
 
 	@WampProcedure(LOOKUP)
-	public WampResult lookup(CallMessage callMessage) {
-		Long registrationId = this.procedureRegistry.lookupRegistration(callMessage.getRealm(),
-				stringArgument(callMessage, 0), matchPolicyOption(callMessage));
+	public WampResult lookup(CallMessage callMessage) throws WampException {
+		MatchPolicy matchPolicy = Objects.requireNonNullElse(matchPolicyOption(callMessage), MatchPolicy.EXACT);
+		String procedure = stringArgument(callMessage, 0);
+		WampUriValidator.validateProcedureRegistrationUri(procedure, matchPolicy);
+		Long registrationId = this.procedureRegistry.lookupRegistration(callMessage.getRealm(), procedure, matchPolicy);
 		return new WampResult().add(registrationId);
 	}
 
 	@WampProcedure(MATCH)
-	public WampResult match(CallMessage callMessage) {
-		Long registrationId = this.procedureRegistry.matchRegistration(callMessage.getRealm(),
-				stringArgument(callMessage, 0));
+	public WampResult match(CallMessage callMessage) throws WampException {
+		String procedure = stringArgument(callMessage, 0);
+		WampUriValidator.validateCallUri(procedure);
+		Long registrationId = this.procedureRegistry.matchRegistration(callMessage.getRealm(), procedure);
 		return new WampResult().add(registrationId);
 	}
 

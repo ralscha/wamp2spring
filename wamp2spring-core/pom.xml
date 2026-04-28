@@ -20,24 +20,6 @@
   <dependencies>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-cbor</artifactId>
-      <version>${jackson-dataformat.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-smile</artifactId>
-      <version>${jackson-dataformat.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
       <version>3.2.3</version>
@@ -45,7 +27,7 @@
 
     <dependency>
       <groupId>org.msgpack</groupId>
-      <artifactId>jackson-dataformat-msgpack</artifactId>
+      <artifactId>msgpack-core</artifactId>
       <version>0.9.11</version>
     </dependency>
 
@@ -59,6 +41,21 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-messaging</artifactId>
       <version>${spring.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>tools.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-cbor</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>tools.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-smile</artifactId>
     </dependency>
 
     <!-- TEST DEPENDENCIES -->

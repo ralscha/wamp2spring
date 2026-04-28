@@ -18,13 +18,13 @@ package ch.rasc.wamp2spring.testsupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Disabled;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -37,17 +37,17 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.cbor.CBORMapper;
+import tools.jackson.dataformat.smile.SmileMapper;
 
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
+import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.WampJson;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Disabled
@@ -59,13 +59,13 @@ public class BaseWampTest {
 
 	}
 
-	protected final JsonFactory jsonFactory = new MappingJsonFactory(new ObjectMapper());
+	protected final ObjectMapper jsonObjectMapper = WampJson.createJsonObjectMapper();
 
-	protected final JsonFactory msgpackFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
+	protected final ObjectMapper msgpackObjectMapper = WampJson.createJsonObjectMapper();
 
-	protected final JsonFactory cborFactory = new ObjectMapper(new CBORFactory()).getFactory();
+	protected final ObjectMapper cborObjectMapper = new CBORMapper();
 
-	protected final JsonFactory smileFactory = new ObjectMapper(new SmileFactory()).getFactory();
+	protected final ObjectMapper smileObjectMapper = new SmileMapper();
 
 	@LocalServerPort
 	public int actualPort;
@@ -102,31 +102,36 @@ public class BaseWampTest {
 	protected void sendMessage(DataFormat dataFormat, WebSocketSession webSocketSession, WampMessage msg)
 			throws IOException {
 
-		JsonFactory useFactory = this.jsonFactory;
-		if (dataFormat == DataFormat.MSGPACK) {
-			useFactory = this.msgpackFactory;
+		byte[] payload = serializeMessage(dataFormat, msg);
+		if (dataFormat == DataFormat.MSGPACK || dataFormat == DataFormat.CBOR || dataFormat == DataFormat.SMILE) {
+			webSocketSession.sendMessage(new BinaryMessage(ByteBuffer.wrap(payload)));
 		}
-		else if (dataFormat == DataFormat.CBOR) {
-			useFactory = this.cborFactory;
+		else {
+			webSocketSession.sendMessage(new TextMessage(payload));
+		}
+	}
+
+	protected byte[] serializeMessage(DataFormat dataFormat, WampMessage msg) throws IOException {
+		ObjectMapper objectMapper = this.jsonObjectMapper;
+		if (dataFormat == DataFormat.CBOR) {
+			objectMapper = this.cborObjectMapper;
 		}
 		else if (dataFormat == DataFormat.SMILE) {
-			useFactory = this.smileFactory;
+			objectMapper = this.smileObjectMapper;
 		}
 
 		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				JsonGenerator generator = useFactory.createGenerator(bos)) {
+				JsonGenerator generator = objectMapper.createGenerator(bos)) {
 			generator.writeStartArray();
-
 			msg.serialize(generator);
 			generator.writeEndArray();
 			generator.close();
 
-			if (dataFormat == DataFormat.MSGPACK || dataFormat == DataFormat.CBOR || dataFormat == DataFormat.SMILE) {
-				webSocketSession.sendMessage(new BinaryMessage(bos.toByteArray()));
+			byte[] payload = bos.toByteArray();
+			if (dataFormat == DataFormat.MSGPACK) {
+				return MessagePackCodec.fromJson(payload, this.msgpackObjectMapper);
 			}
-			else {
-				webSocketSession.sendMessage(new TextMessage(bos.toByteArray()));
-			}
+			return payload;
 		}
 	}
 

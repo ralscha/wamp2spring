@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.rpc;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,8 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationDecision;
+import ch.rasc.wamp2spring.authorization.WampAuthorizer;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
@@ -432,6 +435,75 @@ public class RpcMessageHandlerTest {
 	}
 
 	@Test
+	public void registerReservedProcedureUriIsRejected() {
+		RegisterMessage registerMessage = new RegisterMessage(10L, "wamp.custom.proc");
+		registerMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "callee-ws");
+		registerMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 200L);
+		this.rpcMessageHandler.handleMessage(registerMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.INVALID_URI.getExternalValue());
+	}
+
+	@Test
+	public void callInvalidProcedureUriIsRejected() {
+		CallMessage callMessage = new CallMessage(10L, "com.my app.test");
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, false));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.INVALID_URI.getExternalValue());
+	}
+
+	@Test
+	public void deniedCallReturnsAuthorizationError() {
+		Mockito.when(this.applicationContext.getBeansOfType(WampAuthorizer.class))
+			.thenReturn(Map.of("denyCall", context -> WampAuthorizationDecision.deny(WampError.NOT_AUTHORIZED)));
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.test");
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, false));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = (ErrorMessage) errorCaptor.getValue();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.NOT_AUTHORIZED.getExternalValue());
+	}
+
+	@Test
+	public void deniedRegisterReturnsAuthorizationError() {
+		Mockito.when(this.applicationContext.getBeansOfType(WampAuthorizer.class))
+			.thenReturn(
+					Map.of("denyRegister", context -> WampAuthorizationDecision.deny(WampError.AUTHORIZATION_FAILED)));
+
+		RegisterMessage registerMessage = new RegisterMessage(10L, "com.myapp.secure");
+		registerMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "callee-ws");
+		registerMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 200L);
+		this.rpcMessageHandler.handleMessage(registerMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = (ErrorMessage) errorCaptor.getValue();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.AUTHORIZATION_FAILED.getExternalValue());
+	}
+
+	@Test
 	public void callTimeoutCancelsPendingInvocationAndErrorsCaller() {
 		registerProcedure();
 		Mockito.clearInvocations(this.clientOutboundChannel);
@@ -506,6 +578,37 @@ public class RpcMessageHandlerTest {
 		assertThat(interruptMessages.get(0).getMode()).isEqualTo(CancelMessage.MODE_KILL);
 
 		ErrorMessage errorMessage = sentMessages.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getRequestId()).isEqualTo(10L);
+		assertThat(errorMessage.getError()).isEqualTo(WampError.CANCELED.getExternalValue());
+	}
+
+	@Test
+	public void cancelSkipCancelsPendingCallTimeout() throws Exception {
+		registerProcedure();
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.test", List.of("work"), null, false, false, 80L);
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, true));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		captureSingleInvocation(1);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CancelMessage cancelMessage = new CancelMessage(10L, CancelMessage.MODE_SKIP);
+		cancelMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		this.rpcMessageHandler.handleMessage(cancelMessage);
+
+		Thread.sleep(160L);
+
+		ArgumentCaptor<WampMessage> cancelCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(cancelCaptor.capture());
+		ErrorMessage errorMessage = cancelCaptor.getAllValues()
+			.stream()
 			.filter(ErrorMessage.class::isInstance)
 			.map(ErrorMessage.class::cast)
 			.findFirst()
@@ -628,6 +731,53 @@ public class RpcMessageHandlerTest {
 		assertThat(resultMessages).hasSize(2);
 		assertThat(resultMessages.get(0).isProgress()).isTrue();
 		assertThat(resultMessages.get(0).getArguments()).containsExactly("part");
+		assertThat(resultMessages.get(1).isProgress()).isFalse();
+		assertThat(resultMessages.get(1).getArguments()).containsExactly("done");
+	}
+
+	@Test
+	public void progressiveYieldRefreshesDealerTimeoutWindow() throws Exception {
+		registerProcedure("callee-ws", "com.myapp.test", MatchPolicy.EXACT, InvocationPolicy.SINGLE, true, false, false,
+				true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.test", List.of("work"), null, false, true, 120L);
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, true, true));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		InvocationMessage invocationMessage = captureSingleInvocation(1);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		Thread.sleep(80L);
+		YieldMessage partialYield = new YieldMessage(invocationMessage.getRequestId(), true, List.of("part"), null);
+		this.rpcMessageHandler.handleMessage(partialYield);
+
+		Thread.sleep(70L);
+
+		ArgumentCaptor<WampMessage> progressCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(progressCaptor.capture());
+		ResultMessage partialResult = progressCaptor.getAllValues()
+			.stream()
+			.filter(ResultMessage.class::isInstance)
+			.map(ResultMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(partialResult.isProgress()).isTrue();
+		assertThat(partialResult.getArguments()).containsExactly("part");
+
+		YieldMessage finalYield = new YieldMessage(invocationMessage.getRequestId(), List.of("done"), null);
+		this.rpcMessageHandler.handleMessage(finalYield);
+
+		ArgumentCaptor<WampMessage> resultCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(2)).send(resultCaptor.capture());
+		List<ResultMessage> resultMessages = resultCaptor.getAllValues()
+			.stream()
+			.filter(ResultMessage.class::isInstance)
+			.map(ResultMessage.class::cast)
+			.toList();
+		assertThat(resultMessages).hasSize(2);
+		assertThat(resultMessages.get(0).isProgress()).isTrue();
 		assertThat(resultMessages.get(1).isProgress()).isFalse();
 		assertThat(resultMessages.get(1).getArguments()).containsExactly("done");
 	}
@@ -791,6 +941,69 @@ public class RpcMessageHandlerTest {
 	}
 
 	@Test
+	public void unavailableErrorReroutesRoundRobinInvocationToNextCallee() {
+		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
+				false, false, false, true);
+		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
+				false, false, false, true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.worker");
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		InvocationMessage firstInvocation = captureSingleInvocation(1);
+		this.rpcMessageHandler.handleMessage(new ErrorMessage(firstInvocation, WampError.UNAVAILABLE));
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(2)).send(messageCaptor.capture());
+		List<InvocationMessage> invocations = messageCaptor.getAllValues()
+			.stream()
+			.filter(InvocationMessage.class::isInstance)
+			.map(InvocationMessage.class::cast)
+			.toList();
+		assertThat(invocations).hasSize(2);
+		assertThat(invocations.get(0).getWebSocketSessionId()).isEqualTo("callee-1");
+		assertThat(invocations.get(1).getWebSocketSessionId()).isEqualTo("callee-2");
+	}
+
+	@Test
+	public void unavailableErrorReturnsNoAvailableCalleeAfterAllSharedCalleesFail() {
+		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
+				false, false, false, true);
+		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
+				false, false, false, true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.worker");
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		InvocationMessage firstInvocation = captureSingleInvocation(1);
+		this.rpcMessageHandler.handleMessage(new ErrorMessage(firstInvocation, WampError.UNAVAILABLE));
+		ArgumentCaptor<WampMessage> rerouteCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(2)).send(rerouteCaptor.capture());
+		InvocationMessage secondInvocation = rerouteCaptor.getAllValues()
+			.stream()
+			.filter(InvocationMessage.class::isInstance)
+			.map(InvocationMessage.class::cast)
+			.skip(1)
+			.findFirst()
+			.orElseThrow();
+		this.rpcMessageHandler.handleMessage(new ErrorMessage(secondInvocation, WampError.UNAVAILABLE));
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(3)).send(messageCaptor.capture());
+		ErrorMessage errorMessage = messageCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.NO_AVAILABLE_CALLEE.getExternalValue());
+	}
+
+	@Test
 	public void exactRegistrationWinsOverPatternRegistration() {
 		registerProcedure("callee-prefix", "com.myapp.orders", MatchPolicy.PREFIX);
 		registerProcedure("callee-exact", "com.myapp.orders.create", MatchPolicy.EXACT);
@@ -909,11 +1122,20 @@ public class RpcMessageHandlerTest {
 	private void registerProcedure(String webSocketSessionId, String procedure, MatchPolicy matchPolicy,
 			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported) {
+		registerProcedure(webSocketSessionId, procedure, matchPolicy, invocationPolicy, callCancelingSupported,
+				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported, false);
+	}
+
+	private void registerProcedure(String webSocketSessionId, String procedure, MatchPolicy matchPolicy,
+			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
+			boolean callRerouteSupported) {
 		RegisterMessage registerMessage = new RegisterMessage(1L, procedure, false, matchPolicy, invocationPolicy);
 		registerMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, Math.abs((long) webSocketSessionId.hashCode()));
 		registerMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
 		registerMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, calleeRoles(callCancelingSupported,
-				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported));
+				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported,
+				callRerouteSupported));
 		this.rpcMessageHandler.handleMessage(registerMessage);
 	}
 
@@ -923,6 +1145,13 @@ public class RpcMessageHandlerTest {
 
 	private static List<WampRole> calleeRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported) {
+		return calleeRoles(callCancelingSupported, callTimeoutSupported, registrationRevocationSupported,
+				progressiveCallResultsSupported, false);
+	}
+
+	private static List<WampRole> calleeRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
+			boolean callRerouteSupported) {
 		WampRole callee = new WampRole("callee");
 		if (callCancelingSupported) {
 			callee.addFeature(Feature.DEALER_CALL_CANCELING.getExternalValue());
@@ -935,6 +1164,9 @@ public class RpcMessageHandlerTest {
 		}
 		if (progressiveCallResultsSupported) {
 			callee.addFeature(Feature.DEALER_PROGRESSIVE_CALL_RESULTS.getExternalValue());
+		}
+		if (callRerouteSupported) {
+			callee.addFeature(Feature.DEALER_CALL_REROUTE.getExternalValue());
 		}
 		return List.of(callee);
 	}

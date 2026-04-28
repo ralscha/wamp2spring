@@ -43,8 +43,8 @@ import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.auth.WampAuthentication;
@@ -55,6 +55,7 @@ import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampSessionEstablishedEvent;
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.AuthenticateMessage;
 import ch.rasc.wamp2spring.message.ChallengeMessage;
@@ -68,6 +69,8 @@ import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
+import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -98,13 +101,13 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 	private static final List<String> supportedProtocols = Arrays.asList(MSGPACK_PROTOCOL, JSON_PROTOCOL, CBOR_PROTOCOL,
 			SMILE_PROTOCOL);
 
-	private final JsonFactory jsonFactory;
+	private final ObjectMapper jsonObjectMapper;
 
-	private final JsonFactory msgpackFactory;
+	private final ObjectMapper msgpackObjectMapper;
 
-	private final JsonFactory cborFactory;
+	private final ObjectMapper cborObjectMapper;
 
-	private final JsonFactory smileFactory;
+	private final ObjectMapper smileObjectMapper;
 
 	private final List<WampRole> roles;
 
@@ -120,13 +123,14 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 
 	private final Set<WebSocketSession> webSocketSessions = ConcurrentHashMap.newKeySet();
 
-	public WampWebSocketHandler(JsonFactory jsonFactory, JsonFactory msgpackFactory, JsonFactory cborFactory,
-			JsonFactory smileFactory, MessageChannel clientOutboundChannel, MessageChannel clientInboundChannel,
-			Features features, List<WampAuthenticationProvider> authenticationProviders) {
-		this.jsonFactory = jsonFactory;
-		this.msgpackFactory = msgpackFactory;
-		this.cborFactory = cborFactory;
-		this.smileFactory = smileFactory;
+	public WampWebSocketHandler(ObjectMapper jsonObjectMapper, ObjectMapper msgpackObjectMapper,
+			ObjectMapper cborObjectMapper, ObjectMapper smileObjectMapper, MessageChannel clientOutboundChannel,
+			MessageChannel clientInboundChannel, Features features,
+			List<WampAuthenticationProvider> authenticationProviders) {
+		this.jsonObjectMapper = jsonObjectMapper;
+		this.msgpackObjectMapper = msgpackObjectMapper;
+		this.cborObjectMapper = cborObjectMapper;
+		this.smileObjectMapper = smileObjectMapper;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.clientInboundChannel = clientInboundChannel;
 		this.authenticationProviders = new LinkedHashMap<>();
@@ -223,7 +227,7 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 				byte[] bytes = new byte[inMsg.getPayload().readableByteCount()];
 				inMsg.getPayload().read(bytes);
 
-				wampMessage = WampMessage.deserialize(this.jsonFactory, bytes);
+				wampMessage = WampMessage.deserialize(this.jsonObjectMapper, bytes);
 			}
 			else if (inMsg.getType() == WebSocketMessage.Type.BINARY) {
 				ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
@@ -239,13 +243,14 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 					return;
 				}
 				if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory, bytes);
+					wampMessage = WampMessage.deserialize(this.msgpackObjectMapper,
+							MessagePackCodec.toJson(bytes, this.msgpackObjectMapper));
 				}
 				else if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory, bytes);
+					wampMessage = WampMessage.deserialize(this.smileObjectMapper, bytes);
 				}
 				else if (CBOR_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.cborFactory, bytes);
+					wampMessage = WampMessage.deserialize(this.cborObjectMapper, bytes);
 				}
 			}
 			else {
@@ -317,6 +322,15 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 
 		if (helloMessage.getWampSessionId() != null) {
 			handleProtocolViolation(session, "Received HELLO message after session was established.");
+			return;
+		}
+
+		try {
+			WampUriValidator.validateRealmUri(helloMessage.getRealm());
+		}
+		catch (WampException ex) {
+			handleAuthenticationFailure(session,
+					new WampAuthenticationException(WampError.INVALID_URI, "HELLO realm is not a valid URI."));
 			return;
 		}
 
@@ -445,31 +459,30 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 			return null;
 		}
 
-		JsonFactory useFactory = this.jsonFactory;
-
 		boolean isBinary = false;
 
 		String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
+		ObjectMapper objectMapper = this.jsonObjectMapper;
 		if (acceptedProtocol != null) {
 			if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
-				useFactory = this.msgpackFactory;
+				objectMapper = this.msgpackObjectMapper;
 			}
 			else if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
-				useFactory = this.smileFactory;
+				objectMapper = this.smileObjectMapper;
 			}
 			else if (CBOR_PROTOCOL.equals(acceptedProtocol)) {
 				isBinary = true;
-				useFactory = this.cborFactory;
+				objectMapper = this.cborObjectMapper;
 			}
 
-			try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					JsonGenerator generator = useFactory.createGenerator(bos)) {
-				generator.writeStartArray();
-				wampMessage.serialize(generator);
-				generator.writeEndArray();
-				generator.close();
+			try {
+				byte[] payload = serializeMessage(wampMessage, objectMapper);
+				if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
+					payload = MessagePackCodec.fromJson(payload, this.msgpackObjectMapper);
+				}
+				byte[] payloadToSend = payload;
 
 				if (wampMessage instanceof GoodbyeMessage || wampMessage instanceof AbortMessage) {
 					InternalCloseMessage cm = new InternalCloseMessage();
@@ -478,9 +491,9 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 				}
 
 				if (isBinary) {
-					return session.binaryMessage(factory -> factory.wrap(bos.toByteArray()));
+					return session.binaryMessage(factory -> factory.wrap(payloadToSend));
 				}
-				return session.textMessage(new String(bos.toByteArray(), StandardCharsets.UTF_8));
+				return session.textMessage(new String(payloadToSend, StandardCharsets.UTF_8));
 
 			}
 			catch (Throwable ex) {
@@ -501,6 +514,17 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 		}
 
 		return null;
+	}
+
+	private byte[] serializeMessage(WampMessage wampMessage, ObjectMapper objectMapper) throws IOException {
+		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				JsonGenerator generator = objectMapper.createGenerator(bos)) {
+			generator.writeStartArray();
+			wampMessage.serialize(generator);
+			generator.writeEndArray();
+			generator.close();
+			return bos.toByteArray();
+		}
 	}
 
 	private static void closeSession(WebSocketSession session, CloseStatus closeStatus) {

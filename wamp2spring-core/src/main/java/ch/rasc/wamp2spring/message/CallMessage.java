@@ -21,9 +21,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [CALL, Request|id, Options|dict, Procedure|uri]
@@ -128,14 +128,14 @@ public class CallMessage extends WampMessage {
 
 		generator.writeStartObject();
 		if (this.discloseMe) {
-			generator.writeBooleanField("disclose_me", this.discloseMe);
+			generator.writeBooleanProperty("disclose_me", this.discloseMe);
 		}
 		if (this.receiveProgress) {
-			generator.writeBooleanField("receive_progress", this.receiveProgress);
+			generator.writeBooleanProperty("receive_progress", this.receiveProgress);
 		}
 		Long timeoutValue = this.timeout;
 		if (timeoutValue != null) {
-			generator.writeFieldName("timeout");
+			generator.writeName("timeout");
 			generator.writeNumber(timeoutValue);
 		}
 		generator.writeEndObject();
@@ -148,12 +148,12 @@ public class CallMessage extends WampMessage {
 				generator.writeEndArray();
 			}
 			else {
-				generator.writeObject(this.arguments);
+				generator.writePOJO(this.arguments);
 			}
-			generator.writeObject(this.argumentsKw);
+			generator.writePOJO(this.argumentsKw);
 		}
 		else if (this.arguments != null) {
-			generator.writeObject(this.arguments);
+			generator.writePOJO(this.arguments);
 		}
 	}
 

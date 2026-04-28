@@ -22,23 +22,21 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ObjectMapper;
+
+import ch.rasc.wamp2spring.util.WampJson;
 
 public class BaseMessageTest {
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
-
-	private final JsonFactory jsonFactory = new MappingJsonFactory(this.objectMapper);
+	private final ObjectMapper objectMapper = WampJson.createJsonObjectMapper();
 
 	public ObjectMapper getObjectMapper() {
 		return this.objectMapper;
 	}
 
-	public JsonFactory getJsonFactory() {
-		return this.jsonFactory;
+	public ObjectMapper getJsonFactory() {
+		return this.objectMapper;
 	}
 
 	public Set<Long> toSet(Long... numbers) {

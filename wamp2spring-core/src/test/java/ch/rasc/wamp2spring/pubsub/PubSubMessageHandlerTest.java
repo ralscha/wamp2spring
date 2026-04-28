@@ -21,6 +21,7 @@ import java.security.Principal;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -31,7 +32,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 
+import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationDecision;
+import ch.rasc.wamp2spring.authorization.WampAuthorizer;
 import ch.rasc.wamp2spring.config.Features;
+import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.EventMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
@@ -97,6 +102,19 @@ public class PubSubMessageHandlerTest {
 	}
 
 	@Test
+	public void storesEventHistoryForMatchingSubscriptions() {
+		long subscriptionId = subscribe("ws-1", 1L, new TestPrincipal("alice", "ROLE_ADMIN"));
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		PublishMessage publishMessage = PublishMessage.builder(10L, "topic").addArgument("payload").build();
+		this.pubSubMessageHandler.handleMessage(publishMessage);
+
+		Mockito.verify(this.eventStore)
+			.storeHistoryEvent(ArgumentMatchers.eq(subscriptionId), ArgumentMatchers.anyLong(),
+					ArgumentMatchers.anyLong(), ArgumentMatchers.same(publishMessage));
+	}
+
+	@Test
 	public void eligibleAuthIdFiltersSubscribers() {
 		subscribe("ws-1", 1L, new TestPrincipal("alice", "ROLE_USER"));
 		subscribe("ws-2", 2L, new TestPrincipal("bob", "ROLE_ADMIN"));
@@ -148,6 +166,69 @@ public class PubSubMessageHandlerTest {
 		assertThat(unsubscribedMessage.getSubscriptionId()).isEqualTo(subscriptionId);
 		assertThat(unsubscribedMessage.getReason()).isEqualTo("no.longer.authorized");
 		assertThat(unsubscribedMessage.getWebSocketSessionId()).isEqualTo("ws-1");
+	}
+
+	@Test
+	public void subscribeInvalidTopicUriIsRejected() {
+		SubscribeMessage subscribeMessage = new SubscribeMessage(1L, "topic with space");
+		subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "ws-1");
+		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 1L);
+
+		this.pubSubMessageHandler.handleMessage(subscribeMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getValue()).isInstanceOf(ErrorMessage.class);
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.INVALID_URI.getExternalValue());
+	}
+
+	@Test
+	public void publishReservedTopicUriIsRejected() {
+		PublishMessage publishMessage = PublishMessage.builder(10L, "wamp.topic").addArgument("payload").build();
+		publishMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "pub-ws");
+
+		this.pubSubMessageHandler.handleMessage(publishMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getValue()).isInstanceOf(ErrorMessage.class);
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.INVALID_URI.getExternalValue());
+	}
+
+	@Test
+	public void deniedSubscribeReturnsAuthorizationError() {
+		Mockito.when(this.applicationContext.getBeansOfType(WampAuthorizer.class))
+			.thenReturn(Map.of("denySubscribe", context -> WampAuthorizationDecision.deny(WampError.NOT_AUTHORIZED)));
+
+		SubscribeMessage subscribeMessage = new SubscribeMessage(1L, "topic");
+		subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "ws-1");
+		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 1L);
+
+		this.pubSubMessageHandler.handleMessage(subscribeMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.NOT_AUTHORIZED.getExternalValue());
+	}
+
+	@Test
+	public void deniedPublishReturnsAuthorizationError() {
+		Mockito.when(this.applicationContext.getBeansOfType(WampAuthorizer.class))
+			.thenReturn(
+					Map.of("denyPublish", context -> WampAuthorizationDecision.deny(WampError.AUTHORIZATION_FAILED)));
+
+		PublishMessage publishMessage = PublishMessage.builder(10L, "topic").addArgument("payload").build();
+		publishMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "pub-ws");
+
+		this.pubSubMessageHandler.handleMessage(publishMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.AUTHORIZATION_FAILED.getExternalValue());
 	}
 
 	private long subscribe(String webSocketSessionId, long wampSessionId, Principal principal) {

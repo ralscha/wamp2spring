@@ -88,6 +88,13 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.isReceiveProgress()).isTrue();
 		json = serializeToJson(callMessage);
 		assertThat(json).isEqualTo("[48,1,{\"receive_progress\":true},\"call\",[\"Hello world\"]]");
+
+		Map<String, Object> binaryArgumentsKw = new HashMap<>();
+		binaryArgumentsKw.put("blob", new byte[] { 4, 5, 6 });
+		callMessage = new CallMessage(1, "call", java.util.List.of((Object) new byte[] { 1, 2, 3 }), binaryArgumentsKw,
+				false);
+		json = serializeToJson(callMessage);
+		assertThat(json).isEqualTo("[48,1,{},\"call\",[\"\\u0000AQID\"],{\"blob\":\"\\u0000BAUG\"}]");
 	}
 
 	@Test
@@ -163,6 +170,13 @@ public class CallMessageTest extends BaseMessageTest {
 		json = "[48, 7814135, {\"receive_progress\":true}, \"com.myapp.add2\", [23, 7]]";
 		callMessage = deserializeCallMessage(json);
 		assertThat(callMessage.isReceiveProgress()).isTrue();
+
+		json = "[48, 7814135, {}, \"com.myapp.binary\", [\"\\u0000AQID\"], {\"blob\":\"\\u0000BAUG\"}]";
+		callMessage = deserializeCallMessage(json);
+		assertThat((byte[]) Objects.requireNonNull(callMessage.getArguments()).get(0)).containsExactly((byte) 1,
+				(byte) 2, (byte) 3);
+		assertThat((byte[]) Objects.requireNonNull(callMessage.getArgumentsKw()).get("blob")).containsExactly((byte) 4,
+				(byte) 5, (byte) 6);
 	}
 
 	private CallMessage deserializeCallMessage(String json) throws IOException {

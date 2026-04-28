@@ -110,13 +110,14 @@ public class EventMessageTest extends BaseMessageTest {
 		json = serializeToJson(eventMessage);
 		assertThat(json).isEqualTo("[36,1,2,{\"topic\":\"topic\",\"publisher\":123},[42]]");
 
-		eventMessage = new EventMessage(1, 2, "topic", 123, "publisher1", "admin", false, Collections.singletonList(42),
-				null);
+		eventMessage = new EventMessage(1, 2, "topic", 123, "publisher1", "admin", 7, false,
+				Collections.singletonList(42), null);
 		assertThat(eventMessage.getPublisherAuthId()).isEqualTo("publisher1");
 		assertThat(eventMessage.getPublisherAuthRole()).isEqualTo("admin");
+		assertThat(eventMessage.getPublisherTrustLevel()).isEqualTo(7);
 		json = serializeToJson(eventMessage);
 		assertThat(json).isEqualTo(
-				"[36,1,2,{\"topic\":\"topic\",\"publisher\":123,\"publisher_authid\":\"publisher1\",\"publisher_authrole\":\"admin\"},[42]]");
+				"[36,1,2,{\"topic\":\"topic\",\"publisher\":123,\"publisher_authid\":\"publisher1\",\"publisher_authrole\":\"admin\",\"publisher_trustlevel\":7},[42]]");
 
 		eventMessage = new EventMessage(1, 2, null, null, true, Collections.singletonList(43), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
@@ -212,8 +213,13 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublisher()).isEqualTo(1234);
 		assertThat(eventMessage.getPublisherAuthId()).isEqualTo("publisher1");
 		assertThat(eventMessage.getPublisherAuthRole()).isEqualTo("admin");
+		assertThat(eventMessage.getPublisherTrustLevel()).isNull();
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
+
+		json = "[36, 5512315355, 4429313566, {\"topic\":\"the_topic\", \"publisher\":1234, \"publisher_trustlevel\":11}, [\"Hello, world!\"]]";
+		eventMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		assertThat(eventMessage.getPublisherTrustLevel()).isEqualTo(11);
 
 		json = "[36, 5512315355, 4429313566, {\"retained\":false}, [\"Not Retained\"]]";
 		eventMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));

@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.rpc;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,10 @@ import org.springframework.util.StringUtils;
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampProcedure;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationAction;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationContext;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationDecision;
+import ch.rasc.wamp2spring.authorization.WampAuthorizer;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
@@ -75,6 +80,7 @@ import ch.rasc.wamp2spring.message.YieldMessage;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class RpcMessageHandler implements MessageHandler, SmartLifecycle, InitializingBean, ApplicationContextAware {
 
@@ -173,6 +179,14 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 		}
 
 		if (message instanceof RegisterMessage registerMessage) {
+			if (!validateUri(() -> WampUriValidator.validateProcedureRegistrationUri(registerMessage.getProcedure(),
+					registerMessage.getMatchPolicy()), registerMessage)) {
+				return;
+			}
+			if (!authorize(registerMessage, WampAuthorizationAction.REGISTER, registerMessage.getProcedure(),
+					registerMessage.getMatchPolicy())) {
+				return;
+			}
 			if (registerMessage.getMatchPolicy() != MatchPolicy.EXACT
 					&& this.features.isDisabled(Feature.DEALER_PATTERN_BASED_REGISTRATION)) {
 				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
@@ -224,6 +238,12 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			}
 		}
 		else if (message instanceof CallMessage callMessage) {
+			if (!validateUri(() -> WampUriValidator.validateCallUri(callMessage.getProcedure()), callMessage)) {
+				return;
+			}
+			if (!authorize(callMessage, WampAuthorizationAction.CALL, callMessage.getProcedure(), MatchPolicy.EXACT)) {
+				return;
+			}
 
 			if (callMessage.isDiscloseMe() && this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 				sendMessageToClient(new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
@@ -417,6 +437,27 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 	private void handleErrorMessage(ErrorMessage errorMessage) {
 		cancelTimeoutTask(errorMessage.getRequestId());
+		if (isUnavailableInvocationError(errorMessage)) {
+			ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry.getPendingInvocation(errorMessage.getRequestId());
+			if (pendingCall != null && this.features.isEnabled(Feature.DEALER_CALL_REROUTE)
+					&& pendingCall.getProcedure().isCallRerouteSupported()) {
+				InvocationMessage reroutedInvocation = this.procedureRegistry.rerouteInvocation(errorMessage);
+				if (reroutedInvocation != null) {
+					try {
+						this.clientOutboundChannel.send(reroutedInvocation);
+						scheduleCallTimeout(pendingCall.getCallMessage(), reroutedInvocation);
+					}
+					catch (Throwable ex) {
+						this.procedureRegistry.removePendingInvocation(reroutedInvocation.getRequestId());
+						sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.NETWORK_FAILURE));
+					}
+				}
+				else {
+					sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.NO_AVAILABLE_CALLEE));
+				}
+				return;
+			}
+		}
 		CallMessage callMessage = this.procedureRegistry.removeInvocationCall(errorMessage);
 		if (callMessage != null) {
 			ErrorMessage calErrorMessage = new ErrorMessage(errorMessage, callMessage);
@@ -529,6 +570,52 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 		this.cancelOnTimeoutInvocations.clear();
 	}
 
+	private boolean validateUri(UriValidation validation, WampMessage message) {
+		try {
+			validation.validate();
+			return true;
+		}
+		catch (WampException ex) {
+			if (message instanceof RegisterMessage registerMessage) {
+				sendMessageToClient(new ErrorMessage(registerMessage, WampError.INVALID_URI));
+			}
+			else if (message instanceof CallMessage callMessage) {
+				sendMessageToClient(new ErrorMessage(callMessage, ex.getUri(), ex.getArguments(), ex.getArgumentsKw()));
+			}
+			return false;
+		}
+	}
+
+	private boolean authorize(WampMessage message, WampAuthorizationAction action, String uri,
+			MatchPolicy matchPolicy) {
+		for (WampAuthorizer authorizer : getAuthorizers()) {
+			WampAuthorizationDecision decision = authorizer
+				.authorize(new WampAuthorizationContext(action, message, uri, matchPolicy));
+			if (!decision.isGranted()) {
+				sendAuthorizationError(message, decision.getError());
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Collection<WampAuthorizer> getAuthorizers() {
+		if (this.applicationContext == null) {
+			return List.of();
+		}
+		Map<String, WampAuthorizer> beans = this.applicationContext.getBeansOfType(WampAuthorizer.class);
+		return beans != null ? beans.values() : List.of();
+	}
+
+	private void sendAuthorizationError(WampMessage message, WampError error) {
+		if (message instanceof RegisterMessage registerMessage) {
+			sendMessageToClient(new ErrorMessage(registerMessage, error));
+		}
+		else if (message instanceof CallMessage callMessage) {
+			sendMessageToClient(new ErrorMessage(callMessage, error));
+		}
+	}
+
 	private static boolean isAdvancedCancelMode(String mode) {
 		return CancelMessage.MODE_KILL.equals(mode) || CancelMessage.MODE_KILLNOWAIT.equals(mode);
 	}
@@ -536,6 +623,11 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 	private static boolean isSupportedCancelMode(String mode) {
 		return CancelMessage.MODE_SKIP.equals(mode) || CancelMessage.MODE_KILL.equals(mode)
 				|| CancelMessage.MODE_KILLNOWAIT.equals(mode);
+	}
+
+	private static boolean isUnavailableInvocationError(ErrorMessage errorMessage) {
+		return errorMessage.getType() == InvocationMessage.CODE
+				&& WampError.UNAVAILABLE.getExternalValue().equals(errorMessage.getError());
 	}
 
 	private static boolean callerSupportsFeature(WampMessage message, Feature feature) {
@@ -563,6 +655,13 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			thread.setDaemon(true);
 			return thread;
 		}
+
+	}
+
+	@FunctionalInterface
+	private interface UriValidation {
+
+		void validate() throws WampException;
 
 	}
 

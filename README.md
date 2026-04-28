@@ -4,9 +4,8 @@
 WAMP is a WebSocket subprotocol that provides two application messaging patterns: Remote Procedure Calls and Publish / Subscribe. 
 
 ## Implementation
-*wamp2spring* implements the Basic Profile, but it does not support multiple realms in one application. 
-Every connection, registration and subscription exists in the same realm and *wamp2spring* ignores the realm 
-parameter of the HELLO message.
+*wamp2spring* implements the Basic Profile with realm-aware routing. Connections, registrations, subscriptions,
+and meta APIs are scoped to the negotiated realm, and invalid HELLO realms are rejected during session establishment.
 
 Additionally *wamp2spring* implements a few features from the Advanced Profile:
 
@@ -27,6 +26,10 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 For Advanced RPC timeout handling, the dealer is the source of truth once a caller and the router negotiated `call_timeout`.
 If a callee also advertises timeout support, the dealer forwards the timeout value in `INVOCATION.Details.timeout`.
 If the callee does not advertise timeout support, the dealer still enforces the timeout and returns the appropriate timeout error to the caller.
+
+WAMP-level authorization can be extended with one or more Spring beans implementing `WampAuthorizer`.
+The dealer and broker consult these authorizers for `REGISTER`, `CALL`, `SUBSCRIBE`, and `PUBLISH` before routing,
+and authorizers can deny an operation with `wamp.error.not_authorized` or `wamp.error.authorization_failed`.
 
 **Dataformats**   
 *wamp2spring* supports JSON (wamp.2.json) and MessagePack (wamp.2.msgpack) required by the Basic Profile. In addition it

@@ -21,8 +21,8 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [CHALLENGE, AuthMethod|string, Extra|dict]
@@ -54,7 +54,7 @@ public class ChallengeMessage extends WampMessage {
 	public void serialize(JsonGenerator generator) throws IOException {
 		generator.writeNumber(getCode());
 		generator.writeString(this.authMethod);
-		generator.writeObject(this.extra);
+		generator.writePOJO(this.extra);
 	}
 
 	@Override

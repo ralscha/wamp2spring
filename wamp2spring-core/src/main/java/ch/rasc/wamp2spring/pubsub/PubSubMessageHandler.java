@@ -17,7 +17,9 @@ package ch.rasc.wamp2spring.pubsub;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -41,7 +43,12 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils.MethodFilter;
 
 import ch.rasc.wamp2spring.WampError;
+import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.annotation.WampListener;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationAction;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationContext;
+import ch.rasc.wamp2spring.authorization.WampAuthorizationDecision;
+import ch.rasc.wamp2spring.authorization.WampAuthorizer;
 import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
@@ -57,10 +64,12 @@ import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.SubscribedMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribedMessage;
+import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, InitializingBean, ApplicationContextAware {
 
@@ -157,6 +166,14 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		}
 
 		if (message instanceof SubscribeMessage subscribeMessage) {
+			if (!validateUri(() -> WampUriValidator.validateSubscriptionTopic(subscribeMessage.getTopic(),
+					subscribeMessage.getMatchPolicy()), subscribeMessage)) {
+				return;
+			}
+			if (!authorize(subscribeMessage, WampAuthorizationAction.SUBSCRIBE, subscribeMessage.getTopic(),
+					subscribeMessage.getMatchPolicy())) {
+				return;
+			}
 
 			if (this.features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
 					&& subscribeMessage.getMatchPolicy() != MatchPolicy.EXACT) {
@@ -186,6 +203,13 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 
 		}
 		else if (message instanceof PublishMessage publishMessage) {
+			if (!validateUri(() -> WampUriValidator.validatePublishTopic(publishMessage.getTopic()), publishMessage)) {
+				return;
+			}
+			if (!authorize(publishMessage, WampAuthorizationAction.PUBLISH, publishMessage.getTopic(),
+					MatchPolicy.EXACT)) {
+				return;
+			}
 			if (publishMessage.isDiscloseMe() && this.features.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
 				if (publishMessage.getWebSocketSessionId() != null) {
 					sendMessageToClient(new ErrorMessage(publishMessage, WampError.DISCLOSE_ME_DISALLOWED));
@@ -256,6 +280,52 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		}
 	}
 
+	private boolean validateUri(UriValidation validation, WampMessage message) {
+		try {
+			validation.validate();
+			return true;
+		}
+		catch (WampException ex) {
+			if (message instanceof SubscribeMessage subscribeMessage) {
+				sendMessageToClient(new ErrorMessage(subscribeMessage, WampError.INVALID_URI));
+			}
+			else if (message instanceof PublishMessage publishMessage) {
+				sendMessageToClient(new ErrorMessage(publishMessage, WampError.INVALID_URI));
+			}
+			return false;
+		}
+	}
+
+	private boolean authorize(WampMessage message, WampAuthorizationAction action, String uri,
+			MatchPolicy matchPolicy) {
+		for (WampAuthorizer authorizer : getAuthorizers()) {
+			WampAuthorizationDecision decision = authorizer
+				.authorize(new WampAuthorizationContext(action, message, uri, matchPolicy));
+			if (!decision.isGranted()) {
+				sendAuthorizationError(message, decision.getError());
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private Collection<WampAuthorizer> getAuthorizers() {
+		if (this.applicationContext == null) {
+			return List.of();
+		}
+		Map<String, WampAuthorizer> beans = this.applicationContext.getBeansOfType(WampAuthorizer.class);
+		return beans != null ? beans.values() : List.of();
+	}
+
+	private void sendAuthorizationError(WampMessage message, WampError error) {
+		if (message instanceof SubscribeMessage subscribeMessage) {
+			sendMessageToClient(new ErrorMessage(subscribeMessage, error));
+		}
+		else if (message instanceof PublishMessage publishMessage) {
+			sendMessageToClient(new ErrorMessage(publishMessage, error));
+		}
+	}
+
 	@EventListener
 	void handleDisconnectEvent(WampDisconnectEvent event) {
 		List<UnsubscribeResult> results = this.subscriptionRegistry
@@ -282,6 +352,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(unsubscribeMessage, detail));
 
 		if (result.isDeleted()) {
+			this.eventStore.deleteHistory(detail.getId());
 			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(unsubscribeMessage, detail));
 		}
 	}
@@ -291,6 +362,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(event, detail));
 
 		if (result.isDeleted()) {
+			this.eventStore.deleteHistory(detail.getId());
 			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(event, detail));
 		}
 	}
@@ -305,6 +377,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(unsubscribeMessage, detail));
 
 		if (revocation.isDeleted()) {
+			this.eventStore.deleteHistory(detail.getId());
 			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(unsubscribeMessage, detail));
 		}
 	}
@@ -314,9 +387,15 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				publishMessage.getTopic());
 
 		if (subscriptions != null && !subscriptions.isEmpty()) {
+			long publicationTimestampMillis = System.currentTimeMillis();
 			Long publisher = null;
 
 			for (Subscription subscription : subscriptions) {
+				if (this.features.isEnabled(Feature.BROKER_EVENT_HISTORY)) {
+					this.eventStore.storeHistoryEvent(subscription.getSubscriptionId(), publicationId,
+							publicationTimestampMillis, publishMessage);
+				}
+
 				String topic = null;
 				if (subscription.getMatchPolicy() != MatchPolicy.EXACT) {
 					topic = publishMessage.getTopic();
@@ -363,6 +442,13 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				}
 			}
 		}
+	}
+
+	@FunctionalInterface
+	private interface UriValidation {
+
+		void validate() throws WampException;
+
 	}
 
 	private boolean isEligible(PublishMessage publishMessage, Subscriber subscriber) {

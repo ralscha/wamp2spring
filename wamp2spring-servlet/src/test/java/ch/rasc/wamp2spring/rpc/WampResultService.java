@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.annotation.WampProcedure;
 

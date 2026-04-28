@@ -20,9 +20,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [UNSUBSCRIBED, UNSUBSCRIBE.Request|id]
@@ -86,10 +86,10 @@ public class UnsubscribedMessage extends WampMessage {
 		if (this.subscriptionId != null || this.reason != null) {
 			generator.writeStartObject();
 			if (this.reason != null) {
-				generator.writeStringField("reason", this.reason);
+				generator.writeStringProperty("reason", this.reason);
 			}
 			if (this.subscriptionId != null) {
-				generator.writeNumberField("subscription", this.subscriptionId);
+				generator.writeNumberProperty("subscription", this.subscriptionId);
 			}
 			generator.writeEndObject();
 		}

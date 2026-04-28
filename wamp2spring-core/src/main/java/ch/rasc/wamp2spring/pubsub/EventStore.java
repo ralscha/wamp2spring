@@ -34,10 +34,39 @@ public interface EventStore {
 	void retain(PublishMessage publishMessage);
 
 	/**
+	 * Stores a publication in the event history for a concrete subscription.
+	 * @param subscriptionId the subscription id the publication matched
+	 * @param publicationId the publication id
+	 * @param timestampMillis the time the publication was accepted by the broker
+	 * @param publishMessage the original publication
+	 */
+	default void storeHistoryEvent(long subscriptionId, long publicationId, long timestampMillis,
+			PublishMessage publishMessage) {
+		// optional
+	}
+
+	/**
 	 * Returns all stored events that match the query.
 	 * @param query the query
 	 * @return a collection of events that match the query
 	 */
 	List<PublishMessage> getRetained(DestinationMatch query);
+
+	/**
+	 * Returns stored history events for a concrete subscription.
+	 * @param subscriptionId the subscription id
+	 * @return the stored events in order of occurrence
+	 */
+	default List<EventHistoryEntry> getHistory(long subscriptionId) {
+		return List.of();
+	}
+
+	/**
+	 * Deletes stored history events for a concrete subscription.
+	 * @param subscriptionId the subscription id
+	 */
+	default void deleteHistory(long subscriptionId) {
+		// optional
+	}
 
 }

@@ -16,6 +16,7 @@
 package ch.rasc.wamp2spring.testsupport;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -25,21 +26,20 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
-import com.fasterxml.jackson.dataformat.smile.SmileFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.cbor.CBORMapper;
+import tools.jackson.dataformat.smile.SmileMapper;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
+import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.WampJson;
 
 public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler {
 
@@ -49,13 +49,13 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 	private CompletableFuture<List<WampMessage>> messageFuture;
 
-	private final JsonFactory jsonFactory;
+	private final ObjectMapper jsonObjectMapper;
 
-	private final JsonFactory msgpackFactory;
+	private final ObjectMapper msgpackObjectMapper;
 
-	private final JsonFactory cborFactory;
+	private final ObjectMapper cborObjectMapper;
 
-	private final JsonFactory smileFactory;
+	private final ObjectMapper smileObjectMapper;
 
 	private int noOfResults;
 
@@ -72,10 +72,10 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	}
 
 	public CompletableFutureWebSocketHandler(int expectedNoOfResults) {
-		this.jsonFactory = new MappingJsonFactory(new ObjectMapper());
-		this.msgpackFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
-		this.cborFactory = new ObjectMapper(new CBORFactory()).getFactory();
-		this.smileFactory = new ObjectMapper(new SmileFactory()).getFactory();
+		this.jsonObjectMapper = WampJson.createJsonObjectMapper();
+		this.msgpackObjectMapper = WampJson.createJsonObjectMapper();
+		this.cborObjectMapper = new CBORMapper();
+		this.smileObjectMapper = new SmileMapper();
 		this.timeout = getTimeoutValue();
 		this.noMessageTimeoutMillis = getTimeoutValue("WS_NO_MESSAGE_TIMEOUT_MILLIS", 250L);
 		this.settleTimeMillis = getTimeoutValue("WS_SETTLE_TIMEOUT_MILLIS", 250L);
@@ -113,7 +113,7 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
 		try {
-			WampMessage wampMessage = WampMessage.deserialize(this.jsonFactory, message.asBytes());
+			WampMessage wampMessage = WampMessage.deserialize(this.jsonObjectMapper, message.asBytes());
 
 			if (wampMessage instanceof WelcomeMessage welcomeMessage) {
 				this.welcomeMessageFuture.complete(welcomeMessage);
@@ -137,17 +137,21 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
 		try {
 			WampMessage wampMessage = null;
+			ByteBuffer duplicate = message.getPayload().duplicate();
+			byte[] payloadBytes = new byte[duplicate.remaining()];
+			duplicate.get(payloadBytes);
 
 			String acceptedProtocol = session.getAcceptedProtocol();
 			if (acceptedProtocol != null) {
 				if (WampSubProtocolHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackFactory, message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.msgpackObjectMapper,
+							MessagePackCodec.toJson(payloadBytes, this.msgpackObjectMapper));
 				}
 				else if (WampSubProtocolHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileFactory, message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.smileObjectMapper, payloadBytes);
 				}
 				else if (WampSubProtocolHandler.CBOR_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.cborFactory, message.getPayload().array());
+					wampMessage = WampMessage.deserialize(this.cborObjectMapper, payloadBytes);
 				}
 
 				if (wampMessage instanceof WelcomeMessage) {

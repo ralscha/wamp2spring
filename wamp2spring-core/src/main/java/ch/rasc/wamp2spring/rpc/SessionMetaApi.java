@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
@@ -36,6 +35,7 @@ import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
+import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class SessionMetaApi {
 
@@ -56,8 +56,6 @@ public class SessionMetaApi {
 	static final String ON_JOIN = "wamp.session.on_join";
 
 	static final String ON_LEAVE = "wamp.session.on_leave";
-
-	private static final Pattern URI_PATTERN = Pattern.compile("^([^\\s.#]+\\.)*([^\\s.#]+)$");
 
 	private final SessionRegistry sessionRegistry;
 
@@ -265,9 +263,7 @@ public class SessionMetaApi {
 	}
 
 	private static void validateReason(String reason) throws WampException {
-		if (!URI_PATTERN.matcher(reason).matches()) {
-			throw new WampException.Builder().build(WampError.INVALID_URI.getExternalValue());
-		}
+		WampUriValidator.validateReasonUri(reason);
 	}
 
 	private static Object argument(CallMessage callMessage, int index) {

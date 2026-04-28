@@ -17,8 +17,8 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [PUBLISHED, PUBLISH.Request|id, Publication|id]
