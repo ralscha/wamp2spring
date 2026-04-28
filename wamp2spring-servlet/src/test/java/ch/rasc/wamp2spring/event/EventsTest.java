@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.socket.WebSocketSession;
 
 import ch.rasc.wamp2spring.message.HelloMessage;
@@ -47,7 +46,6 @@ import ch.rasc.wamp2spring.testsupport.BaseWampTest;
 import ch.rasc.wamp2spring.testsupport.CompletableFutureWebSocketHandler;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = EventsTest.Config.class)
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class EventsTest extends BaseWampTest {
 
 	@Autowired
@@ -74,7 +72,7 @@ public class EventsTest extends BaseWampTest {
 
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("sessionEstablished");
 
-			List<WampEvent> events = this.eventsBean.getMethodCounter().get("sessionEstablished");
+			List<WampEvent> events = eventsFor("sessionEstablished");
 			assertThat(events).hasSize(1);
 			WampEvent event = events.get(0);
 			assertThat(event).isInstanceOf(WampSessionEstablishedEvent.class);
@@ -102,7 +100,7 @@ public class EventsTest extends BaseWampTest {
 
 		assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("sessionEstablished", "disconnected");
 
-		List<WampEvent> events = this.eventsBean.getMethodCounter().get("sessionEstablished");
+		List<WampEvent> events = eventsFor("sessionEstablished");
 		assertThat(events).hasSize(1);
 		WampEvent event = events.get(0);
 		assertThat(event).isInstanceOf(WampSessionEstablishedEvent.class);
@@ -110,7 +108,7 @@ public class EventsTest extends BaseWampTest {
 		assertThat(wampEvent1.getWampSessionId()).isEqualTo(welcomeMessage.getSessionId());
 		assertThat(wampEvent1.getWebSocketSessionId()).isNotNull();
 
-		events = this.eventsBean.getMethodCounter().get("disconnected");
+		events = eventsFor("disconnected");
 		assertThat(events).hasSize(1);
 		event = events.get(0);
 		assertThat(event).isInstanceOf(WampDisconnectEvent.class);
@@ -139,7 +137,7 @@ public class EventsTest extends BaseWampTest {
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("sessionEstablished",
 					"procedureRegistered");
 
-			List<WampEvent> events = this.eventsBean.getMethodCounter().get("sessionEstablished");
+			List<WampEvent> events = eventsFor("sessionEstablished");
 			assertThat(events).hasSize(1);
 			WampEvent event = events.get(0);
 			assertThat(event).isInstanceOf(WampSessionEstablishedEvent.class);
@@ -147,7 +145,7 @@ public class EventsTest extends BaseWampTest {
 			assertThat(wampEvent1.getWampSessionId()).isEqualTo(welcomeMessage.getSessionId());
 			assertThat(wampEvent1.getWebSocketSessionId()).isNotNull();
 
-			events = this.eventsBean.getMethodCounter().get("procedureRegistered");
+			events = eventsFor("procedureRegistered");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampProcedureRegisteredEvent.class);
@@ -167,7 +165,7 @@ public class EventsTest extends BaseWampTest {
 			result.getWampMessage();
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("procedureUnregistered");
-			events = this.eventsBean.getMethodCounter().get("procedureUnregistered");
+			events = eventsFor("procedureUnregistered");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampProcedureUnregisteredEvent.class);
@@ -193,13 +191,13 @@ public class EventsTest extends BaseWampTest {
 
 			SubscribeMessage subscribeMessage = new SubscribeMessage(1, "topic");
 			sendMessage(DataFormat.JSON, wsSession, subscribeMessage);
-			SubscribedMessage subscribedMessage = (SubscribedMessage) result.getWampMessage();
+			result.getWampMessage();
 
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("sessionEstablished", "subscriptionCreated",
 					"subscribed");
 
-			List<WampEvent> events = this.eventsBean.getMethodCounter().get("subscriptionCreated");
+			List<WampEvent> events = eventsFor("subscriptionCreated");
 			assertThat(events).hasSize(1);
 			WampEvent event = events.get(0);
 			assertThat(event).isInstanceOf(WampSubscriptionCreatedEvent.class);
@@ -210,7 +208,7 @@ public class EventsTest extends BaseWampTest {
 			assertThat(wampEvent1.getSubscriptionDetail().getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
 			assertThat(wampEvent1.getSubscriptionDetail().getTopic()).isEqualTo("topic");
 
-			events = this.eventsBean.getMethodCounter().get("subscribed");
+			events = eventsFor("subscribed");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampSubscriptionSubscribedEvent.class);
@@ -226,10 +224,10 @@ public class EventsTest extends BaseWampTest {
 			result.reset();
 			subscribeMessage = new SubscribeMessage(1, "topic");
 			sendMessage(DataFormat.JSON, wsSession, subscribeMessage);
-			subscribedMessage = (SubscribedMessage) result.getWampMessage();
+			SubscribedMessage subscribedMessage = (SubscribedMessage) result.getWampMessage();
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("subscribed");
-			events = this.eventsBean.getMethodCounter().get("subscribed");
+			events = eventsFor("subscribed");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampSubscriptionSubscribedEvent.class);
@@ -248,7 +246,7 @@ public class EventsTest extends BaseWampTest {
 			result.getWampMessage();
 			result.waitAFewSeconds();
 			assertThat(this.eventsBean.getMethodCounter()).containsOnlyKeys("unsubscribed", "subscriptionDeleted");
-			events = this.eventsBean.getMethodCounter().get("unsubscribed");
+			events = eventsFor("unsubscribed");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampSubscriptionUnsubscribedEvent.class);
@@ -259,7 +257,7 @@ public class EventsTest extends BaseWampTest {
 			assertThat(wampEvent5.getSubscriptionDetail().getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
 			assertThat(wampEvent5.getSubscriptionDetail().getTopic()).isEqualTo("topic");
 
-			events = this.eventsBean.getMethodCounter().get("subscriptionDeleted");
+			events = eventsFor("subscriptionDeleted");
 			assertThat(events).hasSize(1);
 			event = events.get(0);
 			assertThat(event).isInstanceOf(WampSubscriptionDeletedEvent.class);
@@ -270,6 +268,10 @@ public class EventsTest extends BaseWampTest {
 			assertThat(wampEvent6.getSubscriptionDetail().getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
 			assertThat(wampEvent6.getSubscriptionDetail().getTopic()).isEqualTo("topic");
 		}
+	}
+
+	private List<WampEvent> eventsFor(String name) {
+		return Objects.requireNonNull(this.eventsBean.getMethodCounter().get(name));
 	}
 
 	@Configuration

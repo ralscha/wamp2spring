@@ -18,10 +18,12 @@ package ch.rasc.wamp2spring.pubsub;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -55,6 +57,7 @@ import ch.rasc.wamp2spring.message.SubscribeMessage;
 import ch.rasc.wamp2spring.message.SubscribedMessage;
 import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribedMessage;
+import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
@@ -77,7 +80,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 
 	private final Object lifecycleMonitor = new Object();
 
-	private ApplicationContext applicationContext;
+	@Nullable private ApplicationContext applicationContext;
 
 	private final HandlerMethodService handlerMethodService;
 
@@ -153,8 +156,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 			return;
 		}
 
-		if (message instanceof SubscribeMessage) {
-			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
+		if (message instanceof SubscribeMessage subscribeMessage) {
 
 			if (this.features.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)
 					&& subscribeMessage.getMatchPolicy() != MatchPolicy.EXACT) {
@@ -171,8 +173,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				handleRetentionRequest(subscribeMessage, result.getSubscription());
 			}
 		}
-		else if (message instanceof UnsubscribeMessage) {
-			UnsubscribeMessage unsubscribeMessage = (UnsubscribeMessage) message;
+		else if (message instanceof UnsubscribeMessage unsubscribeMessage) {
 
 			UnsubscribeResult result = this.subscriptionRegistry.unsubscribe(unsubscribeMessage);
 			if (result.getError() == null) {
@@ -184,8 +185,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 			}
 
 		}
-		else if (message instanceof PublishMessage) {
-			PublishMessage publishMessage = (PublishMessage) message;
+		else if (message instanceof PublishMessage publishMessage) {
 			if (publishMessage.isDiscloseMe() && this.features.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)) {
 				if (publishMessage.getWebSocketSessionId() != null) {
 					sendMessageToClient(new ErrorMessage(publishMessage, WampError.DISCLOSE_ME_DISALLOWED));
@@ -207,13 +207,30 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 
 	}
 
+	public int revokeSubscription(long subscriptionId, @Nullable String reason) {
+		List<SubscriptionRevocation> revocations = this.subscriptionRegistry.revokeSubscription(subscriptionId);
+		for (SubscriptionRevocation revocation : revocations) {
+			Subscriber subscriber = revocation.getSubscriber();
+			if (subscriber.isSubscriptionRevocationSupported()) {
+				UnsubscribedMessage unsubscribedMessage = new UnsubscribedMessage(0, subscriptionId, reason);
+				unsubscribedMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
+						subscriber.getWebSocketSessionId());
+				unsubscribedMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, subscriber.getWampSessionId());
+				sendMessageToClient(unsubscribedMessage);
+			}
+
+			sendSubscriptionEvents(revocation);
+		}
+		return revocations.size();
+	}
+
 	private void handleRetentionRequest(SubscribeMessage subscribeMessage, Subscription subscription) {
 
 		List<PublishMessage> retainedMessages = this.eventStore.getRetained(subscription.getTopicMatch());
 
 		if (!retainedMessages.isEmpty()) {
-			Subscriber subscriber = new Subscriber(subscribeMessage.getWebSocketSessionId(),
-					subscribeMessage.getWampSessionId());
+			Subscriber subscriber = new Subscriber(Objects.requireNonNull(subscribeMessage.getWebSocketSessionId()),
+					Objects.requireNonNull(subscribeMessage.getWampSessionId()));
 			for (PublishMessage retainedMessage : retainedMessages) {
 				publishRetentionEvent(subscription, subscriber, retainedMessage);
 			}
@@ -253,35 +270,50 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		SubscriptionDetail detail = new SubscriptionDetail(result.getSubscription());
 
 		if (result.isCreated()) {
-			this.applicationContext.publishEvent(new WampSubscriptionCreatedEvent(subscribeMessage, detail));
+			getApplicationContext().publishEvent(new WampSubscriptionCreatedEvent(subscribeMessage, detail));
 		}
 
-		this.applicationContext.publishEvent(new WampSubscriptionSubscribedEvent(subscribeMessage, detail));
+		getApplicationContext().publishEvent(new WampSubscriptionSubscribedEvent(subscribeMessage, detail));
 
 	}
 
 	private void sendSubscriptionEvents(UnsubscribeResult result, UnsubscribeMessage unsubscribeMessage) {
-		SubscriptionDetail detail = new SubscriptionDetail(result.getSubscription());
-		this.applicationContext.publishEvent(new WampSubscriptionUnsubscribedEvent(unsubscribeMessage, detail));
+		SubscriptionDetail detail = new SubscriptionDetail(Objects.requireNonNull(result.getSubscription()));
+		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(unsubscribeMessage, detail));
 
 		if (result.isDeleted()) {
-			this.applicationContext.publishEvent(new WampSubscriptionDeletedEvent(unsubscribeMessage, detail));
+			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(unsubscribeMessage, detail));
 		}
 	}
 
 	private void sendSubscriptionEvents(UnsubscribeResult result, WampDisconnectEvent event) {
-		SubscriptionDetail detail = new SubscriptionDetail(result.getSubscription());
-		this.applicationContext.publishEvent(new WampSubscriptionUnsubscribedEvent(event, detail));
+		SubscriptionDetail detail = new SubscriptionDetail(Objects.requireNonNull(result.getSubscription()));
+		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(event, detail));
 
 		if (result.isDeleted()) {
-			this.applicationContext.publishEvent(new WampSubscriptionDeletedEvent(event, detail));
+			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(event, detail));
+		}
+	}
+
+	private void sendSubscriptionEvents(SubscriptionRevocation revocation) {
+		SubscriptionDetail detail = new SubscriptionDetail(revocation.getSubscription());
+		Subscriber subscriber = revocation.getSubscriber();
+		UnsubscribeMessage unsubscribeMessage = new UnsubscribeMessage(0,
+				revocation.getSubscription().getSubscriptionId());
+		unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, subscriber.getWebSocketSessionId());
+		unsubscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, subscriber.getWampSessionId());
+		getApplicationContext().publishEvent(new WampSubscriptionUnsubscribedEvent(unsubscribeMessage, detail));
+
+		if (revocation.isDeleted()) {
+			getApplicationContext().publishEvent(new WampSubscriptionDeletedEvent(unsubscribeMessage, detail));
 		}
 	}
 
 	private void handlePublishMessage(PublishMessage publishMessage, long publicationId) {
-		Set<Subscription> subscriptions = this.subscriptionRegistry.findSubscriptions(publishMessage.getTopic());
+		Set<Subscription> subscriptions = this.subscriptionRegistry.findSubscriptions(publishMessage,
+				publishMessage.getTopic());
 
-		if (subscriptions.size() > 0) {
+		if (subscriptions != null && !subscriptions.isEmpty()) {
 			Long publisher = null;
 
 			for (Subscription subscription : subscriptions) {
@@ -343,13 +375,37 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 		}
 
 		if (this.features.isEnabled(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING)) {
-			if (publishMessage.getEligible() != null
-					&& !publishMessage.getEligible().contains(subscriber.getWampSessionId())) {
+			Set<Number> eligible = publishMessage.getEligible();
+			if (eligible != null && !eligible.contains(subscriber.getWampSessionId())) {
 				return false;
 			}
 
-			if (publishMessage.getExclude() != null
-					&& publishMessage.getExclude().contains(subscriber.getWampSessionId())) {
+			Set<String> eligibleAuthIds = publishMessage.getEligibleAuthIds();
+			if (eligibleAuthIds != null
+					&& (subscriber.getAuthId() == null || !eligibleAuthIds.contains(subscriber.getAuthId()))) {
+				return false;
+			}
+
+			Set<String> eligibleAuthRoles = publishMessage.getEligibleAuthRoles();
+			if (eligibleAuthRoles != null
+					&& (subscriber.getAuthRole() == null || !eligibleAuthRoles.contains(subscriber.getAuthRole()))) {
+				return false;
+			}
+
+			Set<Number> exclude = publishMessage.getExclude();
+			if (exclude != null && exclude.contains(subscriber.getWampSessionId())) {
+				return false;
+			}
+
+			Set<String> excludeAuthIds = publishMessage.getExcludeAuthIds();
+			if (excludeAuthIds != null && subscriber.getAuthId() != null
+					&& excludeAuthIds.contains(subscriber.getAuthId())) {
+				return false;
+			}
+
+			Set<String> excludeAuthRoles = publishMessage.getExcludeAuthRoles();
+			if (excludeAuthRoles != null && subscriber.getAuthRole() != null
+					&& excludeAuthRoles.contains(subscriber.getAuthRole())) {
 				return false;
 			}
 		}
@@ -368,13 +424,17 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		for (String beanName : this.applicationContext.getBeanNamesForType(Object.class)) {
+		for (String beanName : getApplicationContext().getBeanNamesForType(Object.class)) {
 			detectAnnotatedMethods(beanName);
 		}
 	}
 
 	private void detectAnnotatedMethods(String beanName) {
-		Class<?> handlerType = this.applicationContext.getType(beanName);
+		ApplicationContext context = getApplicationContext();
+		Class<?> handlerType = context.getType(beanName);
+		if (handlerType == null) {
+			return;
+		}
 		final Class<?> userType = ClassUtils.getUserClass(handlerType);
 
 		List<EventListenerInfo> eventListeners = detectEventListeners(beanName, userType);
@@ -389,18 +449,20 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				(MethodFilter) method -> AnnotationUtils.findAnnotation(method, WampListener.class) != null);
 
 		for (Method method : methods) {
-			WampListener wampEventListenerAnnotation = AnnotationUtils.findAnnotation(method, WampListener.class);
+			WampListener wampEventListenerAnnotation = Objects
+				.requireNonNull(AnnotationUtils.findAnnotation(method, WampListener.class));
 
 			InvocableHandlerMethod handlerMethod = new InvocableHandlerMethod(
-					new HandlerMethod(this.applicationContext.getBean(beanName), method));
+					new HandlerMethod(getApplicationContext().getBean(beanName), method));
 
-			String[] topics = (String[]) AnnotationUtils.getValue(wampEventListenerAnnotation);
+			String[] topics = (String[]) Objects.requireNonNull(AnnotationUtils.getValue(wampEventListenerAnnotation));
 			if (topics.length == 0) {
 				// by default use beanName.methodName as topic
 				topics = new String[] { beanName + "." + method.getName() };
 			}
 
-			MatchPolicy match = (MatchPolicy) AnnotationUtils.getValue(wampEventListenerAnnotation, "match");
+			MatchPolicy match = (MatchPolicy) Objects
+				.requireNonNull(AnnotationUtils.getValue(wampEventListenerAnnotation, "match"));
 			EventListenerInfo info = new EventListenerInfo(handlerMethod, topics, match);
 			registry.add(info);
 		}
@@ -411,6 +473,10 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	private ApplicationContext getApplicationContext() {
+		return Objects.requireNonNull(this.applicationContext);
 	}
 
 }

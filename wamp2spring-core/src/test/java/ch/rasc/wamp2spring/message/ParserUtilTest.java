@@ -15,12 +15,12 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
@@ -76,7 +76,7 @@ public class ParserUtilTest {
 		jp = om.getFactory()
 			.createParser("{\"o1\":{\"a1\":1,\"a2\":2},\"o2\":{\"b1\":11,\"b2\":22},\"o3\":{\"c1\":111,\"c2\":222}}");
 		jp.nextToken();
-		Map<String, Object> m = ParserUtil.readObject(jp);
+		Map<String, Object> m = Objects.requireNonNull(ParserUtil.readObject(jp));
 		assertThat(m).containsKeys("o1", "o2", "o3");
 		assertThat((Map<String, Object>) m.get("o1")).containsOnly(MapEntry.entry("a1", 1), MapEntry.entry("a2", 2));
 		assertThat((Map<String, Object>) m.get("o2")).containsOnly(MapEntry.entry("b1", 11), MapEntry.entry("b2", 22));

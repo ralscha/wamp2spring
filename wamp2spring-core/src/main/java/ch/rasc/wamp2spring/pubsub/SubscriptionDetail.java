@@ -17,6 +17,8 @@ package ch.rasc.wamp2spring.pubsub;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 public class SubscriptionDetail {
 
 	private final long id;
@@ -25,13 +27,16 @@ public class SubscriptionDetail {
 
 	private final String topic;
 
+	@Nullable private final String realm;
+
 	private final MatchPolicy matchPolicy;
 
-	private final Map<String, Object> options;
+	@Nullable private final Map<String, Object> options;
 
 	public SubscriptionDetail(Subscription subscription) {
 		this.id = subscription.getSubscriptionId();
 		this.createdTimeMillis = subscription.getCreatedTimeMillis();
+		this.realm = subscription.getRealm();
 		this.topic = subscription.getTopic();
 		this.matchPolicy = subscription.getMatchPolicy();
 		this.options = subscription.getOptions();
@@ -49,18 +54,23 @@ public class SubscriptionDetail {
 		return this.topic;
 	}
 
+	@Nullable public String getRealm() {
+		return this.realm;
+	}
+
 	public MatchPolicy getMatchPolicy() {
 		return this.matchPolicy;
 	}
 
-	public Map<String, Object> getOptions() {
+	@Nullable public Map<String, Object> getOptions() {
 		return this.options;
 	}
 
 	@Override
 	public String toString() {
-		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis + ", topic="
-				+ this.topic + ", matchPolicy=" + this.matchPolicy + ", options=" + this.options + "]";
+		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis + ", realm="
+				+ this.realm + ", topic=" + this.topic + ", matchPolicy=" + this.matchPolicy + ", options="
+				+ this.options + "]";
 	}
 
 }

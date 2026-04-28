@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -39,15 +39,21 @@ public class YieldMessage extends WampMessage {
 
 	private final long requestId;
 
-	@Nullable
-	private final List<Object> arguments;
+	private final boolean progress;
 
-	@Nullable
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final List<Object> arguments;
+
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	public YieldMessage(long requestId, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+		this(requestId, false, arguments, argumentsKw);
+	}
+
+	public YieldMessage(long requestId, boolean progress, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.requestId = requestId;
+		this.progress = progress;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
 	}
@@ -57,7 +63,11 @@ public class YieldMessage extends WampMessage {
 		long request = jp.getLongValue();
 
 		jp.nextToken();
-		ParserUtil.readObject(jp);
+		boolean progress = false;
+		Map<String, Object> options = ParserUtil.readObject(jp);
+		if (options != null) {
+			progress = (boolean) options.getOrDefault("progress", false);
+		}
 
 		List<Object> arguments = null;
 		JsonToken token = jp.nextToken();
@@ -71,7 +81,7 @@ public class YieldMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new YieldMessage(request, arguments, argumentsKw);
+		return new YieldMessage(request, progress, arguments, argumentsKw);
 	}
 
 	@Override
@@ -79,6 +89,9 @@ public class YieldMessage extends WampMessage {
 		generator.writeNumber(getCode());
 		generator.writeNumber(this.requestId);
 		generator.writeStartObject();
+		if (this.progress) {
+			generator.writeBooleanField("progress", true);
+		}
 		generator.writeEndObject();
 
 		if (this.argumentsKw != null) {
@@ -100,20 +113,22 @@ public class YieldMessage extends WampMessage {
 		return this.requestId;
 	}
 
-	@Nullable
-	public List<Object> getArguments() {
+	public boolean isProgress() {
+		return this.progress;
+	}
+
+	@Nullable public List<Object> getArguments() {
 		return this.arguments;
 	}
 
-	@Nullable
-	public Map<String, Object> getArgumentsKw() {
+	@Nullable public Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
 
 	@Override
 	public String toString() {
-		return "YieldMessage [requestId=" + this.requestId + ", arguments=" + this.arguments + ", argumentsKw="
-				+ this.argumentsKw + "]";
+		return "YieldMessage [requestId=" + this.requestId + ", progress=" + this.progress + ", arguments="
+				+ this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

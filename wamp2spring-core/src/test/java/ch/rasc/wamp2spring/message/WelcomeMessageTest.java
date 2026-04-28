@@ -15,13 +15,13 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -35,14 +35,16 @@ public class WelcomeMessageTest extends BaseMessageTest {
 	public void serializeTest() throws JsonParseException, JsonMappingException, IOException {
 		List<WampRole> roles = createRoles();
 
-		WelcomeMessage welcomeMessage = new WelcomeMessage(9129137332L, roles, "realm");
+		WelcomeMessage welcomeMessage = new WelcomeMessage(9129137332L, roles, "realm", "alice", "admin", "ticket",
+				"static", Map.of("tenant", "demo"));
 
 		assertThat(welcomeMessage.getCode()).isEqualTo(2);
 		assertThat(welcomeMessage.getSessionId()).isEqualTo(9129137332L);
 		assertThat(welcomeMessage.getRoles()).isEqualTo(roles);
+		assertThat(welcomeMessage.getAuthMethod()).isEqualTo("ticket");
 
 		String json = serializeToJson(welcomeMessage);
-		String expected = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"caller_identification\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true}}},\"realm\":\"realm\"}]";
+		String expected = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
 		ObjectMapper om = new ObjectMapper();
 		assertThat(om.readValue(json, List.class)).isEqualTo(om.readValue(expected, List.class));
 	}
@@ -56,19 +58,31 @@ public class WelcomeMessageTest extends BaseMessageTest {
 		assertThat(welcomeMessage.getCode()).isEqualTo(2);
 		assertThat(welcomeMessage.getSessionId()).isEqualTo(9129137332L);
 		assertThat(welcomeMessage.getRoles()).containsExactly(new WampRole("broker"));
+		assertThat(welcomeMessage.getAuthMethod()).isEqualTo("anonymous");
 
-		json = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"caller_identification\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true}}},\"realm\":\"realm\"}]";
+		json = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
 		welcomeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(welcomeMessage.getCode()).isEqualTo(2);
 		assertThat(welcomeMessage.getSessionId()).isEqualTo(9129137332L);
 		assertThat(welcomeMessage.getRoles()).containsOnlyElementsOf(createRoles());
+		assertThat(welcomeMessage.getAuthId()).isEqualTo("alice");
+		assertThat(welcomeMessage.getAuthRole()).isEqualTo("admin");
+		assertThat(welcomeMessage.getAuthMethod()).isEqualTo("ticket");
+		assertThat(welcomeMessage.getAuthProvider()).isEqualTo("static");
+		assertThat(welcomeMessage.getAuthExtra()).containsEntry("tenant", "demo");
 	}
 
 	private static List<WampRole> createRoles() {
 		List<WampRole> roles = new ArrayList<>();
 
 		WampRole dealer = new WampRole("dealer");
+		dealer.addFeature("progressive_call_results");
 		dealer.addFeature("caller_identification");
+		dealer.addFeature("pattern_based_registration");
+		dealer.addFeature("shared_registration");
+		dealer.addFeature("registration_meta_api");
+		dealer.addFeature("session_meta_api");
+		dealer.addFeature("registration_revocation");
 		roles.add(dealer);
 
 		WampRole broker = new WampRole("broker");
@@ -76,6 +90,9 @@ public class WelcomeMessageTest extends BaseMessageTest {
 		broker.addFeature("publisher_exclusion");
 		broker.addFeature("publisher_identification");
 		broker.addFeature("pattern_based_subscription");
+		broker.addFeature("session_meta_api");
+		broker.addFeature("subscription_meta_api");
+		broker.addFeature("subscription_revocation");
 		roles.add(broker);
 
 		return roles;

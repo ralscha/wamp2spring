@@ -67,26 +67,19 @@ public class WampClient implements AutoCloseable {
 		this.result = new CompletableFutureWebSocketHandler();
 		this.headers = new WebSocketHttpHeaders();
 
-		switch (dataFormat) {
-			case CBOR:
-				this.jsonFactory = new ObjectMapper(new CBORFactory()).getFactory();
-				this.headers.setSecWebSocketProtocol(WampSubProtocolHandler.CBOR_PROTOCOL);
-				break;
-			case MSGPACK:
-				this.jsonFactory = new ObjectMapper(new MessagePackFactory()).getFactory();
-				this.headers.setSecWebSocketProtocol(WampSubProtocolHandler.MSGPACK_PROTOCOL);
-				break;
-			case JSON:
-				this.jsonFactory = new MappingJsonFactory(new ObjectMapper());
-				this.headers.setSecWebSocketProtocol(WampSubProtocolHandler.JSON_PROTOCOL);
-				break;
-			case SMILE:
-				this.jsonFactory = new ObjectMapper(new SmileFactory()).getFactory();
-				this.headers.setSecWebSocketProtocol(WampSubProtocolHandler.SMILE_PROTOCOL);
-				break;
-			default:
-				this.jsonFactory = null;
-		}
+		this.jsonFactory = switch (dataFormat) {
+			case CBOR -> new ObjectMapper(new CBORFactory()).getFactory();
+			case MSGPACK -> new ObjectMapper(new MessagePackFactory()).getFactory();
+			case JSON -> new MappingJsonFactory(new ObjectMapper());
+			case SMILE -> new ObjectMapper(new SmileFactory()).getFactory();
+		};
+		String protocol = switch (dataFormat) {
+			case CBOR -> WampSubProtocolHandler.CBOR_PROTOCOL;
+			case MSGPACK -> WampSubProtocolHandler.MSGPACK_PROTOCOL;
+			case JSON -> WampSubProtocolHandler.JSON_PROTOCOL;
+			case SMILE -> WampSubProtocolHandler.SMILE_PROTOCOL;
+		};
+		this.headers.setSecWebSocketProtocol(protocol);
 
 	}
 
@@ -125,7 +118,7 @@ public class WampClient implements AutoCloseable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "TypeParameterUnusedInFormals", "unchecked" })
 	public <T extends WampMessage> T sendMessageWithResult(WampMessage msg)
 			throws IOException, InterruptedException, ExecutionException, TimeoutException {
 		sendMessage(msg);
@@ -134,6 +127,7 @@ public class WampClient implements AutoCloseable {
 		return wampMessage;
 	}
 
+	@SuppressWarnings("TypeParameterUnusedInFormals")
 	public <T extends WampMessage> T getWampMessage()
 			throws InterruptedException, ExecutionException, TimeoutException {
 		@SuppressWarnings("unchecked")
@@ -144,7 +138,7 @@ public class WampClient implements AutoCloseable {
 
 	public void waitForNothing() {
 		try {
-			this.result.getWampMessages();
+			this.result.waitForNoMessage();
 			Assertions.fail("has to fail with a timeout exception");
 		}
 		catch (Exception e) {

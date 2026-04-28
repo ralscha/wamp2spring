@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.reactive;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
@@ -29,6 +30,7 @@ import org.springframework.web.reactive.socket.server.WebSocketService;
 import org.springframework.web.reactive.socket.server.support.HandshakeWebSocketService;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 
+import ch.rasc.wamp2spring.auth.WampAuthenticationProvider;
 import ch.rasc.wamp2spring.config.WampConfiguration;
 import ch.rasc.wamp2spring.config.WampConfigurer;
 
@@ -41,21 +43,22 @@ public class WampReactiveConfiguration extends WampConfiguration implements Impo
 	}
 
 	@Bean
-	public WampWebSocketHandler wampWebSocketHandler() {
+	public WampWebSocketHandler wampWebSocketHandler(
+			ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
 		return new WampWebSocketHandler(jsonJsonFactory(), msgpackJsonFactory(), cborJsonFactory(), smileJsonFactory(),
-				clientOutboundChannel(), clientInboundChannel(), this.features);
+				clientOutboundChannel(), clientInboundChannel(), this.features,
+				authenticationProviders.orderedStream().toList());
 	}
 
 	@Bean
-	public HandlerMapping handlerMapping() {
+	public HandlerMapping handlerMapping(ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
 		Map<String, WebSocketHandler> map = new HashMap<>();
 
-		WampWebSocketHandler wampWebSocketHandler = wampWebSocketHandler();
+		WampWebSocketHandler wampWebSocketHandler = wampWebSocketHandler(authenticationProviders);
 		WebSocketHandler decoratedWebSocketHandler = decorateWebSocketHandler(wampWebSocketHandler);
 		for (WampConfigurer wc : this.configurers) {
-			if (wc instanceof WampReactiveConfigurer) {
-				decoratedWebSocketHandler = ((WampReactiveConfigurer) wc)
-					.decorateWebSocketHandler(decoratedWebSocketHandler);
+			if (wc instanceof WampReactiveConfigurer wampReactiveConfigurer) {
+				decoratedWebSocketHandler = wampReactiveConfigurer.decorateWebSocketHandler(decoratedWebSocketHandler);
 			}
 		}
 		map.put(getWebSocketHandlerPath(), decoratedWebSocketHandler);
@@ -66,8 +69,8 @@ public class WampReactiveConfiguration extends WampConfiguration implements Impo
 
 		configureHandlerMapping(mapping);
 		for (WampConfigurer wc : this.configurers) {
-			if (wc instanceof WampReactiveConfigurer) {
-				((WampReactiveConfigurer) wc).configureHandlerMapping(mapping);
+			if (wc instanceof WampReactiveConfigurer wampReactiveConfigurer) {
+				wampReactiveConfigurer.configureHandlerMapping(mapping);
 			}
 		}
 

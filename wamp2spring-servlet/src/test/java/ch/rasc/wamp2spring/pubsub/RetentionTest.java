@@ -18,8 +18,6 @@ package ch.rasc.wamp2spring.pubsub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -94,12 +92,12 @@ public class RetentionTest extends BaseWampTest {
 			List<WampMessage> result = wc4.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			long w4SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w4SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w4SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isNull();
@@ -112,9 +110,7 @@ public class RetentionTest extends BaseWampTest {
 			publishMessage = new PublishMessage.Builder(1L, "humidity").acknowledge().retain().addArgument(48).build();
 			publishedMessage = wc2.sendMessageWithResult(publishMessage);
 			assertThat(publishedMessage.getRequestId()).isEqualTo(publishMessage.getRequestId());
-			publicationId = publishedMessage.getPublicationId();
-
-			TimeUnit.SECONDS.sleep(2);
+			wc4.getResult().waitAFewSeconds();
 
 			wc4.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(4, "humidity", true);
@@ -123,12 +119,12 @@ public class RetentionTest extends BaseWampTest {
 			result = wc4.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			w4SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w4SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w4SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isNull();
@@ -182,12 +178,12 @@ public class RetentionTest extends BaseWampTest {
 			List<WampMessage> result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			long w3SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isEqualTo("temperature.london");
@@ -207,8 +203,6 @@ public class RetentionTest extends BaseWampTest {
 					.retain()
 					.build());
 
-			TimeUnit.SECONDS.sleep(2);
-
 			wc3.close();
 			wc3.connect(wampEndpointUrl());
 
@@ -218,49 +212,37 @@ public class RetentionTest extends BaseWampTest {
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(3);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			long w3bSubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3bSubscriptionId).isEqualTo(subscriptionId);
 
 			boolean londonCheck = false;
 			boolean parisCheck = false;
-			eventMessage = (EventMessage) result.get(1);
-
-			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
-			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
-			assertThat(eventMessage.getTopic()).isIn("temperature.london", "temperature.paris");
-			assertThat(eventMessage.getPublisher()).isNull();
-			assertThat(eventMessage.isRetained()).isTrue();
-			if ("temperature.london".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(28.5);
-				londonCheck = true;
-			}
-			else {
-				assertThat(eventMessage.getArguments()).containsExactly(15.4);
-				parisCheck = true;
-			}
-			assertThat(eventMessage.getArgumentsKw()).isNull();
-
-			eventMessage = (EventMessage) result.get(2);
-			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
-			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
-			assertThat(eventMessage.getTopic()).isIn("temperature.london", "temperature.paris");
-			assertThat(eventMessage.getPublisher()).isNull();
-			assertThat(eventMessage.isRetained()).isTrue();
-			if ("temperature.london".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(28.5);
-				if (londonCheck) {
-					Assertions.fail("Wrong message");
+			List<EventMessage> eventMessages = messagesOfType(result, EventMessage.class);
+			assertThat(eventMessages).hasSize(2);
+			for (EventMessage retainedEvent : eventMessages) {
+				assertThat(retainedEvent.getSubscriptionId()).isEqualTo(w3SubscriptionId);
+				assertThat(retainedEvent.getPublicationId()).isGreaterThan(0);
+				assertThat(retainedEvent.getTopic()).isIn("temperature.london", "temperature.paris");
+				assertThat(retainedEvent.getPublisher()).isNull();
+				assertThat(retainedEvent.isRetained()).isTrue();
+				if ("temperature.london".equals(retainedEvent.getTopic())) {
+					assertThat(retainedEvent.getArguments()).containsExactly(28.5);
+					if (londonCheck) {
+						Assertions.fail("Wrong message");
+					}
+					londonCheck = true;
 				}
-			}
-			else {
-				assertThat(eventMessage.getArguments()).containsExactly(15.4);
-				if (parisCheck) {
-					Assertions.fail("Wrong message");
+				else {
+					assertThat(retainedEvent.getArguments()).containsExactly(15.4);
+					if (parisCheck) {
+						Assertions.fail("Wrong message");
+					}
+					parisCheck = true;
 				}
+				assertThat(retainedEvent.getArgumentsKw()).isNull();
 			}
-			assertThat(eventMessage.getArgumentsKw()).isNull();
 
 			wc3.getResult().reset();
 			this.retentionService.getWampPublisher()
@@ -290,15 +272,13 @@ public class RetentionTest extends BaseWampTest {
 			this.retentionService.getWampPublisher()
 				.publish(this.retentionService.publishMessageBuilder("temperature.oslo").addArgument(2.9).build());
 
-			TimeUnit.SECONDS.sleep(2);
-
 			subscribeMessage = new SubscribeMessage(4, "temperature", MatchPolicy.PREFIX, true);
 			wc3.getResult().reset(4);
 			wc3.sendMessage(subscribeMessage);
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(4);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			w3bSubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3bSubscriptionId).isEqualTo(subscriptionId);
@@ -306,80 +286,38 @@ public class RetentionTest extends BaseWampTest {
 			londonCheck = false;
 			parisCheck = false;
 			boolean osloCheck = false;
-			eventMessage = (EventMessage) result.get(1);
-			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
-			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
-			assertThat(eventMessage.getTopic()).isIn("temperature.london", "temperature.paris", "temperature.oslo");
-			assertThat(eventMessage.getPublisher()).isNull();
-			assertThat(eventMessage.isRetained()).isTrue();
-			if ("temperature.london".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(23.6);
-				londonCheck = true;
-			}
-			else if ("temperature.paris".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(15.4);
-				parisCheck = true;
-			}
-			else {
-				assertThat(eventMessage.getArguments()).containsExactly(3.6);
-				osloCheck = true;
-			}
-			assertThat(eventMessage.getArgumentsKw()).isNull();
-
-			eventMessage = (EventMessage) result.get(2);
-			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
-			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
-			assertThat(eventMessage.getTopic()).isIn("temperature.london", "temperature.paris", "temperature.oslo");
-			assertThat(eventMessage.getPublisher()).isNull();
-			assertThat(eventMessage.isRetained()).isTrue();
-			if ("temperature.london".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(23.6);
-				if (londonCheck) {
-					Assertions.fail("wrong message");
+			eventMessages = messagesOfType(result, EventMessage.class);
+			assertThat(eventMessages).hasSize(3);
+			for (EventMessage retainedEvent : eventMessages) {
+				assertThat(retainedEvent.getSubscriptionId()).isEqualTo(w3SubscriptionId);
+				assertThat(retainedEvent.getPublicationId()).isGreaterThan(0);
+				assertThat(retainedEvent.getTopic()).isIn("temperature.london", "temperature.paris",
+						"temperature.oslo");
+				assertThat(retainedEvent.getPublisher()).isNull();
+				assertThat(retainedEvent.isRetained()).isTrue();
+				if ("temperature.london".equals(retainedEvent.getTopic())) {
+					assertThat(retainedEvent.getArguments()).containsExactly(23.6);
+					if (londonCheck) {
+						Assertions.fail("wrong message");
+					}
+					londonCheck = true;
 				}
-				londonCheck = true;
-			}
-			else if ("temperature.paris".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(15.4);
-				if (parisCheck) {
-					Assertions.fail("wrong message");
+				else if ("temperature.paris".equals(retainedEvent.getTopic())) {
+					assertThat(retainedEvent.getArguments()).containsExactly(15.4);
+					if (parisCheck) {
+						Assertions.fail("wrong message");
+					}
+					parisCheck = true;
 				}
-				parisCheck = true;
-			}
-			else {
-				assertThat(eventMessage.getArguments()).containsExactly(3.6);
-				if (osloCheck) {
-					Assertions.fail("wrong message");
+				else {
+					assertThat(retainedEvent.getArguments()).containsExactly(3.6);
+					if (osloCheck) {
+						Assertions.fail("wrong message");
+					}
+					osloCheck = true;
 				}
-				osloCheck = true;
+				assertThat(retainedEvent.getArgumentsKw()).isNull();
 			}
-			assertThat(eventMessage.getArgumentsKw()).isNull();
-
-			eventMessage = (EventMessage) result.get(3);
-			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
-			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
-			assertThat(eventMessage.getTopic()).isIn("temperature.london", "temperature.paris", "temperature.oslo");
-			assertThat(eventMessage.getPublisher()).isNull();
-			assertThat(eventMessage.isRetained()).isTrue();
-			if ("temperature.london".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(23.6);
-				if (londonCheck) {
-					Assertions.fail("wrong message");
-				}
-			}
-			else if ("temperature.paris".equals(eventMessage.getTopic())) {
-				assertThat(eventMessage.getArguments()).containsExactly(15.4);
-				if (parisCheck) {
-					Assertions.fail("wrong message");
-				}
-			}
-			else {
-				assertThat(eventMessage.getArguments()).containsExactly(3.6);
-				if (osloCheck) {
-					Assertions.fail("wrong message");
-				}
-			}
-			assertThat(eventMessage.getArgumentsKw()).isNull();
 		}
 	}
 
@@ -426,12 +364,12 @@ public class RetentionTest extends BaseWampTest {
 			List<WampMessage> result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			long w3SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isEqualTo("crud.user.create");
@@ -453,7 +391,6 @@ public class RetentionTest extends BaseWampTest {
 				.retain()
 				.build();
 			this.retentionService.getWampPublisher().publish(publishMessage);
-			TimeUnit.SECONDS.sleep(2);
 
 			eventMessage = (EventMessage) wc3.getWampMessage();
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscriptionId);
@@ -472,12 +409,12 @@ public class RetentionTest extends BaseWampTest {
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			w3SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isEqualTo("crud.user.create");
@@ -491,7 +428,6 @@ public class RetentionTest extends BaseWampTest {
 				.addArgument("id", 11)
 				.build();
 			this.retentionService.getWampPublisher().publish(publishMessage);
-			TimeUnit.SECONDS.sleep(2);
 
 			wc3.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(5, "crud..create", MatchPolicy.WILDCARD, true);
@@ -500,12 +436,12 @@ public class RetentionTest extends BaseWampTest {
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
-			subscribedMessage = (SubscribedMessage) result.get(0);
+			subscribedMessage = firstMessageOfType(result, SubscribedMessage.class);
 			assertThat(subscribedMessage.getRequestId()).isEqualTo(subscribeMessage.getRequestId());
 			w3SubscriptionId = subscribedMessage.getSubscriptionId();
 			assertThat(w3SubscriptionId).isEqualTo(subscriptionId);
 
-			eventMessage = (EventMessage) result.get(1);
+			eventMessage = firstMessageOfType(result, EventMessage.class);
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(w3SubscriptionId);
 			assertThat(eventMessage.getPublicationId()).isGreaterThan(0);
 			assertThat(eventMessage.getTopic()).isEqualTo("crud.user.create");
@@ -514,6 +450,17 @@ public class RetentionTest extends BaseWampTest {
 			assertThat(eventMessage.getArguments()).isEmpty();
 			assertThat(eventMessage.getArgumentsKw()).containsExactly(MapEntry.entry("id", 3));
 		}
+	}
+
+	private static <T extends WampMessage> T firstMessageOfType(List<WampMessage> messages, Class<T> type) {
+		return type.cast(messages.stream()
+			.filter(type::isInstance)
+			.findFirst()
+			.orElseThrow(() -> new AssertionError("Expected message of type " + type.getSimpleName())));
+	}
+
+	private static <T extends WampMessage> List<T> messagesOfType(List<WampMessage> messages, Class<T> type) {
+		return messages.stream().filter(type::isInstance).map(type::cast).toList();
 	}
 
 	@Configuration

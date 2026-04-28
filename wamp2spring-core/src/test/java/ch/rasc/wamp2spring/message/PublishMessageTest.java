@@ -170,6 +170,16 @@ public class PublishMessageTest extends BaseMessageTest {
 		json = serializeToJson(publishMessage);
 		assertThat(json).isEqualTo(
 				"[16,2,{\"exclude\":[1245751,7891255],\"eligible\":[2,3]},\"event\",[23],{\"color\":\"green\"}]");
+
+		publishMessage = PublishMessage.builder(2, "event")
+			.eligibleAuthIds(Collections.singleton("alice"))
+			.excludeAuthRoles(Collections.singleton("admin"))
+			.build();
+		assertThat(publishMessage.getEligibleAuthIds()).containsExactly("alice");
+		assertThat(publishMessage.getExcludeAuthRoles()).containsExactly("admin");
+		json = serializeToJson(publishMessage);
+		assertThat(json)
+			.isEqualTo("[16,2,{\"eligible_authid\":[\"alice\"],\"exclude_authrole\":[\"admin\"]},\"event\"]");
 	}
 
 	@Test
@@ -258,6 +268,16 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
 		assertThat(publishMessage.isRetain()).isFalse();
 		assertThat(publishMessage.isExcludeMe()).isFalse();
+		assertThat(publishMessage.getArguments()).containsExactly(23);
+		assertThat(publishMessage.getArgumentsKw()).isNull();
+
+		json = "[16, 523412, {\"eligible_authid\": [\"alice\"], \"exclude_authrole\": [\"admin\"]}, \"com.myapp.mytopic\", [23]]";
+		publishMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		assertThat(publishMessage.getCode()).isEqualTo(16);
+		assertThat(publishMessage.getRequestId()).isEqualTo(523412L);
+		assertThat(publishMessage.getTopic()).isEqualTo("com.myapp.mytopic");
+		assertThat(publishMessage.getEligibleAuthIds()).containsExactly("alice");
+		assertThat(publishMessage.getExcludeAuthRoles()).containsExactly("admin");
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
 

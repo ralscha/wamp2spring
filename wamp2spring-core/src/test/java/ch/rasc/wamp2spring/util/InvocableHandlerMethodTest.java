@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -26,6 +24,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,6 @@ import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolverComposite;
 
@@ -155,36 +154,28 @@ public class InvocableHandlerMethodTest {
 		assertThat(value).isEqualTo(Optional.empty());
 
 		value = this.invocableHandlerMethod.convert(param, "str");
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo("str");
+		assertOptionalValue(value, "str");
 
 		value = this.invocableHandlerMethod.convert(param, (byte) 1);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo((byte) 1);
+		assertOptionalValue(value, (byte) 1);
 
 		value = this.invocableHandlerMethod.convert(param, (short) 2);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo((short) 2);
+		assertOptionalValue(value, (short) 2);
 
 		value = this.invocableHandlerMethod.convert(param, 3);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo(3);
+		assertOptionalValue(value, 3);
 
 		value = this.invocableHandlerMethod.convert(param, 4L);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo(4L);
+		assertOptionalValue(value, 4L);
 
 		value = this.invocableHandlerMethod.convert(param, 5.5f);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo(5.5f);
+		assertOptionalValue(value, 5.5f);
 
 		value = this.invocableHandlerMethod.convert(param, 6.6);
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo(6.6);
+		assertOptionalValue(value, 6.6);
 
 		value = this.invocableHandlerMethod.convert(param, new BigDecimal("3.141"));
-		assertThat(value).isInstanceOf(Optional.class);
-		assertThat(((Optional) value).get()).isEqualTo(new BigDecimal("3.141"));
+		assertOptionalValue(value, new BigDecimal("3.141"));
 	}
 
 	@Test
@@ -250,21 +241,26 @@ public class InvocableHandlerMethodTest {
 		// nothing here
 	}
 
+	@SuppressWarnings("rawtypes")
+	private static void assertOptionalValue(@Nullable Object value, Object expected) {
+		assertThat((Optional) Objects.requireNonNull(value)).contains(expected);
+	}
+
 	static class TestDto {
 
-		private String v1;
+		private @Nullable String v1;
 
 		private int v2;
 
-		private Integer v3;
+		private @Nullable Integer v3;
 
-		private BigDecimal v4;
+		private @Nullable BigDecimal v4;
 
-		public String getV1() {
+		public @Nullable String getV1() {
 			return this.v1;
 		}
 
-		public void setV1(String v1) {
+		public void setV1(@Nullable String v1) {
 			this.v1 = v1;
 		}
 
@@ -276,19 +272,19 @@ public class InvocableHandlerMethodTest {
 			this.v2 = v2;
 		}
 
-		public Integer getV3() {
+		public @Nullable Integer getV3() {
 			return this.v3;
 		}
 
-		public void setV3(Integer v3) {
+		public void setV3(@Nullable Integer v3) {
 			this.v3 = v3;
 		}
 
-		public BigDecimal getV4() {
+		public @Nullable BigDecimal getV4() {
 			return this.v4;
 		}
 
-		public void setV4(BigDecimal v4) {
+		public void setV4(@Nullable BigDecimal v4) {
 			this.v4 = v4;
 		}
 
@@ -302,13 +298,9 @@ public class InvocableHandlerMethodTest {
 			if (this == obj) {
 				return true;
 			}
-			if (obj == null) {
+			if (!(obj instanceof TestDto other)) {
 				return false;
 			}
-			if (getClass() != obj.getClass()) {
-				return false;
-			}
-			TestDto other = (TestDto) obj;
 			if (!Objects.equals(this.v1, other.v1)) {
 				return false;
 			}

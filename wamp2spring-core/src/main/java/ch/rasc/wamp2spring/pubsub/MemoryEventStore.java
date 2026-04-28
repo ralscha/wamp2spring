@@ -16,7 +16,6 @@
 package ch.rasc.wamp2spring.pubsub;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,7 +45,7 @@ public class MemoryEventStore implements EventStore {
 		if (query.getMatchPolicy() == MatchPolicy.EXACT) {
 			PublishMessage publishMessage = this.eventRetention.get(query.getDestination());
 			if (publishMessage != null) {
-				return Collections.singletonList(publishMessage);
+				return List.of(publishMessage);
 			}
 			return List.of();
 		}
@@ -57,7 +56,7 @@ public class MemoryEventStore implements EventStore {
 					matchedMessages.add(publishMessage);
 				}
 			});
-			return matchedMessages;
+			return List.copyOf(matchedMessages);
 		}
 
 		return List.of();

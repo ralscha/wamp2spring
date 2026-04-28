@@ -28,8 +28,11 @@ import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.message.AbortMessage;
+import ch.rasc.wamp2spring.message.AuthenticateMessage;
+import ch.rasc.wamp2spring.message.ChallengeMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
@@ -66,14 +69,14 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 	private static boolean messageMatches(Message<?> message) {
 		return !(message instanceof AbortMessage) && !(message instanceof ErrorMessage)
 				&& !(message instanceof GoodbyeMessage) && !(message instanceof HelloMessage)
-				&& !(message instanceof WelcomeMessage);
+				&& !(message instanceof WelcomeMessage) && !(message instanceof ChallengeMessage)
+				&& !(message instanceof AuthenticateMessage);
 	}
 
 	@Override
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
 			Map<String, Object> attributes) throws Exception {
-		if (request instanceof ServletServerHttpRequest) {
-			ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
+		if (request instanceof ServletServerHttpRequest servletRequest) {
 			HttpSession session = servletRequest.getServletRequest().getSession(false);
 			if (session != null) {
 				attributes.put(SPRING_SESSION_ID_ATTR_NAME, session.getId());
@@ -84,7 +87,7 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 
 	@Override
 	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
-			Exception exception) {
+			@Nullable Exception exception) {
 		// nothing here
 	}
 

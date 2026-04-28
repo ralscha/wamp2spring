@@ -17,7 +17,6 @@ package ch.rasc.wamp2spring.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 import org.msgpack.jackson.dataformat.MessagePackFactory;
@@ -28,7 +27,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -47,13 +46,17 @@ import ch.rasc.wamp2spring.pubsub.MemoryEventStore;
 import ch.rasc.wamp2spring.pubsub.PubSubMessageHandler;
 import ch.rasc.wamp2spring.pubsub.SubscriptionRegistry;
 import ch.rasc.wamp2spring.rpc.ProcedureRegistry;
+import ch.rasc.wamp2spring.rpc.RegistrationMetaApi;
 import ch.rasc.wamp2spring.rpc.RpcMessageHandler;
+import ch.rasc.wamp2spring.rpc.SessionMetaApi;
+import ch.rasc.wamp2spring.rpc.SessionRegistry;
+import ch.rasc.wamp2spring.rpc.SessionTestamentMetaApi;
+import ch.rasc.wamp2spring.rpc.SubscriptionMetaApi;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 
 public class WampConfiguration {
 
-	@Nullable
-	protected ConversionService internalConversionService;
+	@Nullable protected ConversionService internalConversionService;
 
 	protected final List<WampConfigurer> configurers = new ArrayList<>();
 
@@ -79,7 +82,7 @@ public class WampConfiguration {
 	private EventStore eventStore;
 
 	protected void setImportMetadata(AnnotationMetadata importMetadata, String enableClassName) {
-		Map<String, Object> attributes = AnnotationAttributes
+		AnnotationAttributes attributes = AnnotationAttributes
 			.fromMap(importMetadata.getAnnotationAttributes(enableClassName, false));
 		if (attributes != null) {
 			Feature[] disableFeatures = (Feature[]) attributes.get("disable");
@@ -176,8 +179,7 @@ public class WampConfiguration {
 	 * Executor used by the {@link #brokerChannel()}. By default messages send through the
 	 * brokerChannel are processed synchronously.
 	 */
-	@Nullable
-	public Executor brokerChannelExecutor() {
+	@Nullable public Executor brokerChannelExecutor() {
 		return null;
 	}
 
@@ -205,6 +207,46 @@ public class WampConfiguration {
 			return rpcMessageHandler;
 		}
 		return new NoOpMessageHandler();
+	}
+
+	@Bean
+	public Object registrationMetaApi() {
+		if (this.features.isEnabled(Feature.DEALER) && this.features.isEnabled(Feature.DEALER_REGISTRATION_META_API)) {
+			return new RegistrationMetaApi(procedureRegistry(), wampEventPublisher());
+		}
+		return new Object();
+	}
+
+	@Bean
+	public SessionRegistry sessionRegistry() {
+		return new SessionRegistry();
+	}
+
+	@Bean
+	public Object sessionMetaApi() {
+		if (this.features.isEnabled(Feature.BROKER) && this.features.isEnabled(Feature.DEALER)
+				&& this.features.isEnabled(Feature.BROKER_SESSION_META_API)
+				&& this.features.isEnabled(Feature.DEALER_SESSION_META_API)) {
+			return new SessionMetaApi(sessionRegistry(), wampEventPublisher(), clientOutboundChannel());
+		}
+		return new Object();
+	}
+
+	@Bean
+	public Object sessionTestamentMetaApi() {
+		if (this.features.isEnabled(Feature.BROKER) && this.features.isEnabled(Feature.DEALER)
+				&& this.features.isEnabled(Feature.DEALER_TESTAMENT_META_API)) {
+			return new SessionTestamentMetaApi(wampEventPublisher());
+		}
+		return new Object();
+	}
+
+	@Bean
+	public Object subscriptionMetaApi() {
+		if (this.features.isEnabled(Feature.BROKER) && this.features.isEnabled(Feature.BROKER_SUBSCRIPTION_META_API)) {
+			return new SubscriptionMetaApi(subscriptionRegistry(), wampEventPublisher());
+		}
+		return new Object();
 	}
 
 	@Bean

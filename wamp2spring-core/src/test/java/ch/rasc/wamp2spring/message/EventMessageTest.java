@@ -102,11 +102,21 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(2);
 		assertThat(eventMessage.getTopic()).isEqualTo("topic");
 		assertThat(eventMessage.getPublisher()).isEqualTo(123);
+		assertThat(eventMessage.getPublisherAuthId()).isNull();
+		assertThat(eventMessage.getPublisherAuthRole()).isNull();
 		assertThat(eventMessage.isRetained()).isFalse();
 		assertThat(eventMessage.getArguments()).containsExactly(42);
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(eventMessage);
 		assertThat(json).isEqualTo("[36,1,2,{\"topic\":\"topic\",\"publisher\":123},[42]]");
+
+		eventMessage = new EventMessage(1, 2, "topic", 123, "publisher1", "admin", false, Collections.singletonList(42),
+				null);
+		assertThat(eventMessage.getPublisherAuthId()).isEqualTo("publisher1");
+		assertThat(eventMessage.getPublisherAuthRole()).isEqualTo("admin");
+		json = serializeToJson(eventMessage);
+		assertThat(json).isEqualTo(
+				"[36,1,2,{\"topic\":\"topic\",\"publisher\":123,\"publisher_authid\":\"publisher1\",\"publisher_authrole\":\"admin\"},[42]]");
 
 		eventMessage = new EventMessage(1, 2, null, null, true, Collections.singletonList(43), null);
 		assertThat(eventMessage.getCode()).isEqualTo(36);
@@ -187,7 +197,21 @@ public class EventMessageTest extends BaseMessageTest {
 		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
 		assertThat(eventMessage.getTopic()).isEqualTo("the_topic");
 		assertThat(eventMessage.getPublisher()).isEqualTo(1234);
+		assertThat(eventMessage.getPublisherAuthId()).isNull();
+		assertThat(eventMessage.getPublisherAuthRole()).isNull();
 		assertThat(eventMessage.isRetained()).isFalse();
+		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
+		assertThat(eventMessage.getArgumentsKw()).isNull();
+
+		json = "[36, 5512315355, 4429313566, {\"topic\":\"the_topic\", \"publisher\":1234, \"publisher_authid\":\"publisher1\", \"publisher_authrole\":\"admin\"}, [\"Hello, world!\"]]";
+		eventMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		assertThat(eventMessage.getCode()).isEqualTo(36);
+		assertThat(eventMessage.getSubscriptionId()).isEqualTo(5512315355L);
+		assertThat(eventMessage.getPublicationId()).isEqualTo(4429313566L);
+		assertThat(eventMessage.getTopic()).isEqualTo("the_topic");
+		assertThat(eventMessage.getPublisher()).isEqualTo(1234);
+		assertThat(eventMessage.getPublisherAuthId()).isEqualTo("publisher1");
+		assertThat(eventMessage.getPublisherAuthRole()).isEqualTo("admin");
 		assertThat(eventMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(eventMessage.getArgumentsKw()).isNull();
 

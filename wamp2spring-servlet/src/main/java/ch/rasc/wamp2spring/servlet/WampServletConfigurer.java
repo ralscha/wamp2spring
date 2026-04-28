@@ -24,7 +24,7 @@ import ch.rasc.wamp2spring.config.WampConfigurer;
  * Defines methods for configuring WAMP support.
  *
  * <p>
- * Used together with {@link EnableWamp}
+ * Used together with the servlet WAMP enablement configuration.
  */
 @SuppressWarnings("unused")
 public interface WampServletConfigurer extends WampConfigurer {

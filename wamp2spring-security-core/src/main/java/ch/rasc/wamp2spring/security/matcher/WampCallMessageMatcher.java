@@ -31,8 +31,7 @@ public class WampCallMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public boolean matches(Message<? extends Object> message) {
-		if (message instanceof CallMessage) {
-			CallMessage callMessage = (CallMessage) message;
+		if (message instanceof CallMessage callMessage) {
 			return this.procedureMatch.matches(callMessage.getProcedure());
 		}
 		return false;

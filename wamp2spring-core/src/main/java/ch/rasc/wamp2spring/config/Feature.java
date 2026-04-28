@@ -20,10 +20,16 @@ package ch.rasc.wamp2spring.config;
  */
 public enum Feature {
 
-	DEALER("dealer"), BROKER("broker"), DEALER_CALLER_IDENTIFICATION("caller_identification"),
+	DEALER("dealer"), BROKER("broker"), DEALER_CALL_CANCELING("call_canceling"), DEALER_CALL_TIMEOUT("call_timeout"),
+	DEALER_PROGRESSIVE_CALL_RESULTS("progressive_call_results"), DEALER_CALLER_IDENTIFICATION("caller_identification"),
+	DEALER_PATTERN_BASED_REGISTRATION("pattern_based_registration"), DEALER_SHARED_REGISTRATION("shared_registration"),
+	DEALER_REGISTRATION_META_API("registration_meta_api"), DEALER_SESSION_META_API("session_meta_api"),
+	DEALER_TESTAMENT_META_API("testament_meta_api"), DEALER_REGISTRATION_REVOCATION("registration_revocation"),
 	BROKER_SUBSCRIBER_BLACKWHITE_LISTING("subscriber_blackwhite_listing"),
 	BROKER_PUBLISHER_EXCLUSION("publisher_exclusion"), BROKER_PUBLISHER_IDENTIFICATION("publisher_identification"),
-	BROKER_PATTERN_BASED_SUBSCRIPTION("pattern_based_subscription"), BROKER_EVENT_RETENTION("event_retention");
+	BROKER_PATTERN_BASED_SUBSCRIPTION("pattern_based_subscription"), BROKER_EVENT_RETENTION("event_retention"),
+	BROKER_SESSION_META_API("session_meta_api"), BROKER_SUBSCRIPTION_META_API("subscription_meta_api"),
+	BROKER_SUBSCRIPTION_REVOCATION("subscription_revocation");
 
 	private final String externalValue;
 

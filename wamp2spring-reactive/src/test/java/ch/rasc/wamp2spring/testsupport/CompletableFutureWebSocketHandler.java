@@ -61,6 +61,10 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 
 	private final int timeout;
 
+	private final long noMessageTimeoutMillis;
+
+	private final long settleTimeMillis;
+
 	private List<WampMessage> receivedMessages;
 
 	public CompletableFutureWebSocketHandler() {
@@ -73,15 +77,21 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 		this.cborFactory = new ObjectMapper(new CBORFactory()).getFactory();
 		this.smileFactory = new ObjectMapper(new SmileFactory()).getFactory();
 		this.timeout = getTimeoutValue();
+		this.noMessageTimeoutMillis = getTimeoutValue("WS_NO_MESSAGE_TIMEOUT_MILLIS", 250L);
+		this.settleTimeMillis = getTimeoutValue("WS_SETTLE_TIMEOUT_MILLIS", 250L);
 		this.welcomeMessageFuture = new CompletableFuture<>();
 		this.reset(expectedNoOfResults);
 	}
 
 	private static int getTimeoutValue() {
-		int timeout = 2;
+		return (int) getTimeoutValue("WS_TIMEOUT", 2L);
+	}
+
+	private static long getTimeoutValue(String envVariableName, long defaultValue) {
+		long timeout = defaultValue;
 		try {
-			String timeoutValue = System.getenv("WS_TIMEOUT");
-			timeout = Integer.parseInt(timeoutValue);
+			String timeoutValue = System.getenv(envVariableName);
+			timeout = Long.parseLong(timeoutValue);
 		}
 		catch (Exception e) {
 			// ignore error
@@ -105,8 +115,8 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 		try {
 			WampMessage wampMessage = WampMessage.deserialize(this.jsonFactory, message.asBytes());
 
-			if (wampMessage instanceof WelcomeMessage) {
-				this.welcomeMessageFuture.complete((WelcomeMessage) wampMessage);
+			if (wampMessage instanceof WelcomeMessage welcomeMessage) {
+				this.welcomeMessageFuture.complete(welcomeMessage);
 			}
 			else {
 				this.receivedMessages.add(wampMessage);
@@ -169,13 +179,22 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 		return this.messageFuture.get(this.timeout, TimeUnit.SECONDS);
 	}
 
+	public List<WampMessage> getWampMessages(long timeout, TimeUnit unit)
+			throws InterruptedException, ExecutionException, TimeoutException {
+		return this.messageFuture.get(timeout, unit);
+	}
+
 	public WelcomeMessage getWelcomeMessage() throws InterruptedException, ExecutionException, TimeoutException {
 		return this.welcomeMessageFuture.get(this.timeout, TimeUnit.SECONDS);
 	}
 
+	public void waitForNoMessage() throws InterruptedException, ExecutionException, TimeoutException {
+		this.messageFuture.get(this.noMessageTimeoutMillis, TimeUnit.MILLISECONDS);
+	}
+
 	public void waitAFewSeconds() {
 		try {
-			TimeUnit.SECONDS.sleep(getTimeoutValue());
+			TimeUnit.MILLISECONDS.sleep(this.settleTimeMillis);
 		}
 		catch (InterruptedException e) {
 			throw new RuntimeException(e);

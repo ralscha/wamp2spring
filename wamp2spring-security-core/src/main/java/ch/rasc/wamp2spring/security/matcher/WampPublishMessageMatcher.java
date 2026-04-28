@@ -31,8 +31,7 @@ public class WampPublishMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public boolean matches(Message<? extends Object> message) {
-		if (message instanceof PublishMessage) {
-			PublishMessage publishMessage = (PublishMessage) message;
+		if (message instanceof PublishMessage publishMessage) {
 			return this.topicMatch.matches(publishMessage.getTopic());
 		}
 		return false;

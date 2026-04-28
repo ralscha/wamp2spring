@@ -18,8 +18,6 @@ package ch.rasc.wamp2spring.pubsub;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -116,15 +114,12 @@ public class RetentionTest extends BaseWampTest {
 			publishMessage = new PublishMessage.Builder(1L, "humidity").acknowledge().retain().addArgument(48).build();
 			publishedMessage = wc2.sendMessageWithResult(publishMessage);
 			assertThat(publishedMessage.getRequestId()).isEqualTo(publishMessage.getRequestId());
-			publicationId = publishedMessage.getPublicationId();
-
-			TimeUnit.SECONDS.sleep(2);
+			wc4.getResult().waitAFewSeconds();
 
 			wc4.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(4, "humidity", true);
 			wc4.getResult().reset(2);
 			wc4.sendMessage(subscribeMessage);
-			TimeUnit.SECONDS.sleep(2);
 			result = wc4.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
@@ -213,8 +208,6 @@ public class RetentionTest extends BaseWampTest {
 					.retain()
 					.build());
 
-			TimeUnit.SECONDS.sleep(2);
-
 			wc3.close();
 			wc3.connect(wampEndpointUrl());
 
@@ -295,8 +288,6 @@ public class RetentionTest extends BaseWampTest {
 				.publish(this.retentionService.publishMessageBuilder("temperature.paris").addArgument(11.3).build());
 			this.retentionService.getWampPublisher()
 				.publish(this.retentionService.publishMessageBuilder("temperature.oslo").addArgument(2.9).build());
-
-			TimeUnit.SECONDS.sleep(2);
 
 			subscribeMessage = new SubscribeMessage(4, "temperature", MatchPolicy.PREFIX, true);
 			wc3.getResult().reset(4);
@@ -460,7 +451,6 @@ public class RetentionTest extends BaseWampTest {
 				.retain()
 				.build();
 			this.retentionService.getWampPublisher().publish(publishMessage);
-			TimeUnit.SECONDS.sleep(2);
 
 			eventMessage = (EventMessage) wc3.getWampMessage();
 			assertThat(eventMessage.getSubscriptionId()).isEqualTo(subscriptionId);
@@ -476,7 +466,7 @@ public class RetentionTest extends BaseWampTest {
 			subscribeMessage = new SubscribeMessage(4, "crud..create", MatchPolicy.WILDCARD, true);
 			wc3.getResult().reset(2);
 			wc3.sendMessage(subscribeMessage);
-			TimeUnit.SECONDS.sleep(2);
+			wc3.getResult().waitAFewSeconds();
 			result = wc3.getResult().getWampMessages();
 			assertThat(result).hasSize(2);
 
@@ -499,7 +489,6 @@ public class RetentionTest extends BaseWampTest {
 				.addArgument("id", 11)
 				.build();
 			this.retentionService.getWampPublisher().publish(publishMessage);
-			TimeUnit.SECONDS.sleep(2);
 
 			wc3.connect(wampEndpointUrl());
 			subscribeMessage = new SubscribeMessage(5, "crud..create", MatchPolicy.WILDCARD, true);

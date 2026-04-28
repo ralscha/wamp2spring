@@ -36,8 +36,8 @@ public class WampMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public boolean matches(Message<? extends Object> message) {
-		if (message instanceof WampMessage) {
-			return ((WampMessage) message).getCode() == this.code;
+		if (message instanceof WampMessage wampMessage) {
+			return wampMessage.getCode() == this.code;
 		}
 		return false;
 	}
@@ -52,17 +52,10 @@ public class WampMessageMatcher implements MessageMatcher<Object> {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (!(obj instanceof WampMessageMatcher other)) {
 			return false;
 		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		WampMessageMatcher other = (WampMessageMatcher) obj;
-		if (this.code != other.code) {
-			return false;
-		}
-		return true;
+		return this.code == other.code;
 	}
 
 	@Override

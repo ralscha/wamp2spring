@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,7 +87,7 @@ public class CallService {
 		this.called.add("callWithDto");
 		assertThat(testDto.getName()).isEqualTo("Hi");
 		assertThat(testDto.getId()).isEqualTo(1);
-		return testDto.getName().toUpperCase();
+		return testDto.getName().toUpperCase(Locale.ROOT);
 	}
 
 	@WampProcedure
@@ -96,7 +97,7 @@ public class CallService {
 		assertThat(testDto.getName()).isEqualTo("Hi");
 		assertThat(testDto.getId()).isEqualTo(2);
 		assertThat(secondArgument).isEqualTo("the_second_argument");
-		return testDto.getName().toUpperCase() + "/" + secondArgument;
+		return testDto.getName().toUpperCase(Locale.ROOT) + "/" + secondArgument;
 	}
 
 	@WampProcedure

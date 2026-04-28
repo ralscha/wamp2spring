@@ -44,8 +44,35 @@ public class Features {
 
 	public List<Feature> enabledDealerFeatures() {
 		List<Feature> dealerFeatures = new ArrayList<>();
+		if (isEnabled(Feature.DEALER_CALL_CANCELING)) {
+			dealerFeatures.add(Feature.DEALER_CALL_CANCELING);
+		}
+		if (isEnabled(Feature.DEALER_CALL_TIMEOUT)) {
+			dealerFeatures.add(Feature.DEALER_CALL_TIMEOUT);
+		}
+		if (isEnabled(Feature.DEALER_PROGRESSIVE_CALL_RESULTS)) {
+			dealerFeatures.add(Feature.DEALER_PROGRESSIVE_CALL_RESULTS);
+		}
 		if (isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 			dealerFeatures.add(Feature.DEALER_CALLER_IDENTIFICATION);
+		}
+		if (isEnabled(Feature.DEALER_PATTERN_BASED_REGISTRATION)) {
+			dealerFeatures.add(Feature.DEALER_PATTERN_BASED_REGISTRATION);
+		}
+		if (isEnabled(Feature.DEALER_SHARED_REGISTRATION)) {
+			dealerFeatures.add(Feature.DEALER_SHARED_REGISTRATION);
+		}
+		if (isEnabled(Feature.DEALER_REGISTRATION_META_API)) {
+			dealerFeatures.add(Feature.DEALER_REGISTRATION_META_API);
+		}
+		if (isEnabled(Feature.DEALER_SESSION_META_API)) {
+			dealerFeatures.add(Feature.DEALER_SESSION_META_API);
+		}
+		if (isEnabled(Feature.DEALER_TESTAMENT_META_API)) {
+			dealerFeatures.add(Feature.DEALER_TESTAMENT_META_API);
+		}
+		if (isEnabled(Feature.DEALER_REGISTRATION_REVOCATION)) {
+			dealerFeatures.add(Feature.DEALER_REGISTRATION_REVOCATION);
 		}
 		return dealerFeatures;
 	}
@@ -66,6 +93,15 @@ public class Features {
 		}
 		if (isEnabled(Feature.BROKER_EVENT_RETENTION)) {
 			brokerFeatures.add(Feature.BROKER_EVENT_RETENTION);
+		}
+		if (isEnabled(Feature.BROKER_SESSION_META_API)) {
+			brokerFeatures.add(Feature.BROKER_SESSION_META_API);
+		}
+		if (isEnabled(Feature.BROKER_SUBSCRIPTION_META_API)) {
+			brokerFeatures.add(Feature.BROKER_SUBSCRIPTION_META_API);
+		}
+		if (isEnabled(Feature.BROKER_SUBSCRIPTION_REVOCATION)) {
+			brokerFeatures.add(Feature.BROKER_SUBSCRIPTION_REVOCATION);
 		}
 		return brokerFeatures;
 	}

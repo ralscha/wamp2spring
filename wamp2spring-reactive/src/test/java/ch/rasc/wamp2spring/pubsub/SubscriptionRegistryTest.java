@@ -27,13 +27,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.util.StopWatch;
 
@@ -115,14 +114,14 @@ public class SubscriptionRegistryTest {
 		unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "one");
 
 		UnsubscribeResult uresult = this.subscriptionRegistry.unsubscribe(unsubscribeMessage);
+		Subscription unsubscribed = Objects.requireNonNull(uresult.getSubscription());
 		assertThat(uresult.getError()).isNull();
 		assertThat(uresult.isDeleted()).isTrue();
 		assertThat(uresult.getWampSessionId()).isEqualTo(123L);
-		assertThat(uresult.getSubscription().getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(uresult.getSubscription().getSubscriptionId())
-			.isEqualTo(result.getSubscription().getSubscriptionId());
-		assertThat(uresult.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
+		assertThat(unsubscribed.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(unsubscribed.getSubscriptionId()).isEqualTo(result.getSubscription().getSubscriptionId());
+		assertThat(unsubscribed.getTopic()).isEqualTo("topic");
+		assertThat(unsubscribed.getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
 		assertRegistry(ra);
@@ -158,14 +157,14 @@ public class SubscriptionRegistryTest {
 		unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "1");
 
 		UnsubscribeResult uresult = this.subscriptionRegistry.unsubscribe(unsubscribeMessage);
+		Subscription unsubscribed = Objects.requireNonNull(uresult.getSubscription());
 		assertThat(uresult.getError()).isNull();
 		assertThat(uresult.isDeleted()).isFalse();
 		assertThat(uresult.getWampSessionId()).isEqualTo(123L);
-		assertThat(uresult.getSubscription().getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
-		assertThat(uresult.getSubscription().getSubscriptionId())
-			.isEqualTo(result1.getSubscription().getSubscriptionId());
-		assertThat(uresult.getSubscription().getTopic()).isEqualTo("topic");
-		assertThat(uresult.getSubscription().getSubscribers()).hasSize(1);
+		assertThat(unsubscribed.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(unsubscribed.getSubscriptionId()).isEqualTo(result1.getSubscription().getSubscriptionId());
+		assertThat(unsubscribed.getTopic()).isEqualTo("topic");
+		assertThat(unsubscribed.getSubscribers()).hasSize(1);
 
 		ra = new RegistryAssert();
 		ra.addSubscriber(MatchPolicy.EXACT, "topic", result2.getSubscription().getSubscriptionId(), 321L);
@@ -197,14 +196,14 @@ public class SubscriptionRegistryTest {
 		unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "one");
 
 		UnsubscribeResult uresult = this.subscriptionRegistry.unsubscribe(unsubscribeMessage);
+		Subscription unsubscribed = Objects.requireNonNull(uresult.getSubscription());
 		assertThat(uresult.isDeleted()).isTrue();
 		assertThat(uresult.getError()).isNull();
 		assertThat(uresult.getWampSessionId()).isEqualTo(123L);
-		assertThat(uresult.getSubscription().getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
-		assertThat(uresult.getSubscription().getSubscriptionId())
-			.isEqualTo(result.getSubscription().getSubscriptionId());
-		assertThat(uresult.getSubscription().getTopic()).isEqualTo("com.myapp.topic.emergency");
-		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
+		assertThat(unsubscribed.getMatchPolicy()).isEqualTo(MatchPolicy.PREFIX);
+		assertThat(unsubscribed.getSubscriptionId()).isEqualTo(result.getSubscription().getSubscriptionId());
+		assertThat(unsubscribed.getTopic()).isEqualTo("com.myapp.topic.emergency");
+		assertThat(unsubscribed.getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
 		assertRegistry(ra);
@@ -235,14 +234,14 @@ public class SubscriptionRegistryTest {
 		unsubscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "one");
 
 		UnsubscribeResult uresult = this.subscriptionRegistry.unsubscribe(unsubscribeMessage);
+		Subscription unsubscribed = Objects.requireNonNull(uresult.getSubscription());
 		assertThat(uresult.isDeleted()).isTrue();
 		assertThat(uresult.getError()).isNull();
 		assertThat(uresult.getWampSessionId()).isEqualTo(123L);
-		assertThat(uresult.getSubscription().getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
-		assertThat(uresult.getSubscription().getSubscriptionId())
-			.isEqualTo(result.getSubscription().getSubscriptionId());
-		assertThat(uresult.getSubscription().getTopic()).isEqualTo("com.myapp..userevent");
-		assertThat(uresult.getSubscription().getSubscribers()).isEmpty();
+		assertThat(unsubscribed.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
+		assertThat(unsubscribed.getSubscriptionId()).isEqualTo(result.getSubscription().getSubscriptionId());
+		assertThat(unsubscribed.getTopic()).isEqualTo("com.myapp..userevent");
+		assertThat(unsubscribed.getSubscribers()).isEmpty();
 
 		ra = new RegistryAssert();
 		assertRegistry(ra);
@@ -534,7 +533,7 @@ public class SubscriptionRegistryTest {
 		for (Integer ix : ixs) {
 			UnsubscribeMessage unsubMessage = unsubs.get(c);
 			ra.removeSubscriber(matchPolicy[ix], topics[ix], unsubMessage.getSubscriptionId(),
-					unsubMessage.getWampSessionId());
+					Objects.requireNonNull(unsubMessage.getWampSessionId()));
 			this.subscriptionRegistry.unsubscribe(unsubMessage);
 			c++;
 
@@ -713,11 +712,13 @@ public class SubscriptionRegistryTest {
 
 		oneSub = this.subscriptionRegistry.findSubscriptions("one.two");
 		assertThat(oneSub).hasSize(2);
-		Subscription sub = oneSub.stream().filter(s -> !s.getSubscribers().isEmpty()).findFirst().orElse(null);
-		assertThat(sub.getEventListenerHandlerMethods()).containsExactly(handlerMethod);
-		assertThat(sub.getSubscribers()).hasSize(1);
-		sub = oneSub.stream().filter(s -> s.getSubscribers().isEmpty()).findFirst().orElse(null);
-		assertThat(sub.getEventListenerHandlerMethods()).containsExactly(handlerMethod);
+		Subscription subscriberSub = Objects
+			.requireNonNull(oneSub.stream().filter(s -> !s.getSubscribers().isEmpty()).findFirst().orElse(null));
+		assertThat(subscriberSub.getEventListenerHandlerMethods()).containsExactly(handlerMethod);
+		assertThat(subscriberSub.getSubscribers()).hasSize(1);
+		Subscription listenerSub = Objects
+			.requireNonNull(oneSub.stream().filter(s -> s.getSubscribers().isEmpty()).findFirst().orElse(null));
+		assertThat(listenerSub.getEventListenerHandlerMethods()).containsExactly(handlerMethod);
 	}
 
 	private void assertRegistry(RegistryAssert ra) {
@@ -735,10 +736,11 @@ public class SubscriptionRegistryTest {
 				assertThat(this.subscriptionRegistry.countSubscribers(subscriptionId)).isEqualTo(subscribers.size());
 
 				SubscriptionDetail detail = this.subscriptionRegistry.getSubscription(subscriptionId);
-				assertThat(detail.getCreatedTimeMillis()).isGreaterThan(0);
-				assertThat(detail.getId()).isEqualTo(subscriptionId);
-				assertThat(detail.getMatchPolicy()).isEqualTo(policy);
-				assertThat(detail.getTopic()).isEqualTo(ra.topic(subscriptionId));
+				SubscriptionDetail requiredDetail = Objects.requireNonNull(detail);
+				assertThat(requiredDetail.getCreatedTimeMillis()).isGreaterThan(0);
+				assertThat(requiredDetail.getId()).isEqualTo(subscriptionId);
+				assertThat(requiredDetail.getMatchPolicy()).isEqualTo(policy);
+				assertThat(requiredDetail.getTopic()).isEqualTo(ra.topic(subscriptionId));
 			}
 
 			assertThat(this.subscriptionRegistry.lookupSubscription("topic", policy))
@@ -751,7 +753,7 @@ public class SubscriptionRegistryTest {
 		assertThat(this.subscriptionRegistry.hasSubscribers("x")).isFalse();
 	}
 
-	private class RegistryAssert {
+	private static class RegistryAssert {
 
 		Map<MatchPolicy, Map<String, Map<Long, Set<Long>>>> registry = new HashMap<>();
 
@@ -761,9 +763,8 @@ public class SubscriptionRegistryTest {
 			this.registry.put(MatchPolicy.PREFIX, new HashMap<>());
 		}
 
-		@Nullable
-		public Long subscriptionId(String topic, MatchPolicy policy) {
-			Map<Long, Set<Long>> map = this.registry.get(policy).get(topic);
+		@Nullable Long subscriptionId(String topic, MatchPolicy policy) {
+			Map<Long, Set<Long>> map = Objects.requireNonNull(this.registry.get(policy)).get(topic);
 			if (map != null) {
 				return map.keySet().iterator().next();
 			}
@@ -791,10 +792,9 @@ public class SubscriptionRegistryTest {
 			}
 		}
 
-		@Nullable
-		public String topic(Long subscriptionId) {
+		@Nullable String topic(Long subscriptionId) {
 			for (MatchPolicy policy : MatchPolicy.values()) {
-				Map<String, Map<Long, Set<Long>>> map = this.registry.get(policy);
+				Map<String, Map<Long, Set<Long>>> map = Objects.requireNonNull(this.registry.get(policy));
 				for (Entry<String, Map<Long, Set<Long>>> entry : map.entrySet()) {
 					if (entry.getValue().containsKey(subscriptionId)) {
 						return entry.getKey();
@@ -810,13 +810,17 @@ public class SubscriptionRegistryTest {
 				.flatMap(m -> m.values().stream())
 				.filter(m -> m.containsKey(subscriptionId))
 				.findFirst()
-				.map(m -> m.get(subscriptionId))
+				.map(m -> Objects.requireNonNull(m.get(subscriptionId)))
 				.orElse(Set.of());
 
 		}
 
 		List<Long> subscriptions(MatchPolicy match) {
-			return this.registry.get(match).values().stream().flatMap(m -> m.keySet().stream()).toList();
+			return Objects.requireNonNull(this.registry.get(match))
+				.values()
+				.stream()
+				.flatMap(m -> m.keySet().stream())
+				.toList();
 		}
 
 		List<String> topics() {

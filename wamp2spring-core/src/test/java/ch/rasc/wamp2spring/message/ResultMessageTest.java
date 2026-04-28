@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ public class ResultMessageTest extends BaseMessageTest {
 		ResultMessage resultMessage = new ResultMessage(111, null, null);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).isNull();
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 		String json = serializeToJson(resultMessage);
@@ -41,6 +43,7 @@ public class ResultMessageTest extends BaseMessageTest {
 		resultMessage = new ResultMessage(111, Arrays.asList("Hello world"), null);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).containsExactly("Hello world");
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 		json = serializeToJson(resultMessage);
@@ -52,6 +55,7 @@ public class ResultMessageTest extends BaseMessageTest {
 		resultMessage = new ResultMessage(111, Arrays.asList("johnny"), argumentsKw);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).containsExactly("johnny");
 		assertThat(resultMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
 				MapEntry.entry("surname", "Doe"));
@@ -64,11 +68,17 @@ public class ResultMessageTest extends BaseMessageTest {
 		resultMessage = new ResultMessage(111, null, argumentsKw);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(111);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).isNull();
 		assertThat(resultMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
 				MapEntry.entry("surname", "Doe"));
 		json = serializeToJson(resultMessage);
 		assertThat(json).isEqualTo("[50,111,{},[],{\"firstname\":\"John\",\"surname\":\"Doe\"}]");
+
+		resultMessage = new ResultMessage(111, true, Arrays.asList("partial"), null);
+		assertThat(resultMessage.isProgress()).isTrue();
+		json = serializeToJson(resultMessage);
+		assertThat(json).isEqualTo("[50,111,{\"progress\":true},[\"partial\"]]");
 
 	}
 
@@ -76,41 +86,54 @@ public class ResultMessageTest extends BaseMessageTest {
 	public void deserializeTest() throws IOException {
 		String json = "[50, 7814135, {}]";
 
-		ResultMessage resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		ResultMessage resultMessage = deserializeResultMessage(json);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).isNull();
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [\"Hello, world!\"]]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = deserializeResultMessage(json);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).containsExactly("Hello, world!");
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [30]]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = deserializeResultMessage(json);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).containsExactly(30);
 		assertThat(resultMessage.getArgumentsKw()).isNull();
 
 		json = "[50, 7814135, {}, [], {\"userid\": 123, \"karma\": 10}]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = deserializeResultMessage(json);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).isEmpty();
 		assertThat(resultMessage.getArgumentsKw()).containsOnly(MapEntry.entry("userid", 123),
 				MapEntry.entry("karma", 10));
 
 		json = "[50, 7814135, {}, [\"a\",\"b\",\"c\"], {\"userid\": 123, \"karma\": 10}]";
-		resultMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		resultMessage = deserializeResultMessage(json);
 		assertThat(resultMessage.getCode()).isEqualTo(50);
 		assertThat(resultMessage.getRequestId()).isEqualTo(7814135L);
+		assertThat(resultMessage.isProgress()).isFalse();
 		assertThat(resultMessage.getArguments()).containsExactly("a", "b", "c");
 		assertThat(resultMessage.getArgumentsKw()).containsOnly(MapEntry.entry("userid", 123),
 				MapEntry.entry("karma", 10));
+
+		json = "[50, 7814135, {\"progress\": true}, [30]]";
+		resultMessage = deserializeResultMessage(json);
+		assertThat(resultMessage.isProgress()).isTrue();
+	}
+
+	private ResultMessage deserializeResultMessage(String json) throws IOException {
+		return Objects.requireNonNull(WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8)));
 	}
 
 }

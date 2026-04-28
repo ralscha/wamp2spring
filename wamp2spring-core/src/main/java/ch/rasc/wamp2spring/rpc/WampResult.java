@@ -22,19 +22,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.util.CollectionHelper;
 
 public class WampResult {
 
-	@Nullable
-	private List<Object> results;
+	@Nullable private List<Object> results;
 
-	@Nullable
-	private Map<String, Object> resultsKw;
+	@Nullable private Map<String, Object> resultsKw;
 
-	public static WampResult createKw(String k, Object v) {
+	public static WampResult createKw(String k, @Nullable Object v) {
 		Map<String, Object> kw = new HashMap<>();
 		kw.put(k, v);
 		return new WampResult(kw);
@@ -63,7 +61,7 @@ public class WampResult {
 		this.resultsKw = resultsKw;
 	}
 
-	public WampResult add(Object value) {
+	public WampResult add(@Nullable Object value) {
 		if (this.results == null) {
 			this.results = new ArrayList<>();
 		}
@@ -72,7 +70,7 @@ public class WampResult {
 		return this;
 	}
 
-	public WampResult add(String key, Object value) {
+	public WampResult add(String key, @Nullable Object value) {
 		if (this.resultsKw == null) {
 			this.resultsKw = new HashMap<>();
 		}
@@ -81,8 +79,7 @@ public class WampResult {
 		return this;
 	}
 
-	@Nullable
-	public List<Object> getResults() {
+	@Nullable public List<Object> getResults() {
 		return this.results;
 	}
 
@@ -90,8 +87,7 @@ public class WampResult {
 		this.results = CollectionHelper.toList(results);
 	}
 
-	@Nullable
-	public Map<String, Object> getResultsKw() {
+	@Nullable public Map<String, Object> getResultsKw() {
 		return this.resultsKw;
 	}
 

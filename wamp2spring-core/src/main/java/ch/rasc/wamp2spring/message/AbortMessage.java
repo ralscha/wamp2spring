@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -35,11 +35,9 @@ public class AbortMessage extends WampMessage {
 
 	static final int CODE = 3;
 
-	@Nullable
-	private final String message;
+	@Nullable private final String message;
 
-	@Nullable
-	private final String reason;
+	@Nullable private final String reason;
 
 	public AbortMessage(WampError reason, @Nullable String message) {
 		this(reason.getExternalValue(), message);
@@ -83,16 +81,14 @@ public class AbortMessage extends WampMessage {
 	/**
 	 * Reason for the abort in human readable form
 	 */
-	@Nullable
-	public String getMessage() {
+	@Nullable public String getMessage() {
 		return this.message;
 	}
 
 	/**
 	 * Return an URI describing the abort reason.
 	 */
-	@Nullable
-	public String getReason() {
+	@Nullable public String getReason() {
 		return this.reason;
 	}
 

@@ -15,6 +15,7 @@
  */
 package ch.rasc.wamp2spring.config;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -33,7 +34,7 @@ public class WampSessionIdMethodArgumentResolver implements HandlerMethodArgumen
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
+	public @Nullable Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		return message.getHeaders().get(WampMessageHeader.WAMP_SESSION_ID.name());
 	}
 

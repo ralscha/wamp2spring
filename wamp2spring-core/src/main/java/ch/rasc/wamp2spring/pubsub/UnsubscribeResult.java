@@ -15,7 +15,7 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.WampError;
 
@@ -23,13 +23,11 @@ class UnsubscribeResult {
 
 	private final long wampSessionId;
 
-	@Nullable
-	private final Subscription subscription;
+	@Nullable private final Subscription subscription;
 
 	private final boolean deleted;
 
-	@Nullable
-	private final WampError error;
+	@Nullable private final WampError error;
 
 	public UnsubscribeResult(long wampSessionId, Subscription subscription, boolean deleted) {
 		this.wampSessionId = wampSessionId;
@@ -49,8 +47,7 @@ class UnsubscribeResult {
 		return this.wampSessionId;
 	}
 
-	@Nullable
-	public Subscription getSubscription() {
+	@Nullable public Subscription getSubscription() {
 		return this.subscription;
 	}
 
@@ -58,8 +55,7 @@ class UnsubscribeResult {
 		return this.deleted;
 	}
 
-	@Nullable
-	public WampError getError() {
+	@Nullable public WampError getError() {
 		return this.error;
 	}
 

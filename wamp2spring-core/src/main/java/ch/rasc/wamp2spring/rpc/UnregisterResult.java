@@ -17,7 +17,7 @@ package ch.rasc.wamp2spring.rpc;
 
 import java.util.List;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.message.ErrorMessage;
 
@@ -25,20 +25,25 @@ class UnregisterResult {
 
 	private final boolean success;
 
-	@Nullable
-	private final String procedure;
+	@Nullable private final String procedure;
 
 	private final long registrationId;
 
-	@Nullable
-	private final List<ErrorMessage> invocationErrors;
+	private final boolean deleted;
 
-	UnregisterResult(boolean success, @Nullable Procedure proc) {
-		this(success, proc, null);
+	@Nullable private final Procedure procedureObject;
+
+	@Nullable private final List<ErrorMessage> invocationErrors;
+
+	UnregisterResult(boolean success, @Nullable Procedure proc, boolean deleted) {
+		this(success, proc, deleted, null);
 	}
 
-	UnregisterResult(boolean success, @Nullable Procedure proc, @Nullable List<ErrorMessage> invocationErrors) {
+	UnregisterResult(boolean success, @Nullable Procedure proc, boolean deleted,
+			@Nullable List<ErrorMessage> invocationErrors) {
 		this.success = success;
+		this.deleted = deleted;
+		this.procedureObject = proc;
 		if (proc != null) {
 			this.procedure = proc.getProcedure();
 			this.registrationId = proc.getRegistrationId();
@@ -54,8 +59,7 @@ class UnregisterResult {
 		return this.success;
 	}
 
-	@Nullable
-	String getProcedure() {
+	@Nullable String getProcedure() {
 		return this.procedure;
 	}
 
@@ -63,9 +67,16 @@ class UnregisterResult {
 		return this.registrationId;
 	}
 
-	@Nullable
-	List<ErrorMessage> getInvocationErrors() {
+	boolean isDeleted() {
+		return this.deleted;
+	}
+
+	@Nullable List<ErrorMessage> getInvocationErrors() {
 		return this.invocationErrors;
+	}
+
+	@Nullable Procedure getProcedureObject() {
+		return this.procedureObject;
 	}
 
 }

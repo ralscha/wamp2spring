@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
@@ -30,20 +30,23 @@ class Subscription {
 
 	private final DestinationMatch topicMatch;
 
+	@Nullable private final String realm;
+
 	private final long subscriptionId;
 
 	private final Set<Subscriber> subscribers;
 
 	private final long createdTimeMillis;
 
-	private final Map<String, Object> options;
+	@Nullable private final Map<String, Object> options;
 
-	@Nullable
-	private volatile List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
+	@Nullable private volatile List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
 
-	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId, Map<String, Object> options) {
+	Subscription(@Nullable String realm, String topic, MatchPolicy matchPolicy, long subscriptionId,
+			@Nullable Map<String, Object> options) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
+		this.realm = realm;
 		this.topicMatch = new DestinationMatch(topic, matchPolicy);
 
 		this.subscriptionId = subscriptionId;
@@ -78,6 +81,10 @@ class Subscription {
 		return this.topicMatch.getDestination();
 	}
 
+	@Nullable String getRealm() {
+		return this.realm;
+	}
+
 	MatchPolicy getMatchPolicy() {
 		return this.topicMatch.getMatchPolicy();
 	}
@@ -94,12 +101,11 @@ class Subscription {
 		return this.subscribers;
 	}
 
-	public Map<String, Object> getOptions() {
+	public @Nullable Map<String, Object> getOptions() {
 		return this.options;
 	}
 
-	@Nullable
-	List<InvocableHandlerMethod> getEventListenerHandlerMethods() {
+	@Nullable List<InvocableHandlerMethod> getEventListenerHandlerMethods() {
 		return this.eventListenerHandlerMethods;
 	}
 

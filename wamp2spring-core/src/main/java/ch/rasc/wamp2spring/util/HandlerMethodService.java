@@ -23,7 +23,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.handler.annotation.support.HeaderMethodArgumentResolver;
 import org.springframework.messaging.handler.annotation.support.HeadersMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
@@ -69,14 +69,12 @@ public class HandlerMethodService {
 		this.objectMapper = objectMapper;
 	}
 
-	@Nullable
-	public Object invoke(CallMessage callMessage, InvocableHandlerMethod handlerMethod) throws Exception {
+	@Nullable public Object invoke(CallMessage callMessage, InvocableHandlerMethod handlerMethod) throws Exception {
 		setHelpers(handlerMethod);
 		return handlerMethod.invoke(callMessage, callMessage.getArguments(), callMessage.getArgumentsKw());
 	}
 
-	@Nullable
-	public Object invoke(EventMessage eventMessage, InvocableHandlerMethod handlerMethod) throws Exception {
+	@Nullable public Object invoke(EventMessage eventMessage, InvocableHandlerMethod handlerMethod) throws Exception {
 		setHelpers(handlerMethod);
 		return handlerMethod.invoke(eventMessage, eventMessage.getArguments(), eventMessage.getArgumentsKw());
 	}

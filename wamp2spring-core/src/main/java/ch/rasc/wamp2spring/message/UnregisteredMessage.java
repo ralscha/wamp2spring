@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -35,11 +35,9 @@ public class UnregisteredMessage extends WampMessage {
 
 	private final long requestId;
 
-	@Nullable
-	private final Long registrationId;
+	@Nullable private final Long registrationId;
 
-	@Nullable
-	private final String reason;
+	@Nullable private final String reason;
 
 	public UnregisteredMessage(long requestId) {
 		this(requestId, null, null);
@@ -67,11 +65,13 @@ public class UnregisteredMessage extends WampMessage {
 		JsonToken token = jp.nextToken();
 		if (token == JsonToken.START_OBJECT) {
 			Map<String, Object> details = ParserUtil.readObject(jp);
-			reason = (String) details.get("reason");
+			if (details != null) {
+				reason = (String) details.get("reason");
 
-			Object registrationObj = details.get("registration");
-			if (registrationObj != null) {
-				registrationId = ((Number) registrationObj).longValue();
+				Object registrationObj = details.get("registration");
+				if (registrationObj != null) {
+					registrationId = ((Number) registrationObj).longValue();
+				}
 			}
 		}
 
@@ -99,13 +99,11 @@ public class UnregisteredMessage extends WampMessage {
 		return this.requestId;
 	}
 
-	@Nullable
-	public Long getRegistrationId() {
+	@Nullable public Long getRegistrationId() {
 		return this.registrationId;
 	}
 
-	@Nullable
-	public String getReason() {
+	@Nullable public String getReason() {
 		return this.reason;
 	}
 

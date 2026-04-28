@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Collection helper class
@@ -36,8 +36,7 @@ public class CollectionHelper {
 	 * @return a {@link List} instance with the provided arguments
 	 */
 	@SafeVarargs
-	@Nullable
-	public static <T> List<T> toList(@Nullable T... arguments) {
+	@Nullable public static <T> List<T> toList(@Nullable T... arguments) {
 		if (arguments != null) {
 			if (arguments.length == 1) {
 				return Collections.singletonList(arguments[0]);
@@ -60,8 +59,7 @@ public class CollectionHelper {
 	 * collection
 	 */
 	@SuppressWarnings("unchecked")
-	@Nullable
-	public static <T> List<Object> toList(@Nullable Collection<T> collection) {
+	@Nullable public static <T> List<Object> toList(@Nullable Collection<T> collection) {
 		if (collection != null) {
 			if (collection instanceof List) {
 				return (List<Object>) collection;
@@ -77,8 +75,7 @@ public class CollectionHelper {
 	 * @return an instance of {@link Set} containing all the elements of the provided
 	 * collection.
 	 */
-	@Nullable
-	public static Set<Long> toSet(@Nullable Collection<Long> collection) {
+	@Nullable public static Set<Long> toSet(@Nullable Collection<Long> collection) {
 		if (collection != null) {
 			if (collection instanceof Set) {
 				return (Set<Long>) collection;

@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -200,7 +200,7 @@ public class WampPublisherTest {
 	}
 
 	private static <T> void assertPublishMessage(PublishMessage publishMessage, String topic, Map<String, T> value,
-			Set<Long> eligible, Set<Long> exclude) {
+			@Nullable Set<Long> eligible, @Nullable Set<Long> exclude) {
 		assertThat(publishMessage.getCode()).isEqualTo(16);
 		assertThat(publishMessage.getRequestId()).isGreaterThan(0);
 		assertThat(publishMessage.getTopic()).isEqualTo(topic);
@@ -224,7 +224,7 @@ public class WampPublisherTest {
 	}
 
 	private static <T> void assertPublishMessage(PublishMessage publishMessage, String topic, List<T> values,
-			Set<Long> eligible, Set<Long> exclude) {
+			@Nullable Set<Long> eligible, @Nullable Set<Long> exclude) {
 		assertThat(publishMessage.getCode()).isEqualTo(16);
 		assertThat(publishMessage.getRequestId()).isGreaterThan(0);
 		assertThat(publishMessage.getTopic()).isEqualTo(topic);

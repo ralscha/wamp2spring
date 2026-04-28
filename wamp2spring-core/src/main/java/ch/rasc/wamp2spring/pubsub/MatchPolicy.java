@@ -15,7 +15,7 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public enum MatchPolicy {
 
@@ -31,18 +31,13 @@ public enum MatchPolicy {
 		return this.externalValue;
 	}
 
-	@Nullable
-	public static MatchPolicy fromExtValue(String externalValue) {
-		switch (externalValue) {
-			case "exact":
-				return EXACT;
-			case "prefix":
-				return PREFIX;
-			case "wildcard":
-				return WILDCARD;
-			default:
-				return null;
-		}
+	@Nullable public static MatchPolicy fromExtValue(String externalValue) {
+		return switch (externalValue) {
+			case "exact" -> EXACT;
+			case "prefix" -> PREFIX;
+			case "wildcard" -> WILDCARD;
+			default -> null;
+		};
 	}
 
 }

@@ -16,8 +16,9 @@
 package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
+import java.util.Objects;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.pubsub.SubscriptionDetail;
@@ -30,7 +31,9 @@ public abstract class WampSubscriptionEvent extends WampEvent {
 	private final SubscriptionDetail subscriptionDetail;
 
 	public WampSubscriptionEvent(WampMessage wampMessage, SubscriptionDetail subscriptionDetail) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
+		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
+				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
 		this.subscriptionDetail = subscriptionDetail;
 	}
 

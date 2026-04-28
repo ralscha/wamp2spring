@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Id generator, that generates WAMP compliant identification numbers.
@@ -59,7 +59,7 @@ public class IdGenerator {
 	public static long newLinearId(AtomicLong longValue) {
 		while (true) {
 			long current = longValue.get();
-			long next = (current >= IdGenerator.MAX) ? 1L : current + 1L;
+			long next = (current >= MAX) ? 1L : current + 1L;
 			if (longValue.compareAndSet(current, next)) {
 				return next;
 			}

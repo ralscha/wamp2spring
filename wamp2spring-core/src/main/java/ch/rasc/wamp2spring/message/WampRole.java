@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class WampRole {
 
@@ -32,16 +32,20 @@ public final class WampRole {
 		this.features = new HashSet<>();
 	}
 
-	String getRole() {
+	public String getRole() {
 		return this.role;
 	}
 
-	Set<String> getFeatures() {
+	public Set<String> getFeatures() {
 		return this.features;
 	}
 
 	public void addFeature(String feature) {
 		this.features.add(feature);
+	}
+
+	public boolean hasFeature(String feature) {
+		return this.features.contains(feature);
 	}
 
 	boolean hasFeatures() {

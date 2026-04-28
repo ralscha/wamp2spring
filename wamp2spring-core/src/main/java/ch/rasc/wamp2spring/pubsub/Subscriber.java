@@ -17,7 +17,7 @@ package ch.rasc.wamp2spring.pubsub;
 
 import java.util.Objects;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 final class Subscriber {
 
@@ -25,9 +25,27 @@ final class Subscriber {
 
 	private final long wampSessionId;
 
+	@Nullable private final String authId;
+
+	@Nullable private final String authRole;
+
+	private final boolean subscriptionRevocationSupported;
+
 	Subscriber(String webSocketSessionId, long wampSessionId) {
+		this(webSocketSessionId, wampSessionId, null, null, false);
+	}
+
+	Subscriber(String webSocketSessionId, long wampSessionId, @Nullable String authId, @Nullable String authRole) {
+		this(webSocketSessionId, wampSessionId, authId, authRole, false);
+	}
+
+	Subscriber(String webSocketSessionId, long wampSessionId, @Nullable String authId, @Nullable String authRole,
+			boolean subscriptionRevocationSupported) {
 		this.webSocketSessionId = webSocketSessionId;
 		this.wampSessionId = wampSessionId;
+		this.authId = authId;
+		this.authRole = authRole;
+		this.subscriptionRevocationSupported = subscriptionRevocationSupported;
 	}
 
 	String getWebSocketSessionId() {
@@ -36,6 +54,18 @@ final class Subscriber {
 
 	long getWampSessionId() {
 		return this.wampSessionId;
+	}
+
+	@Nullable String getAuthId() {
+		return this.authId;
+	}
+
+	@Nullable String getAuthRole() {
+		return this.authRole;
+	}
+
+	boolean isSubscriptionRevocationSupported() {
+		return this.subscriptionRevocationSupported;
 	}
 
 	@Override

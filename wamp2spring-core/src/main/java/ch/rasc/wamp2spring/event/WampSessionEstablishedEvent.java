@@ -15,6 +15,8 @@
  */
 package ch.rasc.wamp2spring.event;
 
+import java.util.Objects;
+
 import ch.rasc.wamp2spring.message.WampMessage;
 
 /**
@@ -23,7 +25,9 @@ import ch.rasc.wamp2spring.message.WampMessage;
 public class WampSessionEstablishedEvent extends WampEvent {
 
 	public WampSessionEstablishedEvent(WampMessage wampMessage) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
+		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
+				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
 	}
 
 }

@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 
@@ -41,7 +43,7 @@ public class SubscribeMessage extends WampMessage {
 
 	private final boolean getRetained;
 
-	private final Map<String, Object> options;
+	@Nullable private final Map<String, Object> options;
 
 	public SubscribeMessage(long requestId, String topic) {
 		this(requestId, topic, MatchPolicy.EXACT, false, null);
@@ -60,7 +62,7 @@ public class SubscribeMessage extends WampMessage {
 	}
 
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match, boolean getRetained,
-			Map<String, Object> options) {
+			@Nullable Map<String, Object> options) {
 		super(CODE);
 		this.requestId = requestId;
 		this.matchPolicy = match;
@@ -154,7 +156,7 @@ public class SubscribeMessage extends WampMessage {
 	 * <p>
 	 * Returns a unmodifiable view of the map. Can be null.
 	 */
-	public Map<String, Object> getOptions() {
+	public @Nullable Map<String, Object> getOptions() {
 		return this.options;
 	}
 

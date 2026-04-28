@@ -20,12 +20,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -56,21 +57,27 @@ public class PublishMessage extends WampMessage {
 
 	private final String topic;
 
-	@Nullable
-	private final Set<Number> exclude;
+	@Nullable private final Set<Number> exclude;
 
-	@Nullable
-	private final Set<Number> eligible;
+	@Nullable private final Set<Number> eligible;
 
-	@Nullable
-	private final List<Object> arguments;
+	@Nullable private final Set<String> excludeAuthIds;
 
-	@Nullable
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final Set<String> eligibleAuthIds;
+
+	@Nullable private final Set<String> excludeAuthRoles;
+
+	@Nullable private final Set<String> eligibleAuthRoles;
+
+	@Nullable private final List<Object> arguments;
+
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	private PublishMessage(long requestId, String topic, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean acknowledge, boolean excludeMe, boolean discloseMe,
-			boolean retain, @Nullable Set<Number> exclude, @Nullable Set<Number> eligible) {
+			boolean retain, @Nullable Set<Number> exclude, @Nullable Set<Number> eligible,
+			@Nullable Set<String> excludeAuthIds, @Nullable Set<String> eligibleAuthIds,
+			@Nullable Set<String> excludeAuthRoles, @Nullable Set<String> eligibleAuthRoles) {
 		super(CODE);
 		this.requestId = requestId;
 		this.topic = topic;
@@ -82,11 +89,16 @@ public class PublishMessage extends WampMessage {
 		this.retain = retain;
 		this.exclude = exclude;
 		this.eligible = eligible;
+		this.excludeAuthIds = excludeAuthIds;
+		this.eligibleAuthIds = eligibleAuthIds;
+		this.excludeAuthRoles = excludeAuthRoles;
+		this.eligibleAuthRoles = eligibleAuthRoles;
 	}
 
 	PublishMessage(Builder builder) {
 		this(builder.requestId, builder.topic, builder.arguments, builder.argumentsKw, builder.acknowledge,
-				builder.excludeMe, builder.discloseMe, builder.retain, builder.exclude, builder.eligible);
+				builder.excludeMe, builder.discloseMe, builder.retain, builder.exclude, builder.eligible,
+				builder.excludeAuthIds, builder.eligibleAuthIds, builder.excludeAuthRoles, builder.eligibleAuthRoles);
 	}
 
 	public static Builder builder(long requestId, String topic) {
@@ -107,17 +119,21 @@ public class PublishMessage extends WampMessage {
 
 		boolean retain;
 
-		@Nullable
-		List<Object> arguments;
+		@Nullable List<Object> arguments;
 
-		@Nullable
-		Map<String, Object> argumentsKw;
+		@Nullable Map<String, Object> argumentsKw;
 
-		@Nullable
-		Set<Number> exclude;
+		@Nullable Set<Number> exclude;
 
-		@Nullable
-		Set<Number> eligible;
+		@Nullable Set<Number> eligible;
+
+		@Nullable Set<String> excludeAuthIds;
+
+		@Nullable Set<String> eligibleAuthIds;
+
+		@Nullable Set<String> excludeAuthRoles;
+
+		@Nullable Set<String> eligibleAuthRoles;
 
 		public Builder(long requestId, String topic) {
 			this.requestId = requestId;
@@ -198,6 +214,26 @@ public class PublishMessage extends WampMessage {
 			return this;
 		}
 
+		public Builder excludeAuthIds(Collection<String> authIds) {
+			this.excludeAuthIds = new LinkedHashSet<>(authIds);
+			return this;
+		}
+
+		public Builder eligibleAuthIds(Collection<String> authIds) {
+			this.eligibleAuthIds = new LinkedHashSet<>(authIds);
+			return this;
+		}
+
+		public Builder excludeAuthRoles(Collection<String> authRoles) {
+			this.excludeAuthRoles = new LinkedHashSet<>(authRoles);
+			return this;
+		}
+
+		public Builder eligibleAuthRoles(Collection<String> authRoles) {
+			this.eligibleAuthRoles = new LinkedHashSet<>(authRoles);
+			return this;
+		}
+
 		public PublishMessage build() {
 			return new PublishMessage(this);
 		}
@@ -215,6 +251,10 @@ public class PublishMessage extends WampMessage {
 		boolean retain = false;
 		Set<Number> exclude = null;
 		Set<Number> eligible = null;
+		Set<String> excludeAuthIds = null;
+		Set<String> eligibleAuthIds = null;
+		Set<String> excludeAuthRoles = null;
+		Set<String> eligibleAuthRoles = null;
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
@@ -231,6 +271,26 @@ public class PublishMessage extends WampMessage {
 			List<Number> eligibleArray = (List<Number>) options.get("eligible");
 			if (eligibleArray != null) {
 				eligible = new HashSet<>(eligibleArray);
+			}
+
+			List<String> excludeAuthIdArray = (List<String>) options.get("exclude_authid");
+			if (excludeAuthIdArray != null) {
+				excludeAuthIds = new LinkedHashSet<>(excludeAuthIdArray);
+			}
+
+			List<String> eligibleAuthIdArray = (List<String>) options.get("eligible_authid");
+			if (eligibleAuthIdArray != null) {
+				eligibleAuthIds = new LinkedHashSet<>(eligibleAuthIdArray);
+			}
+
+			List<String> excludeAuthRoleArray = (List<String>) options.get("exclude_authrole");
+			if (excludeAuthRoleArray != null) {
+				excludeAuthRoles = new LinkedHashSet<>(excludeAuthRoleArray);
+			}
+
+			List<String> eligibleAuthRoleArray = (List<String>) options.get("eligible_authrole");
+			if (eligibleAuthRoleArray != null) {
+				eligibleAuthRoles = new LinkedHashSet<>(eligibleAuthRoleArray);
 			}
 		}
 
@@ -250,7 +310,7 @@ public class PublishMessage extends WampMessage {
 		}
 
 		return new PublishMessage(request, topic, arguments, argumentsKw, acknowledge, excludeMe, discloseMe, retain,
-				exclude, eligible);
+				exclude, eligible, excludeAuthIds, eligibleAuthIds, excludeAuthRoles, eligibleAuthRoles);
 	}
 
 	@Override
@@ -281,6 +341,22 @@ public class PublishMessage extends WampMessage {
 
 		if (this.eligible != null) {
 			generator.writeObjectField("eligible", this.eligible);
+		}
+
+		if (this.excludeAuthIds != null) {
+			generator.writeObjectField("exclude_authid", this.excludeAuthIds);
+		}
+
+		if (this.eligibleAuthIds != null) {
+			generator.writeObjectField("eligible_authid", this.eligibleAuthIds);
+		}
+
+		if (this.excludeAuthRoles != null) {
+			generator.writeObjectField("exclude_authrole", this.excludeAuthRoles);
+		}
+
+		if (this.eligibleAuthRoles != null) {
+			generator.writeObjectField("eligible_authrole", this.eligibleAuthRoles);
 		}
 
 		generator.writeEndObject();
@@ -325,24 +401,36 @@ public class PublishMessage extends WampMessage {
 		return this.topic;
 	}
 
-	@Nullable
-	public List<Object> getArguments() {
+	@Nullable public List<Object> getArguments() {
 		return this.arguments;
 	}
 
-	@Nullable
-	public Map<String, Object> getArgumentsKw() {
+	@Nullable public Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
 
-	@Nullable
-	public Set<Number> getExclude() {
+	@Nullable public Set<Number> getExclude() {
 		return this.exclude;
 	}
 
-	@Nullable
-	public Set<Number> getEligible() {
+	@Nullable public Set<String> getExcludeAuthIds() {
+		return this.excludeAuthIds;
+	}
+
+	@Nullable public Set<Number> getEligible() {
 		return this.eligible;
+	}
+
+	@Nullable public Set<String> getEligibleAuthIds() {
+		return this.eligibleAuthIds;
+	}
+
+	@Nullable public Set<String> getExcludeAuthRoles() {
+		return this.excludeAuthRoles;
+	}
+
+	@Nullable public Set<String> getEligibleAuthRoles() {
+		return this.eligibleAuthRoles;
 	}
 
 	@Override

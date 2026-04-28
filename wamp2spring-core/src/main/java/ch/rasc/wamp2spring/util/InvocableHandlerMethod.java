@@ -23,13 +23,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolverComposite;
@@ -47,13 +48,13 @@ import ch.rasc.wamp2spring.message.WampMessage;
 
 public class InvocableHandlerMethod extends HandlerMethod {
 
-	private HandlerMethodArgumentResolverComposite argumentResolvers;
+	@Nullable private HandlerMethodArgumentResolverComposite argumentResolvers;
 
-	private ParameterNameDiscoverer parameterNameDiscoverer;
+	@Nullable private ParameterNameDiscoverer parameterNameDiscoverer;
 
-	private ConversionService conversionService;
+	@Nullable private ConversionService conversionService;
 
-	private ObjectMapper objectMapper;
+	@Nullable private ObjectMapper objectMapper;
 
 	public InvocableHandlerMethod(HandlerMethod handlerMethod) {
 		super(handlerMethod);
@@ -83,15 +84,14 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * {@link HandlerMethodArgumentResolver}s. The {@code providedArgs} parameter however
 	 * may supply argument values to be used directly, i.e. without argument resolution.
 	 * @param message the current message being processed
-	 * @param arguments
-	 * @param argumentsKw
+	 * @param arguments positional arguments supplied with the WAMP message
+	 * @param argumentsKw keyword arguments supplied with the WAMP message
 	 * @return the raw value returned by the invoked method
-	 * @exception Exception raised if no suitable argument resolver can be found, or if
-	 * the method raised an exception
+	 * @throws Exception raised if no suitable argument resolver can be found, or if the
+	 * method raised an exception
 	 */
-	@Nullable
-	public Object invoke(WampMessage message, List<Object> arguments, Map<String, Object> argumentsKw)
-			throws Exception {
+	@Nullable public Object invoke(WampMessage message, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) throws Exception {
 		Object[] args = getMethodArgumentValues(message, arguments, argumentsKw);
 		if (this.logger.isTraceEnabled()) {
 			this.logger.trace("Invoking '" + ClassUtils.getQualifiedMethodName(getMethod(), getBeanType())
@@ -105,20 +105,21 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		return returnValue;
 	}
 
-	private Object[] getMethodArgumentValues(WampMessage message, List<Object> arguments,
-			Map<String, Object> argumentsKw) throws Exception {
+	private Object[] getMethodArgumentValues(WampMessage message, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) throws Exception {
 
 		MethodParameter[] parameters = getMethodParameters();
 		Object[] args = new Object[parameters.length];
+		HandlerMethodArgumentResolverComposite argumentResolvers = getArgumentResolvers();
 		int argIndex = 0;
 		for (int i = 0; i < parameters.length; i++) {
 			MethodParameter parameter = parameters[i];
 			parameter.initParameterNameDiscovery(this.parameterNameDiscoverer);
+			@Nullable Object resolvedArg = null;
 
-			if (this.argumentResolvers.supportsParameter(parameter)) {
+			if (argumentResolvers.supportsParameter(parameter)) {
 				try {
-					args[i] = this.argumentResolvers.resolveArgument(parameter, message);
-					continue;
+					resolvedArg = argumentResolvers.resolveArgument(parameter, message);
 				}
 				catch (Exception ex) {
 					if (this.logger.isDebugEnabled()) {
@@ -127,37 +128,35 @@ public class InvocableHandlerMethod extends HandlerMethod {
 					throw ex;
 				}
 			}
-
-			if (arguments != null && arguments.size() > argIndex) {
-				args[i] = convert(parameter, arguments.get(argIndex));
-				if (args[i] != null) {
+			else if (arguments != null && arguments.size() > argIndex) {
+				resolvedArg = convert(parameter, arguments.get(argIndex));
+				if (resolvedArg != null) {
 					argIndex++;
-					continue;
 				}
 			}
 
-			if (argumentsKw != null) {
+			if (resolvedArg == null && argumentsKw != null) {
 				String paramName = parameter.getParameterName();
 				if (paramName != null) {
 					Object arg = argumentsKw.get(paramName);
 					if (arg != null) {
-						args[i] = convert(parameter, arg);
-						continue;
+						resolvedArg = convert(parameter, arg);
 					}
 				}
 			}
 
-			if (args[i] == null) {
+			if (resolvedArg == null) {
 				throw new MethodArgumentResolutionException(message, parameter,
 						getArgumentResolutionErrorMessage("No suitable resolver for", i));
 			}
+
+			args[i] = resolvedArg;
 		}
 
 		return args;
 	}
 
-	@Nullable
-	public Object convert(MethodParameter parameter, Object argument) {
+	@Nullable public Object convert(MethodParameter parameter, @Nullable Object argument) {
 		if (argument == null) {
 			if (parameter.getParameterType().equals(Optional.class)) {
 				return Optional.empty();
@@ -175,15 +174,16 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			return convertListElements(td, argument);
 		}
 
-		if (this.conversionService.canConvert(sourceClass, targetClass)) {
+		ConversionService conversionService = getConversionService();
+		if (conversionService.canConvert(sourceClass, targetClass)) {
 			try {
-				return convertListElements(td, this.conversionService.convert(argument, targetClass));
+				return convertListElements(td, conversionService.convert(argument, targetClass));
 			}
 			catch (Exception e) {
 				// ignore this exception for collections and arrays.
 				// try to convert the value with Jackson
 
-				TypeFactory typeFactory = this.objectMapper.getTypeFactory();
+				TypeFactory typeFactory = getObjectMapper().getTypeFactory();
 				if (td.getElementTypeDescriptor() != null) {
 					if (td.isCollection()) {
 						JavaType elemType = typeFactory.constructType(td.getElementTypeDescriptor().getType());
@@ -202,30 +202,29 @@ public class InvocableHandlerMethod extends HandlerMethod {
 						}
 
 						JavaType type = CollectionType.construct(targetClass, bindings, superClass, null, elemType);
-						return this.objectMapper.convertValue(argument, type);
+						return getObjectMapper().convertValue(argument, type);
 					}
 					if (td.isArray()) {
 						JavaType type = typeFactory.constructArrayType(td.getElementTypeDescriptor().getType());
-						return this.objectMapper.convertValue(argument, type);
+						return getObjectMapper().convertValue(argument, type);
 					}
 				}
 
 				throw e;
 			}
 		}
-		return this.objectMapper.convertValue(argument, targetClass);
+		return getObjectMapper().convertValue(argument, targetClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	@Nullable
-	private Object convertListElements(TypeDescriptor td, @Nullable Object convertedValue) {
+	@Nullable private Object convertListElements(TypeDescriptor td, @Nullable Object convertedValue) {
 		if (convertedValue != null && List.class.isAssignableFrom(convertedValue.getClass()) && td.isCollection()
 				&& td.getElementTypeDescriptor() != null) {
 			Class<?> elementType = td.getElementTypeDescriptor().getType();
 
 			Collection<Object> convertedList = new ArrayList<>();
 			for (Object record : (List<Object>) convertedValue) {
-				Object convertedObject = this.objectMapper.convertValue(record, elementType);
+				Object convertedObject = getObjectMapper().convertValue(record, elementType);
 				convertedList.add(convertedObject);
 			}
 			return convertedList;
@@ -242,8 +241,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	/**
 	 * Invoke the handler method with the given argument values.
 	 */
-	@Nullable
-	private Object doInvoke(Object... args) throws Exception {
+	@Nullable private Object doInvoke(Object[] args) throws Exception {
 		ReflectionUtils.makeAccessible(getBridgedMethod());
 		try {
 			return getBridgedMethod().invoke(getBean(), args);
@@ -256,14 +254,14 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		catch (InvocationTargetException ex) {
 			// Unwrap for HandlerExceptionResolvers ...
 			Throwable targetException = ex.getTargetException();
-			if (targetException instanceof RuntimeException) {
-				throw (RuntimeException) targetException;
+			if (targetException instanceof RuntimeException runtimeException) {
+				throw runtimeException;
 			}
-			if (targetException instanceof Error) {
-				throw (Error) targetException;
+			if (targetException instanceof Error error) {
+				throw error;
 			}
-			if (targetException instanceof Exception) {
-				throw (Exception) targetException;
+			if (targetException instanceof Exception exception) {
+				throw exception;
 			}
 			else {
 				String text = getInvocationErrorMessage("Failed to invoke handler method", args);
@@ -280,7 +278,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * mechanisms.
 	 */
 	@Override
-	protected void assertTargetBean(Method method, Object targetBean, Object[] args) {
+	protected void assertTargetBean(Method method, Object targetBean, @Nullable Object[] args) {
 		Class<?> methodDeclaringClass = method.getDeclaringClass();
 		Class<?> targetBeanClass = targetBean.getClass();
 		if (!methodDeclaringClass.isAssignableFrom(targetBeanClass)) {
@@ -292,9 +290,13 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		}
 	}
 
-	private String getInvocationErrorMessage(String text, Object[] resolvedArgs) {
+	private String getInvocationErrorMessage(String text, @Nullable Object[] resolvedArgs) {
 		StringBuilder sb = new StringBuilder(getDetailedErrorMessage(text));
 		sb.append("Resolved arguments: \n");
+		if (resolvedArgs == null) {
+			sb.append("[none]\n");
+			return sb.toString();
+		}
 		for (int i = 0; i < resolvedArgs.length; i++) {
 			sb.append("[").append(i).append("] ");
 			if (resolvedArgs[i] == null) {
@@ -319,6 +321,18 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		sb.append("Endpoint [").append(getBeanType().getName()).append("]\n");
 		sb.append("Method [").append(getBridgedMethod().toGenericString()).append("]\n");
 		return sb.toString();
+	}
+
+	private HandlerMethodArgumentResolverComposite getArgumentResolvers() {
+		return Objects.requireNonNull(this.argumentResolvers);
+	}
+
+	private ConversionService getConversionService() {
+		return Objects.requireNonNull(this.conversionService);
+	}
+
+	private ObjectMapper getObjectMapper() {
+		return Objects.requireNonNull(this.objectMapper);
 	}
 
 }

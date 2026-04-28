@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.rpc;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -59,7 +60,7 @@ public class WampResultService {
 	@WampProcedure(name = "two")
 	public WampResult two(String first, String second) {
 		this.called.add("two");
-		return WampResult.create(first.toUpperCase(), second.toUpperCase());
+		return WampResult.create(first.toUpperCase(Locale.ROOT), second.toUpperCase(Locale.ROOT));
 	}
 
 	@WampProcedure(name = "empty")
@@ -71,7 +72,7 @@ public class WampResultService {
 	@WampProcedure(name = "twoKw")
 	public WampResult twoKw(String first, String second) {
 		this.called.add("twoKw");
-		return WampResult.createKw("1", first.toUpperCase()).add("2", second.toUpperCase());
+		return WampResult.createKw("1", first.toUpperCase(Locale.ROOT)).add("2", second.toUpperCase(Locale.ROOT));
 	}
 
 	@WampProcedure(name = "mix")

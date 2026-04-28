@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -32,8 +32,7 @@ public class GoodbyeMessage extends WampMessage {
 
 	static final int CODE = 6;
 
-	@Nullable
-	private final String message;
+	@Nullable private final String message;
 
 	private final String reason;
 
@@ -45,7 +44,7 @@ public class GoodbyeMessage extends WampMessage {
 		this(reason.getExternalValue(), null);
 	}
 
-	private GoodbyeMessage(String reason, @Nullable String message) {
+	public GoodbyeMessage(String reason, @Nullable String message) {
 		super(CODE);
 		this.message = message;
 		this.reason = reason;
@@ -79,8 +78,7 @@ public class GoodbyeMessage extends WampMessage {
 		return this.reason;
 	}
 
-	@Nullable
-	public String getMessage() {
+	@Nullable public String getMessage() {
 		return this.message;
 	}
 

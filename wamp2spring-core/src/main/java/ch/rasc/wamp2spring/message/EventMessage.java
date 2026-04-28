@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -40,27 +40,35 @@ public class EventMessage extends WampMessage {
 
 	private final long publicationId;
 
-	@Nullable
-	private final String topic;
+	@Nullable private final String topic;
 
-	@Nullable
-	private final Number publisher;
+	@Nullable private final Number publisher;
+
+	@Nullable private final String publisherAuthId;
+
+	@Nullable private final String publisherAuthRole;
 
 	private final boolean retained;
 
-	@Nullable
-	private final List<Object> arguments;
+	@Nullable private final List<Object> arguments;
 
-	@Nullable
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic, @Nullable Number publisher,
 			boolean retained, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
+		this(subscriptionId, publicationId, topic, publisher, null, null, retained, arguments, argumentsKw);
+	}
+
+	public EventMessage(long subscriptionId, long publicationId, @Nullable String topic, @Nullable Number publisher,
+			@Nullable String publisherAuthId, @Nullable String publisherAuthRole, boolean retained,
+			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.subscriptionId = subscriptionId;
 		this.publicationId = publicationId;
 		this.topic = topic;
 		this.publisher = publisher;
+		this.publisherAuthId = publisherAuthId;
+		this.publisherAuthRole = publisherAuthRole;
 		this.retained = retained;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
@@ -68,8 +76,10 @@ public class EventMessage extends WampMessage {
 
 	public EventMessage(@Nullable String receiverWebSocketSessionId, long subscription, long publication,
 			@Nullable String topic, @Nullable Number publisher, boolean retained, PublishMessage publishMessage) {
-		this(subscription, publication, topic, publisher, retained, publishMessage.getArguments(),
-				publishMessage.getArgumentsKw());
+		this(subscription, publication, topic, publisher,
+				publishMessage.isDiscloseMe() ? publishMessage.getAuthId() : null,
+				publishMessage.isDiscloseMe() ? publishMessage.getAuthRole() : null, retained,
+				publishMessage.getArguments(), publishMessage.getArgumentsKw());
 
 		if (receiverWebSocketSessionId != null) {
 			setReceiverWebSocketSessionId(receiverWebSocketSessionId);
@@ -86,11 +96,15 @@ public class EventMessage extends WampMessage {
 		jp.nextToken();
 		String topic = null;
 		Number publisher = null;
+		String publisherAuthId = null;
+		String publisherAuthRole = null;
 		boolean retained = false;
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			topic = (String) details.get("topic");
 			publisher = (Number) details.get("publisher");
+			publisherAuthId = (String) details.get("publisher_authid");
+			publisherAuthRole = (String) details.get("publisher_authrole");
 			retained = (boolean) details.getOrDefault("retained", false);
 		}
 
@@ -106,11 +120,13 @@ public class EventMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new EventMessage(subscription, publication, topic, publisher, retained, arguments, argumentsKw);
+		return new EventMessage(subscription, publication, topic, publisher, publisherAuthId, publisherAuthRole,
+				retained, arguments, argumentsKw);
 	}
 
 	@Override
 	public void serialize(JsonGenerator generator) throws IOException {
+		Number publisher = this.publisher;
 		generator.writeNumber(getCode());
 		generator.writeNumber(this.subscriptionId);
 		generator.writeNumber(this.publicationId);
@@ -119,8 +135,14 @@ public class EventMessage extends WampMessage {
 		if (this.topic != null) {
 			generator.writeStringField("topic", this.topic);
 		}
-		if (this.publisher != null) {
-			generator.writeNumberField("publisher", this.publisher.longValue());
+		if (publisher != null) {
+			generator.writeNumberField("publisher", publisher.longValue());
+		}
+		if (this.publisherAuthId != null) {
+			generator.writeStringField("publisher_authid", this.publisherAuthId);
+		}
+		if (this.publisherAuthRole != null) {
+			generator.writeStringField("publisher_authrole", this.publisherAuthRole);
 		}
 		if (this.retained) {
 			generator.writeBooleanField("retained", this.retained);
@@ -150,34 +172,39 @@ public class EventMessage extends WampMessage {
 		return this.publicationId;
 	}
 
-	@Nullable
-	public String getTopic() {
+	@Nullable public String getTopic() {
 		return this.topic;
 	}
 
-	@Nullable
-	public Number getPublisher() {
+	@Nullable public Number getPublisher() {
 		return this.publisher;
+	}
+
+	@Nullable public String getPublisherAuthId() {
+		return this.publisherAuthId;
+	}
+
+	@Nullable public String getPublisherAuthRole() {
+		return this.publisherAuthRole;
 	}
 
 	public boolean isRetained() {
 		return this.retained;
 	}
 
-	@Nullable
-	public List<Object> getArguments() {
+	@Nullable public List<Object> getArguments() {
 		return this.arguments;
 	}
 
-	@Nullable
-	public Map<String, Object> getArgumentsKw() {
+	@Nullable public Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
 
 	@Override
 	public String toString() {
 		return "EventMessage [subscriptionId=" + this.subscriptionId + ", publicationId=" + this.publicationId
-				+ ", topic=" + this.topic + ", publisher=" + this.publisher + ", retained=" + this.retained
+				+ ", topic=" + this.topic + ", publisher=" + this.publisher + ", publisherAuthId="
+				+ this.publisherAuthId + ", publisherAuthRole=" + this.publisherAuthRole + ", retained=" + this.retained
 				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 

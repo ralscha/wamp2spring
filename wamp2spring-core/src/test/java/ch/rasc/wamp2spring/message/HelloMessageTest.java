@@ -15,13 +15,13 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 public class HelloMessageTest extends BaseMessageTest {
@@ -29,15 +29,18 @@ public class HelloMessageTest extends BaseMessageTest {
 	@Test
 	public void serializeTest() {
 		List<WampRole> roles = createRoles();
-		HelloMessage helloMessage = new HelloMessage("aRealm", roles);
+		HelloMessage helloMessage = new HelloMessage("aRealm", roles, List.of("ticket"), "alice",
+				Map.of("ticket", "demo-token"));
 
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("aRealm");
 		assertThat(helloMessage.getRoles()).isEqualTo(roles);
+		assertThat(helloMessage.getAuthMethods()).containsExactly("ticket");
+		assertThat(helloMessage.getAuthId()).isEqualTo("alice");
 
 		String json = serializeToJson(helloMessage);
 		assertThat(json).isEqualTo(
-				"[1,\"aRealm\",{\"roles\":{\"publisher\":{\"features\":{\"publisher_exclusion\":true}},\"subscriber\":{\"features\":{\"subscriber_blackwhite_listing\":true}}}}]");
+				"[1,\"aRealm\",{\"roles\":{\"publisher\":{\"features\":{\"publisher_exclusion\":true}},\"subscriber\":{\"features\":{\"subscriber_blackwhite_listing\":true}}},\"authmethods\":[\"ticket\"],\"authid\":\"alice\",\"authextra\":{\"ticket\":\"demo-token\"}}]");
 	}
 
 	@Test
@@ -47,12 +50,17 @@ public class HelloMessageTest extends BaseMessageTest {
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("somerealm");
 		assertThat(helloMessage.getRoles()).containsOnly(new WampRole("publisher"), new WampRole("subscriber"));
+		assertThat(helloMessage.getAuthMethods()).isEmpty();
+		assertThat(helloMessage.getAuthId()).isNull();
 
-		json = "[1,\"aRealm\",{\"roles\":{\"publisher\":{\"features\":{\"publisher_exclusion\":true}},\"subscriber\":{\"features\":{\"subscriber_blackwhite_listing\":true}}}}]";
+		json = "[1,\"aRealm\",{\"roles\":{\"publisher\":{\"features\":{\"publisher_exclusion\":true}},\"subscriber\":{\"features\":{\"subscriber_blackwhite_listing\":true}}},\"authmethods\":[\"ticket\"],\"authid\":\"alice\",\"authextra\":{\"ticket\":\"demo-token\"}}]";
 		helloMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("aRealm");
 		assertThat(helloMessage.getRoles()).containsOnlyElementsOf(createRoles());
+		assertThat(helloMessage.getAuthMethods()).containsExactly("ticket");
+		assertThat(helloMessage.getAuthId()).isEqualTo("alice");
+		assertThat(helloMessage.getAuthExtra()).containsEntry("ticket", "demo-token");
 	}
 
 	private static List<WampRole> createRoles() {

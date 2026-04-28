@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.config;
 
-import org.springframework.lang.Nullable;
-
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 /**
@@ -28,8 +26,7 @@ public class DestinationMatch {
 
 	private final MatchPolicy matchPolicy;
 
-	@Nullable
-	private final String wildcardComponents[];
+	private final String @org.jspecify.annotations.Nullable [] wildcardComponents;
 
 	public DestinationMatch(String destination) {
 		this(destination, MatchPolicy.EXACT);

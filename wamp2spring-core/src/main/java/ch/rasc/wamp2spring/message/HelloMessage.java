@@ -17,10 +17,11 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -32,15 +33,28 @@ public class HelloMessage extends WampMessage {
 
 	static final int CODE = 1;
 
-	@Nullable
-	private final String realm;
+	@Nullable private final String realm;
 
 	private final List<WampRole> roles;
 
+	private final List<String> authMethods;
+
+	@Nullable private final String authId;
+
+	@Nullable private final Map<String, Object> authExtra;
+
 	public HelloMessage(@Nullable String realm, List<WampRole> roles) {
+		this(realm, roles, List.of(), null, null);
+	}
+
+	public HelloMessage(@Nullable String realm, List<WampRole> roles, @Nullable List<String> authMethods,
+			@Nullable String authId, @Nullable Map<String, Object> authExtra) {
 		super(CODE);
 		this.realm = realm;
 		this.roles = roles;
+		this.authMethods = authMethods != null ? List.copyOf(authMethods) : List.of();
+		this.authId = authId;
+		this.authExtra = authExtra != null ? Collections.unmodifiableMap(authExtra) : null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -49,24 +63,42 @@ public class HelloMessage extends WampMessage {
 		String realm = jp.getValueAsString();
 
 		List<WampRole> roles = new ArrayList<>();
+		List<String> authMethods = List.of();
+		String authId = null;
+		Map<String, Object> authExtra = null;
 		jp.nextToken();
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
 				.get("roles");
-			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
-				WampRole wampRole = new WampRole(entry.getKey());
-				Map<String, Boolean> features = entry.getValue().get("features");
-				if (features != null) {
-					for (String feature : features.keySet()) {
-						wampRole.addFeature(feature);
+			if (rolesMap != null) {
+				for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
+					WampRole wampRole = new WampRole(entry.getKey());
+					Map<String, Boolean> features = entry.getValue().get("features");
+					if (features != null) {
+						for (String feature : features.keySet()) {
+							wampRole.addFeature(feature);
+						}
+					}
+					roles.add(wampRole);
+				}
+			}
+
+			Object authMethodsValue = details.get("authmethods");
+			if (authMethodsValue instanceof List<?>) {
+				authMethods = new ArrayList<>();
+				for (Object value : (List<?>) authMethodsValue) {
+					if (value != null) {
+						authMethods.add(value.toString());
 					}
 				}
-				roles.add(wampRole);
 			}
+
+			authId = (String) details.get("authid");
+			authExtra = (Map<String, Object>) details.get("authextra");
 		}
 
-		return new HelloMessage(realm, roles);
+		return new HelloMessage(realm, roles, authMethods, authId, authExtra);
 	}
 
 	@Override
@@ -87,11 +119,24 @@ public class HelloMessage extends WampMessage {
 			generator.writeEndObject();
 		}
 		generator.writeEndObject();
+		if (!this.authMethods.isEmpty()) {
+			generator.writeArrayFieldStart("authmethods");
+			for (String authMethod : this.authMethods) {
+				generator.writeString(authMethod);
+			}
+			generator.writeEndArray();
+		}
+		if (this.authId != null) {
+			generator.writeStringField("authid", this.authId);
+		}
+		if (this.authExtra != null && !this.authExtra.isEmpty()) {
+			generator.writeObjectField("authextra", this.authExtra);
+		}
 		generator.writeEndObject();
 	}
 
-	@Nullable
-	public String getRealm() {
+	@Override
+	@Nullable public String getRealm() {
 		return this.realm;
 	}
 
@@ -99,9 +144,23 @@ public class HelloMessage extends WampMessage {
 		return this.roles;
 	}
 
+	public List<String> getAuthMethods() {
+		return this.authMethods;
+	}
+
+	@Override
+	@Nullable public String getAuthId() {
+		return this.authId;
+	}
+
+	@Nullable public Map<String, Object> getAuthExtra() {
+		return this.authExtra;
+	}
+
 	@Override
 	public String toString() {
-		return "HelloMessage [realm=" + this.realm + ", roles=" + this.roles + "]";
+		return "HelloMessage [realm=" + this.realm + ", roles=" + this.roles + ", authMethods=" + this.authMethods
+				+ ", authId=" + this.authId + "]";
 	}
 
 }

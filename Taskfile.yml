@@ -1,3 +1,19 @@
+#
+# Copyright the original author or authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 version: '3'
 
 vars:
@@ -10,29 +26,36 @@ tasks:
       - task --list-all
 
   clean:
+    descr: Clean the project
     cmds:
       - '{{.MVNW}} clean'
 
+  lint:
+    descr: Run PMD 
+    cmds:
+      - '{{.MVNW}} -DskipTests pmd:check'
+
   test:
+    descr: Run tests
     cmds:
       - '{{.MVNW}} test'
 
   verify:
+    descr: Run Maven verify phase
     cmds:
       - '{{.MVNW}} verify'
 
-  ci:
-    cmds:
-      - '{{.MVNW}} clean verify'
-
   format:
+    descr: Format code using Spring Java Format
     cmds:
       - '{{.MVNW}} spring-javaformat:apply'
 
   sortpom:
+    descr: Sort pom.xml using sortpom
     cmds:
       - '{{.MVNW}} sortpom:sort'
 
   license:
+    descr: Format license headers using the license-maven-plugin
     cmds:
       - '{{.MVNW}} license:format'

@@ -32,8 +32,7 @@ public class WampSubscribeMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public boolean matches(Message<? extends Object> message) {
-		if (message instanceof SubscribeMessage) {
-			SubscribeMessage subscribeMessage = (SubscribeMessage) message;
+		if (message instanceof SubscribeMessage subscribeMessage) {
 			String topic = subscribeMessage.getTopic();
 			if (this.topicMatch.getMatchPolicy() != MatchPolicy.PREFIX) {
 				return subscribeMessage.getMatchPolicy() == this.topicMatch.getMatchPolicy()

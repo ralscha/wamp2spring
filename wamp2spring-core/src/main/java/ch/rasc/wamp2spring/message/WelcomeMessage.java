@@ -17,10 +17,11 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -36,14 +37,34 @@ public class WelcomeMessage extends WampMessage {
 
 	private final List<WampRole> roles;
 
-	@Nullable
-	private final String realm;
+	@Nullable private final String realm;
+
+	@Nullable private final String authId;
+
+	@Nullable private final String authRole;
+
+	@Nullable private final String authMethod;
+
+	@Nullable private final String authProvider;
+
+	@Nullable private final Map<String, Object> authExtra;
 
 	public WelcomeMessage(long sessionId, List<WampRole> roles, @Nullable String realm) {
+		this(sessionId, roles, realm, null, null, null, null, null);
+	}
+
+	public WelcomeMessage(long sessionId, List<WampRole> roles, @Nullable String realm, @Nullable String authId,
+			@Nullable String authRole, @Nullable String authMethod, @Nullable String authProvider,
+			@Nullable Map<String, Object> authExtra) {
 		super(CODE);
 		this.sessionId = sessionId;
 		this.roles = roles;
 		this.realm = realm;
+		this.authId = authId;
+		this.authRole = authRole;
+		this.authMethod = authMethod;
+		this.authProvider = authProvider;
+		this.authExtra = authExtra != null ? Collections.unmodifiableMap(authExtra) : null;
 	}
 
 	public WelcomeMessage(HelloMessage helloMessage, long sessionId, List<WampRole> roles) {
@@ -59,26 +80,38 @@ public class WelcomeMessage extends WampMessage {
 
 		List<WampRole> roles = new ArrayList<>();
 		String realm = null;
+		String authId = null;
+		String authRole = null;
+		String authMethod = null;
+		String authProvider = null;
+		Map<String, Object> authExtra = null;
 		jp.nextToken();
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
 				.get("roles");
-			for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
-				WampRole wampRole = new WampRole(entry.getKey());
-				Map<String, Boolean> features = entry.getValue().get("features");
-				if (features != null) {
-					for (String feature : features.keySet()) {
-						wampRole.addFeature(feature);
+			if (rolesMap != null) {
+				for (Map.Entry<String, Map<String, Map<String, Boolean>>> entry : rolesMap.entrySet()) {
+					WampRole wampRole = new WampRole(entry.getKey());
+					Map<String, Boolean> features = entry.getValue().get("features");
+					if (features != null) {
+						for (String feature : features.keySet()) {
+							wampRole.addFeature(feature);
+						}
 					}
+					roles.add(wampRole);
 				}
-				roles.add(wampRole);
 			}
 
 			realm = (String) details.get("realm");
+			authId = (String) details.get("authid");
+			authRole = (String) details.get("authrole");
+			authMethod = (String) details.get("authmethod");
+			authProvider = (String) details.get("authprovider");
+			authExtra = (Map<String, Object>) details.get("authextra");
 		}
 
-		return new WelcomeMessage(session, roles, realm);
+		return new WelcomeMessage(session, roles, realm, authId, authRole, authMethod, authProvider, authExtra);
 	}
 
 	@Override
@@ -105,6 +138,21 @@ public class WelcomeMessage extends WampMessage {
 		if (this.realm != null) {
 			generator.writeStringField("realm", this.realm);
 		}
+		if (this.authId != null) {
+			generator.writeStringField("authid", this.authId);
+		}
+		if (this.authRole != null) {
+			generator.writeStringField("authrole", this.authRole);
+		}
+		if (this.authMethod != null) {
+			generator.writeStringField("authmethod", this.authMethod);
+		}
+		if (this.authProvider != null) {
+			generator.writeStringField("authprovider", this.authProvider);
+		}
+		if (this.authExtra != null && !this.authExtra.isEmpty()) {
+			generator.writeObjectField("authextra", this.authExtra);
+		}
 		generator.writeEndObject();
 	}
 
@@ -116,14 +164,51 @@ public class WelcomeMessage extends WampMessage {
 		return this.roles;
 	}
 
-	@Nullable
-	public String getRealm() {
+	@Override
+	@Nullable public String getRealm() {
 		return this.realm;
 	}
 
 	@Override
+	@Nullable public String getAuthId() {
+		if (this.authId != null) {
+			return this.authId;
+		}
+		return getPrincipal() != null ? super.getAuthId() : null;
+	}
+
+	@Override
+	@Nullable public String getAuthRole() {
+		if (this.authRole != null) {
+			return this.authRole;
+		}
+		return getPrincipal() != null ? super.getAuthRole() : null;
+	}
+
+	@Override
+	public String getAuthMethod() {
+		if (this.authMethod != null) {
+			return this.authMethod;
+		}
+		return super.getAuthMethod();
+	}
+
+	@Override
+	public String getAuthProvider() {
+		if (this.authProvider != null) {
+			return this.authProvider;
+		}
+		return super.getAuthProvider();
+	}
+
+	@Nullable public Map<String, Object> getAuthExtra() {
+		return this.authExtra;
+	}
+
+	@Override
 	public String toString() {
-		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles + ", realm=" + this.realm + "]";
+		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles + ", realm=" + this.realm
+				+ ", authId=" + this.authId + ", authRole=" + this.authRole + ", authMethod=" + this.authMethod + "]";
 	}
 
 }

@@ -12,12 +12,21 @@ Additionally *wamp2spring* implements a few features from the Advanced Profile:
 
 |Feature                      |Remark                                                                                                                                                    |
 |:----------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+|call_canceling               |Dealer-side `CANCEL` / `INTERRUPT` with `skip`, `kill`, and `killnowait`. Advanced cancel modes require caller negotiation; unsupported callees fall back to dealer-managed behavior.|
+|call_timeout                 |Dealer-enforced `CALL.Options.timeout`. Timeout intent is forwarded to callees that advertise support, but timeout semantics remain enforced by the dealer.|
+|progressive_call_results     |Dealer-side negotiation and forwarding of `CALL.Options.receive_progress`, `INVOCATION.Details.receive_progress`, progressive `YIELD`, and progressive `RESULT`, while keeping the invocation open until the final `YIELD` or `ERROR`.|
 |caller_identification        |disclose_me option in the CALL message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.3.5)                                               |
+|registration_revocation      |Dealer-side administrative revocation of registrations, with extended `UNREGISTERED` delivery to callees that advertised support.|
 |subscriber_blackwhite_listing|Exclude and include receivers with their WAMP session id. *Only eligible and exclude options are implemented.* [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.1).|
 |publisher_exclusion          |exclude_me option in the PUBLISH message. By default the publisher is excluded from receiving the EVENT message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.2)                                               |
 |publisher_identification     |disclose_me option in the PUBLISH message. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.3)|
 |pattern_based_subscription   |Prefix- and wildcard matching policies for subscriptions. [Specification](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.4.6)                                               |
 |event_retention              |[Specification](https://github.com/wamp-proto/wamp-proto/blob/da34d9bd833beeb6f9cc8bc89faf8138d710aa78/rfc/text/advanced/ap_pubsub_event_retention.md)|
+|testament_meta_api           |`wamp.session.add_testament` and `wamp.session.flush_testaments` with detached/destroyed scopes and disconnect-triggered publication order.| 
+
+For Advanced RPC timeout handling, the dealer is the source of truth once a caller and the router negotiated `call_timeout`.
+If a callee also advertises timeout support, the dealer forwards the timeout value in `INVOCATION.Details.timeout`.
+If the callee does not advertise timeout support, the dealer still enforces the timeout and returns the appropriate timeout error to the caller.
 
 **Dataformats**   
 *wamp2spring* supports JSON (wamp.2.json) and MessagePack (wamp.2.msgpack) required by the Basic Profile. In addition it

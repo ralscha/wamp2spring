@@ -31,8 +31,7 @@ public class WampRegisterMessageMatcher implements MessageMatcher<Object> {
 
 	@Override
 	public boolean matches(Message<? extends Object> message) {
-		if (message instanceof RegisterMessage) {
-			RegisterMessage registerMessage = (RegisterMessage) message;
+		if (message instanceof RegisterMessage registerMessage) {
 			return this.procedureMatch.matches(registerMessage.getProcedure());
 		}
 		return false;

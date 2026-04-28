@@ -17,11 +17,10 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.junit.jupiter.api.Assertions;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -53,11 +52,10 @@ public class BaseMessageTest {
 			message.serialize(generator);
 			generator.writeEndArray();
 			generator.close();
-			return new String(bos.toByteArray());
+			return new String(bos.toByteArray(), StandardCharsets.UTF_8);
 		}
 		catch (IOException e) {
-			Assertions.fail(e.getMessage());
-			return null;
+			throw new AssertionError(e);
 		}
 	}
 

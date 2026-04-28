@@ -15,11 +15,12 @@
  */
 package ch.rasc.wamp2spring.servlet;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.ServletWebSocketHandlerRegistry;
@@ -28,14 +29,14 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.web.socket.messaging.SubProtocolWebSocketHandler;
 import org.springframework.web.socket.server.HandshakeHandler;
 
+import ch.rasc.wamp2spring.auth.WampAuthenticationProvider;
 import ch.rasc.wamp2spring.config.WampConfiguration;
 import ch.rasc.wamp2spring.config.WampConfigurer;
 
 @Configuration
 public class WampServletConfiguration extends WampConfiguration implements ImportAware {
 
-	@Nullable
-	private ServletWebSocketHandlerRegistry handlerRegistry;
+	@Nullable private ServletWebSocketHandlerRegistry handlerRegistry;
 
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
@@ -43,35 +44,40 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 	}
 
 	@Bean
-	public SubProtocolWebSocketHandler subProtocolWebSocketHandler() {
+	public SubProtocolWebSocketHandler subProtocolWebSocketHandler(
+			ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
 		SubProtocolWebSocketHandler subProtocolWebSocketHandler = new SubProtocolWebSocketHandler(
 				clientInboundChannel(), clientOutboundChannel());
-		subProtocolWebSocketHandler.addProtocolHandler(wampSubProtocolHandler());
+		subProtocolWebSocketHandler.addProtocolHandler(wampSubProtocolHandler(authenticationProviders));
 		return subProtocolWebSocketHandler;
 	}
 
 	@Bean
-	public WampSubProtocolHandler wampSubProtocolHandler() {
+	public WampSubProtocolHandler wampSubProtocolHandler(
+			ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
 		return new WampSubProtocolHandler(jsonJsonFactory(), msgpackJsonFactory(), cborJsonFactory(),
-				smileJsonFactory(), clientInboundChannel(), this.features);
+				smileJsonFactory(), clientInboundChannel(), this.features,
+				authenticationProviders.orderedStream().toList());
 	}
 
 	@Bean
-	public HandlerMapping webSocketHandlerMapping() {
-		ServletWebSocketHandlerRegistry registry = initHandlerRegistry();
+	public HandlerMapping webSocketHandlerMapping(ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
+		ServletWebSocketHandlerRegistry registry = initHandlerRegistry(authenticationProviders);
 		return registry.getHandlerMapping();
 	}
 
-	private ServletWebSocketHandlerRegistry initHandlerRegistry() {
+	private ServletWebSocketHandlerRegistry initHandlerRegistry(
+			ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
 		if (this.handlerRegistry == null) {
 			this.handlerRegistry = new ServletWebSocketHandlerRegistry();
-			registerWebSocketHandlers(this.handlerRegistry);
+			registerWebSocketHandlers(this.handlerRegistry, authenticationProviders);
 		}
 		return this.handlerRegistry;
 	}
 
-	protected void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-		SubProtocolWebSocketHandler subProtocolWebSocketHandler = subProtocolWebSocketHandler();
+	protected void registerWebSocketHandlers(WebSocketHandlerRegistry registry,
+			ObjectProvider<WampAuthenticationProvider> authenticationProviders) {
+		SubProtocolWebSocketHandler subProtocolWebSocketHandler = subProtocolWebSocketHandler(authenticationProviders);
 
 		Integer sendTimeLimit = getSendTimeLimit();
 		if (sendTimeLimit != null) {
@@ -86,8 +92,8 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 		WebSocketHandler decoratedHandler = subProtocolWebSocketHandler;
 		decoratedHandler = decorateWebSocketHandler(decoratedHandler);
 		for (WampConfigurer wc : this.configurers) {
-			if (wc instanceof WampServletConfigurer) {
-				decoratedHandler = ((WampServletConfigurer) wc).decorateWebSocketHandler(decoratedHandler);
+			if (wc instanceof WampServletConfigurer wampServletConfigurer) {
+				decoratedHandler = wampServletConfigurer.decorateWebSocketHandler(decoratedHandler);
 			}
 		}
 
@@ -97,8 +103,8 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 
 		configureWebSocketHandlerRegistration(registration);
 		for (WampConfigurer wc : this.configurers) {
-			if (wc instanceof WampServletConfigurer) {
-				((WampServletConfigurer) wc).configureWebSocketHandlerRegistration(registration);
+			if (wc instanceof WampServletConfigurer wampServletConfigurer) {
+				wampServletConfigurer.configureWebSocketHandlerRegistration(registration);
 			}
 		}
 	}
@@ -116,13 +122,11 @@ public class WampServletConfiguration extends WampConfiguration implements Impor
 		return new PreferBinaryHandshakeHandler();
 	}
 
-	@Nullable
-	protected Integer getSendTimeLimit() {
+	@Nullable protected Integer getSendTimeLimit() {
 		return null;
 	}
 
-	@Nullable
-	protected Integer getSendBufferSizeLimit() {
+	@Nullable protected Integer getSendBufferSizeLimit() {
 		return null;
 	}
 

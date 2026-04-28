@@ -16,14 +16,14 @@
 package ch.rasc.wamp2spring.event;
 
 import java.security.Principal;
+import java.util.Objects;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import ch.rasc.wamp2spring.message.WampMessage;
 
 /**
- * Base class for the {@link WampProcedureRegisteredEvent} and
- * {@link WampProcedureUnregisteredEvent} event.
+ * Base class for procedure registration lifecycle events.
  */
 public abstract class WampProcedureEvent extends WampEvent {
 
@@ -32,7 +32,9 @@ public abstract class WampProcedureEvent extends WampEvent {
 	private final long registrationId;
 
 	public WampProcedureEvent(WampMessage wampMessage, String procedure, long registrationId) {
-		super(wampMessage.getWampSessionId(), wampMessage.getWebSocketSessionId(), wampMessage.getPrincipal());
+		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
+				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
 		this.procedure = procedure;
 		this.registrationId = registrationId;
 	}

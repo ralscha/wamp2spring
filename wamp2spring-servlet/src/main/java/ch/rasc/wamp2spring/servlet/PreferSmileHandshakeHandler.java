@@ -17,6 +17,7 @@ package ch.rasc.wamp2spring.servlet;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeHandler;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
@@ -43,7 +44,7 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 public class PreferSmileHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
-	protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
+	@Nullable protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
 
 		if (requestedProtocols.contains(WampSubProtocolHandler.SMILE_PROTOCOL)) {
 			return WampSubProtocolHandler.SMILE_PROTOCOL;

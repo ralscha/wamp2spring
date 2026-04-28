@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -31,8 +31,7 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class ParserUtil {
 
-	@Nullable
-	public static List<Object> readArray(JsonParser jp) throws IOException {
+	@Nullable public static List<Object> readArray(JsonParser jp) throws IOException {
 		if (jp.currentToken() != JsonToken.START_ARRAY) {
 			return null;
 		}
@@ -57,8 +56,7 @@ public class ParserUtil {
 		return result;
 	}
 
-	@Nullable
-	public static Map<String, Object> readObject(JsonParser jp) throws IOException {
+	@Nullable public static Map<String, Object> readObject(JsonParser jp) throws IOException {
 		if (jp.currentToken() != JsonToken.START_OBJECT) {
 			return null;
 		}
@@ -86,39 +84,24 @@ public class ParserUtil {
 
 	}
 
-	@Nullable
-	private static Object getValue(JsonParser jp) throws IOException {
-		switch (jp.currentToken()) {
-			case VALUE_FALSE:
-			case VALUE_TRUE:
-				return jp.getBooleanValue();
-			case VALUE_STRING:
-				return jp.getValueAsString();
-			case VALUE_NUMBER_INT:
-				switch (jp.getNumberType()) {
-					case INT:
-						return jp.getIntValue();
-					case LONG:
-						return jp.getLongValue();
-					case BIG_INTEGER:
-						return jp.getBigIntegerValue();
-					default:
-						return null;
-				}
-			case VALUE_NUMBER_FLOAT:
-				switch (jp.getNumberType()) {
-					case FLOAT:
-						return jp.getFloatValue();
-					case DOUBLE:
-						return jp.getDoubleValue();
-					case BIG_DECIMAL:
-						return jp.getDecimalValue();
-					default:
-						return null;
-				}
-			default:
-				return null;
-		}
+	@Nullable private static Object getValue(JsonParser jp) throws IOException {
+		return switch (jp.currentToken()) {
+			case VALUE_FALSE, VALUE_TRUE -> jp.getBooleanValue();
+			case VALUE_STRING -> jp.getValueAsString();
+			case VALUE_NUMBER_INT -> switch (jp.getNumberType()) {
+				case INT -> jp.getIntValue();
+				case LONG -> jp.getLongValue();
+				case BIG_INTEGER -> jp.getBigIntegerValue();
+				default -> null;
+			};
+			case VALUE_NUMBER_FLOAT -> switch (jp.getNumberType()) {
+				case FLOAT -> jp.getFloatValue();
+				case DOUBLE -> jp.getDoubleValue();
+				case BIG_DECIMAL -> jp.getDecimalValue();
+				default -> null;
+			};
+			default -> null;
+		};
 	}
 
 }

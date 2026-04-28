@@ -25,7 +25,7 @@ public class CommonTest {
 
 	@Test
 	public void testEquals() {
-		EqualsVerifier.forClass(Subscriber.class).withIgnoredFields("webSocketSessionId").verify();
+		EqualsVerifier.forClass(Subscriber.class).withOnlyTheseFields("wampSessionId").verify();
 	}
 
 	@Test

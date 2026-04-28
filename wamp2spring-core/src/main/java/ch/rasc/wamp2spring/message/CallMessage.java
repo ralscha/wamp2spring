@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -42,32 +42,47 @@ public class CallMessage extends WampMessage {
 
 	private final boolean discloseMe;
 
-	@Nullable
-	private final List<Object> arguments;
+	private final boolean receiveProgress;
 
-	@Nullable
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final Long timeout;
+
+	@Nullable private final List<Object> arguments;
+
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	public CallMessage(long request, String procedure) {
-		this(request, procedure, null, null, false);
+		this(request, procedure, null, null, false, false, null);
 	}
 
 	public CallMessage(long request, String procedure, @Nullable List<Object> arguments) {
-		this(request, procedure, arguments, null, false);
+		this(request, procedure, arguments, null, false, false, null);
 	}
 
 	public CallMessage(long request, String procedure, @Nullable Map<String, Object> argumentsKw) {
-		this(request, procedure, null, argumentsKw, false);
+		this(request, procedure, null, argumentsKw, false, false, null);
 	}
 
 	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean discloseMe) {
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, false, null);
+	}
+
+	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean receiveProgress) {
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, receiveProgress, null);
+	}
+
+	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean receiveProgress,
+			@Nullable Long timeout) {
 		super(CODE);
 		this.requestId = requestId;
 		this.procedure = procedure;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
 		this.discloseMe = discloseMe;
+		this.receiveProgress = receiveProgress;
+		this.timeout = timeout;
 	}
 
 	public static CallMessage deserialize(JsonParser jp) throws IOException {
@@ -75,10 +90,17 @@ public class CallMessage extends WampMessage {
 		long request = jp.getLongValue();
 
 		boolean discloseMe = false;
+		boolean receiveProgress = false;
+		Long timeout = null;
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
 			discloseMe = (boolean) options.getOrDefault("disclose_me", false);
+			receiveProgress = (boolean) options.getOrDefault("receive_progress", false);
+			Object timeoutOption = options.get("timeout");
+			if (timeoutOption instanceof Number timeoutNumber) {
+				timeout = timeoutNumber.longValue();
+			}
 		}
 
 		jp.nextToken();
@@ -96,7 +118,7 @@ public class CallMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new CallMessage(request, procedure, arguments, argumentsKw, discloseMe);
+		return new CallMessage(request, procedure, arguments, argumentsKw, discloseMe, receiveProgress, timeout);
 	}
 
 	@Override
@@ -107,6 +129,14 @@ public class CallMessage extends WampMessage {
 		generator.writeStartObject();
 		if (this.discloseMe) {
 			generator.writeBooleanField("disclose_me", this.discloseMe);
+		}
+		if (this.receiveProgress) {
+			generator.writeBooleanField("receive_progress", this.receiveProgress);
+		}
+		Long timeoutValue = this.timeout;
+		if (timeoutValue != null) {
+			generator.writeFieldName("timeout");
+			generator.writeNumber(timeoutValue);
 		}
 		generator.writeEndObject();
 
@@ -135,13 +165,11 @@ public class CallMessage extends WampMessage {
 		return this.procedure;
 	}
 
-	@Nullable
-	public List<Object> getArguments() {
+	@Nullable public List<Object> getArguments() {
 		return this.arguments;
 	}
 
-	@Nullable
-	public Map<String, Object> getArgumentsKw() {
+	@Nullable public Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
 
@@ -149,10 +177,19 @@ public class CallMessage extends WampMessage {
 		return this.discloseMe;
 	}
 
+	public boolean isReceiveProgress() {
+		return this.receiveProgress;
+	}
+
+	@Nullable public Long getTimeout() {
+		return this.timeout;
+	}
+
 	@Override
 	public String toString() {
 		return "CallMessage [requestId=" + this.requestId + ", procedure=" + this.procedure + ", discloseMe="
-				+ this.discloseMe + ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+				+ this.discloseMe + ", receiveProgress=" + this.receiveProgress + ", timeout=" + this.timeout
+				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

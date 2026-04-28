@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -45,11 +45,9 @@ public class ErrorMessage extends WampMessage {
 
 	private final String error;
 
-	@Nullable
-	private final List<Object> arguments;
+	@Nullable private final List<Object> arguments;
 
-	@Nullable
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	public ErrorMessage(int type, long requestId, String error, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw) {
@@ -95,6 +93,11 @@ public class ErrorMessage extends WampMessage {
 	public ErrorMessage(CallMessage callMessage, WampError error) {
 		this(callMessage.getCode(), callMessage.getRequestId(), error.getExternalValue(), null, null);
 		setReceiver(callMessage);
+	}
+
+	public ErrorMessage(CancelMessage cancelMessage, WampError error) {
+		this(cancelMessage.getCode(), cancelMessage.getRequestId(), error.getExternalValue(), null, null);
+		setReceiver(cancelMessage);
 	}
 
 	public ErrorMessage(CallMessage callMessage, String error, @Nullable List<Object> arguments,
@@ -173,13 +176,11 @@ public class ErrorMessage extends WampMessage {
 		return this.error;
 	}
 
-	@Nullable
-	public List<Object> getArguments() {
+	@Nullable public List<Object> getArguments() {
 		return this.arguments;
 	}
 
-	@Nullable
-	public Map<String, Object> getArgumentsKw() {
+	@Nullable public Map<String, Object> getArgumentsKw() {
 		return this.argumentsKw;
 	}
 

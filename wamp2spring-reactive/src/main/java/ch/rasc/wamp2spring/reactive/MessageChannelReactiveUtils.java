@@ -43,11 +43,11 @@ public final class MessageChannelReactiveUtils {
 		if (messageChannel instanceof Publisher) {
 			return (Publisher<Message<T>>) messageChannel;
 		}
-		if (messageChannel instanceof SubscribableChannel) {
-			return adaptSubscribableChannelToPublisher((SubscribableChannel) messageChannel);
+		if (messageChannel instanceof SubscribableChannel subscribableChannel) {
+			return adaptSubscribableChannelToPublisher(subscribableChannel);
 		}
-		if (messageChannel instanceof PollableChannel) {
-			return adaptPollableChannelToPublisher((PollableChannel) messageChannel);
+		if (messageChannel instanceof PollableChannel pollableChannel) {
+			return adaptPollableChannelToPublisher(pollableChannel);
 		}
 		throw new IllegalArgumentException("The 'messageChannel' must be an instance of Publisher, "
 				+ "SubscribableChannel or PollableChannel, not: " + messageChannel);

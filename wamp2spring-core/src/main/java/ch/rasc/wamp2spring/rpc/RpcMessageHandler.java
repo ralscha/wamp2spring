@@ -19,11 +19,18 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -49,8 +56,12 @@ import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampProcedureRegisteredEvent;
 import ch.rasc.wamp2spring.event.WampProcedureUnregisteredEvent;
+import ch.rasc.wamp2spring.event.WampRegistrationCreatedEvent;
+import ch.rasc.wamp2spring.event.WampRegistrationDeletedEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
+import ch.rasc.wamp2spring.message.CancelMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
+import ch.rasc.wamp2spring.message.InterruptMessage;
 import ch.rasc.wamp2spring.message.InvocationMessage;
 import ch.rasc.wamp2spring.message.RegisterMessage;
 import ch.rasc.wamp2spring.message.RegisteredMessage;
@@ -58,7 +69,10 @@ import ch.rasc.wamp2spring.message.ResultMessage;
 import ch.rasc.wamp2spring.message.UnregisterMessage;
 import ch.rasc.wamp2spring.message.UnregisteredMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
+import ch.rasc.wamp2spring.message.WampMessageHeader;
+import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.YieldMessage;
+import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
 
@@ -76,7 +90,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 	private final Object lifecycleMonitor = new Object();
 
-	private ApplicationContext applicationContext;
+	@Nullable private ApplicationContext applicationContext;
 
 	private final ProcedureRegistry procedureRegistry;
 
@@ -86,6 +100,12 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 	private final Features features;
 
+	private final Map<Long, ScheduledFuture<?>> timeoutTasks = new ConcurrentHashMap<>();
+
+	private final Set<Long> cancelOnTimeoutInvocations = ConcurrentHashMap.newKeySet();
+
+	private final ScheduledThreadPoolExecutor callTimeoutExecutor;
+
 	public RpcMessageHandler(SubscribableChannel clientInboundChannel, MessageChannel clientOutboundChannel,
 			ProcedureRegistry procedureRegistry, HandlerMethodService handlerMethodService, Features features) {
 		this.clientInboundChannel = clientInboundChannel;
@@ -93,6 +113,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 		this.procedureRegistry = procedureRegistry;
 		this.handlerMethodService = handlerMethodService;
 		this.features = features;
+		this.callTimeoutExecutor = new ScheduledThreadPoolExecutor(1, new CallTimeoutThreadFactory());
+		this.callTimeoutExecutor.setRemoveOnCancelPolicy(true);
 	}
 
 	public void setAutoStartup(boolean autoStartup) {
@@ -121,6 +143,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 	public void stop() {
 		synchronized (this.lifecycleMonitor) {
 			this.clientInboundChannel.unsubscribe(this);
+			cancelAllTimeoutTasks();
 			this.running = false;
 		}
 	}
@@ -149,40 +172,74 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			return;
 		}
 
-		if (message instanceof RegisterMessage) {
-			RegisterMessage registerMessage = (RegisterMessage) message;
-			long registrationId = this.procedureRegistry.register(registerMessage);
-			if (registrationId != -1) {
-				sendMessageToClient(new RegisteredMessage(registerMessage, registrationId));
+		if (message instanceof RegisterMessage registerMessage) {
+			if (registerMessage.getMatchPolicy() != MatchPolicy.EXACT
+					&& this.features.isDisabled(Feature.DEALER_PATTERN_BASED_REGISTRATION)) {
+				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+			if (registerMessage.getInvokePolicy() != InvocationPolicy.SINGLE
+					&& this.features.isDisabled(Feature.DEALER_SHARED_REGISTRATION)) {
+				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+			RegisterResult registerResult = this.procedureRegistry.register(registerMessage);
+			if (registerResult.isSuccess()) {
+				sendMessageToClient(new RegisteredMessage(registerMessage, registerResult.getRegistrationId()));
 
-				this.applicationContext.publishEvent(new WampProcedureRegisteredEvent(registerMessage, registrationId));
+				if (registerResult.isCreated()) {
+					getApplicationContext().publishEvent(
+							new WampRegistrationCreatedEvent(registerMessage, registerResult.getRegistrationId()));
+				}
+
+				getApplicationContext().publishEvent(
+						new WampProcedureRegisteredEvent(registerMessage, registerResult.getRegistrationId()));
 			}
 			else {
 				sendMessageToClient(new ErrorMessage(registerMessage, WampError.PROCEDURE_ALREADY_EXISTS));
 			}
 		}
-		else if (message instanceof UnregisterMessage) {
-			UnregisterMessage unregisterMessage = (UnregisterMessage) message;
+		else if (message instanceof UnregisterMessage unregisterMessage) {
 			UnregisterResult result = this.procedureRegistry.unregister(unregisterMessage);
 			if (result.isSuccess()) {
 				sendMessageToClient(new UnregisteredMessage(unregisterMessage));
+				String procedure = Objects.requireNonNull(result.getProcedure());
 
-				this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(unregisterMessage,
-						result.getProcedure(), result.getRegistrationId()));
+				getApplicationContext().publishEvent(
+						new WampProcedureUnregisteredEvent(unregisterMessage, procedure, result.getRegistrationId()));
+				if (result.isDeleted()) {
+					getApplicationContext().publishEvent(
+							new WampRegistrationDeletedEvent(unregisterMessage, procedure, result.getRegistrationId()));
+				}
 
-				for (ErrorMessage errorMessage : result.getInvocationErrors()) {
-					handleErrorMessage(errorMessage);
+				List<ErrorMessage> invocationErrors = result.getInvocationErrors();
+				if (invocationErrors != null) {
+					for (ErrorMessage errorMessage : invocationErrors) {
+						handleErrorMessage(errorMessage);
+					}
 				}
 			}
 			else {
 				sendMessageToClient(new ErrorMessage(unregisterMessage, WampError.NO_SUCH_REGISTRATION));
 			}
 		}
-		else if (message instanceof CallMessage) {
-			CallMessage callMessage = (CallMessage) message;
+		else if (message instanceof CallMessage callMessage) {
 
 			if (callMessage.isDiscloseMe() && this.features.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 				sendMessageToClient(new ErrorMessage(callMessage, WampError.DISCLOSE_ME_DISALLOWED));
+				return;
+			}
+
+			Long timeout = callMessage.getTimeout();
+			if (timeout != null && (!this.features.isEnabled(Feature.DEALER_CALL_TIMEOUT)
+					|| !callerSupportsFeature(callMessage, Feature.DEALER_CALL_TIMEOUT) || timeout <= 0L)) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+
+			if (callMessage.isReceiveProgress() && (!this.features.isEnabled(Feature.DEALER_PROGRESSIVE_CALL_RESULTS)
+					|| !callerSupportsFeature(callMessage, Feature.DEALER_PROGRESSIVE_CALL_RESULTS))) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
 			}
 
@@ -195,6 +252,9 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 				try {
 					this.clientOutboundChannel.send(errorOrInvocationMessage);
+					if (errorOrInvocationMessage instanceof InvocationMessage invocationMessage) {
+						scheduleCallTimeout(callMessage, invocationMessage);
+					}
 				}
 				catch (Throwable ex) {
 					if (errorOrInvocationMessage instanceof InvocationMessage) {
@@ -203,18 +263,116 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				}
 			}
 		}
-		else if (message instanceof YieldMessage) {
-			YieldMessage yieldMessage = (YieldMessage) message;
-			CallMessage callMessage = this.procedureRegistry.removeInvocationCall(yieldMessage);
-			if (callMessage != null) {
-				ResultMessage resultMessage = new ResultMessage(yieldMessage, callMessage);
+		else if (message instanceof CancelMessage cancelMessage) {
+			handleCancelMessage(cancelMessage);
+		}
+		else if (message instanceof YieldMessage yieldMessage) {
+			ProcedureRegistry.PendingCall pendingCall = yieldMessage.isProgress()
+					? this.procedureRegistry.getPendingInvocation(yieldMessage.getRequestId())
+					: this.procedureRegistry.removePendingInvocation(yieldMessage.getRequestId());
+			if (pendingCall != null) {
+				if (yieldMessage.isProgress()) {
+					scheduleCallTimeout(pendingCall.getCallMessage(), pendingCall.getInvocationRequestId());
+				}
+				else {
+					cancelTimeoutTask(pendingCall.getInvocationRequestId());
+				}
+				ResultMessage resultMessage = new ResultMessage(yieldMessage, pendingCall.getCallMessage());
 				sendMessageToClient(resultMessage);
 			}
 		}
-		else if (message instanceof ErrorMessage) {
-			handleErrorMessage((ErrorMessage) message);
+		else if (message instanceof ErrorMessage errorMessage) {
+			handleErrorMessage(errorMessage);
 		}
 
+	}
+
+	public int revokeRegistration(long registrationId, @Nullable String reason) {
+		List<UnregisterResult> unregisterResults = this.procedureRegistry.revokeRegistration(registrationId);
+		for (UnregisterResult unregisterResult : unregisterResults) {
+			Procedure procedure = unregisterResult.getProcedureObject();
+			if (procedure == null) {
+				continue;
+			}
+
+			if (this.features.isEnabled(Feature.DEALER_REGISTRATION_REVOCATION)
+					&& procedure.isRegistrationRevocationSupported()) {
+				UnregisteredMessage unregisteredMessage = new UnregisteredMessage(0, registrationId, reason);
+				unregisteredMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID,
+						procedure.getWebSocketSessionId());
+				unregisteredMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, procedure.getWampSessionId());
+				sendMessageToClient(unregisteredMessage);
+			}
+			String procedureUri = Objects.requireNonNull(unregisterResult.getProcedure());
+			Long wampSessionId = Objects.requireNonNull(procedure.getWampSessionId());
+
+			getApplicationContext().publishEvent(new WampProcedureUnregisteredEvent(
+					new WampDisconnectEvent(wampSessionId, procedure.getWebSocketSessionId(), null), procedureUri,
+					unregisterResult.getRegistrationId()));
+			if (unregisterResult.isDeleted()) {
+				getApplicationContext().publishEvent(new WampRegistrationDeletedEvent(
+						new WampDisconnectEvent(wampSessionId, procedure.getWebSocketSessionId(), null), procedureUri,
+						unregisterResult.getRegistrationId()));
+			}
+
+			List<ErrorMessage> invocationErrors = unregisterResult.getInvocationErrors();
+			if (invocationErrors != null) {
+				for (ErrorMessage errorMessage : invocationErrors) {
+					handleErrorMessage(errorMessage);
+				}
+			}
+		}
+		return unregisterResults.size();
+	}
+
+	private void handleCancelMessage(CancelMessage cancelMessage) {
+		String requestedMode = cancelMessage.getModeOrDefault();
+		if (isAdvancedCancelMode(requestedMode) && (!this.features.isEnabled(Feature.DEALER_CALL_CANCELING)
+				|| !callerSupportsFeature(cancelMessage, Feature.DEALER_CALL_CANCELING))) {
+			sendMessageToClient(new ErrorMessage(cancelMessage, WampError.OPTION_NOT_ALLOWED));
+			return;
+		}
+
+		if (!isSupportedCancelMode(requestedMode)) {
+			sendMessageToClient(new ErrorMessage(cancelMessage, WampError.OPTION_NOT_ALLOWED));
+			return;
+		}
+
+		ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry.getPendingCall(cancelMessage);
+		if (pendingCall == null) {
+			return;
+		}
+
+		String mode = requestedMode;
+		if (!pendingCall.getProcedure().isCallCancelingSupported()) {
+			mode = CancelMessage.MODE_SKIP;
+		}
+
+		if (CancelMessage.MODE_SKIP.equals(mode)) {
+			this.procedureRegistry.removePendingCall(pendingCall);
+			cancelTimeoutTask(pendingCall.getInvocationRequestId());
+			sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.CANCELED));
+			return;
+		}
+
+		InterruptMessage interruptMessage = new InterruptMessage(pendingCall.getInvocationRequestId(), mode,
+				pendingCall.getProcedure().getWebSocketSessionId());
+		try {
+			this.clientOutboundChannel.send(interruptMessage);
+		}
+		catch (Throwable ex) {
+			this.logger.error("Failed to send " + interruptMessage, ex);
+		}
+
+		if (CancelMessage.MODE_KILL.equals(mode)) {
+			this.cancelOnTimeoutInvocations.add(pendingCall.getInvocationRequestId());
+		}
+
+		if (CancelMessage.MODE_KILLNOWAIT.equals(mode)) {
+			this.procedureRegistry.removePendingCall(pendingCall);
+			cancelTimeoutTask(pendingCall.getInvocationRequestId());
+			sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.CANCELED));
+		}
 	}
 
 	@EventListener
@@ -223,17 +381,42 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			.unregisterWebSocketSession(event.getWebSocketSessionId());
 
 		for (UnregisterResult unregisterResult : unregisterResults) {
+			String procedure = Objects.requireNonNull(unregisterResult.getProcedure());
 
-			this.applicationContext.publishEvent(new WampProcedureUnregisteredEvent(event,
-					unregisterResult.getProcedure(), unregisterResult.getRegistrationId()));
+			getApplicationContext().publishEvent(
+					new WampProcedureUnregisteredEvent(event, procedure, unregisterResult.getRegistrationId()));
+			if (unregisterResult.isDeleted()) {
+				getApplicationContext().publishEvent(
+						new WampRegistrationDeletedEvent(event, procedure, unregisterResult.getRegistrationId()));
+			}
 
-			for (ErrorMessage errorMessage : unregisterResult.getInvocationErrors()) {
-				handleErrorMessage(errorMessage);
+			List<ErrorMessage> invocationErrors = unregisterResult.getInvocationErrors();
+			if (invocationErrors != null) {
+				for (ErrorMessage errorMessage : invocationErrors) {
+					handleErrorMessage(errorMessage);
+				}
+			}
+		}
+
+		List<ProcedureRegistry.PendingCall> pendingCalls = this.procedureRegistry
+			.removePendingCalls(event.getWebSocketSessionId());
+		for (ProcedureRegistry.PendingCall pendingCall : pendingCalls) {
+			cancelTimeoutTask(pendingCall.getInvocationRequestId());
+			if (pendingCall.getProcedure().isCallCancelingSupported()) {
+				InterruptMessage interruptMessage = new InterruptMessage(pendingCall.getInvocationRequestId(),
+						CancelMessage.MODE_KILLNOWAIT, pendingCall.getProcedure().getWebSocketSessionId());
+				try {
+					this.clientOutboundChannel.send(interruptMessage);
+				}
+				catch (Throwable ex) {
+					this.logger.error("Failed to send " + interruptMessage, ex);
+				}
 			}
 		}
 	}
 
 	private void handleErrorMessage(ErrorMessage errorMessage) {
+		cancelTimeoutTask(errorMessage.getRequestId());
 		CallMessage callMessage = this.procedureRegistry.removeInvocationCall(errorMessage);
 		if (callMessage != null) {
 			ErrorMessage calErrorMessage = new ErrorMessage(errorMessage, callMessage);
@@ -249,8 +432,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			List<Object> arguments = null;
 			Map<String, Object> argumentsKw = null;
 
-			if (returnValue instanceof WampResult) {
-				WampResult wampResult = (WampResult) returnValue;
+			if (returnValue instanceof WampResult wampResult) {
 				arguments = wampResult.getResults();
 				argumentsKw = wampResult.getResultsKw();
 			}
@@ -288,6 +470,102 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 		}
 	}
 
+	private void scheduleCallTimeout(CallMessage callMessage, InvocationMessage invocationMessage) {
+		scheduleCallTimeout(callMessage, invocationMessage.getRequestId());
+	}
+
+	private void scheduleCallTimeout(CallMessage callMessage, long invocationRequestId) {
+		Long timeout = callMessage.getTimeout();
+		if (timeout == null || timeout <= 0L) {
+			return;
+		}
+
+		// The dealer remains the source of truth for timeout enforcement even when the
+		// callee did not advertise timeout support and therefore only receives the call.
+		ScheduledFuture<?> timeoutTask = this.callTimeoutExecutor.schedule(() -> handleCallTimeout(invocationRequestId),
+				timeout, TimeUnit.MILLISECONDS);
+		ScheduledFuture<?> previous = this.timeoutTasks.put(invocationRequestId, timeoutTask);
+		if (previous != null) {
+			previous.cancel(false);
+		}
+	}
+
+	private void handleCallTimeout(long invocationRequestId) {
+		this.timeoutTasks.remove(invocationRequestId);
+		boolean canceledByCaller = this.cancelOnTimeoutInvocations.remove(invocationRequestId);
+		ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry.removePendingInvocation(invocationRequestId);
+		if (pendingCall == null) {
+			return;
+		}
+
+		if (!canceledByCaller && pendingCall.getProcedure().isCallCancelingSupported()) {
+			InterruptMessage interruptMessage = new InterruptMessage(invocationRequestId, CancelMessage.MODE_KILLNOWAIT,
+					pendingCall.getProcedure().getWebSocketSessionId());
+			try {
+				this.clientOutboundChannel.send(interruptMessage);
+			}
+			catch (Throwable ex) {
+				this.logger.error("Failed to send " + interruptMessage, ex);
+			}
+		}
+
+		sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(),
+				canceledByCaller ? WampError.CANCELED : WampError.TIMEOUT));
+	}
+
+	private void cancelTimeoutTask(long invocationRequestId) {
+		this.cancelOnTimeoutInvocations.remove(invocationRequestId);
+		ScheduledFuture<?> timeoutTask = this.timeoutTasks.remove(invocationRequestId);
+		if (timeoutTask != null) {
+			timeoutTask.cancel(false);
+		}
+	}
+
+	private void cancelAllTimeoutTasks() {
+		for (Map.Entry<Long, ScheduledFuture<?>> entry : this.timeoutTasks.entrySet()) {
+			entry.getValue().cancel(false);
+		}
+		this.timeoutTasks.clear();
+		this.cancelOnTimeoutInvocations.clear();
+	}
+
+	private static boolean isAdvancedCancelMode(String mode) {
+		return CancelMessage.MODE_KILL.equals(mode) || CancelMessage.MODE_KILLNOWAIT.equals(mode);
+	}
+
+	private static boolean isSupportedCancelMode(String mode) {
+		return CancelMessage.MODE_SKIP.equals(mode) || CancelMessage.MODE_KILL.equals(mode)
+				|| CancelMessage.MODE_KILLNOWAIT.equals(mode);
+	}
+
+	private static boolean callerSupportsFeature(WampMessage message, Feature feature) {
+		List<WampRole> peerRoles = message.getPeerRoles();
+		if (peerRoles == null) {
+			return false;
+		}
+
+		for (WampRole role : peerRoles) {
+			if ("caller".equals(role.getRole()) && role.hasFeature(feature.getExternalValue())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final class CallTimeoutThreadFactory implements ThreadFactory {
+
+		private final AtomicInteger threadCounter = new AtomicInteger();
+
+		@Override
+		public Thread newThread(Runnable runnable) {
+			Thread thread = new Thread(runnable, "wampRpcTimeout-" + this.threadCounter.incrementAndGet());
+			thread.setDaemon(true);
+			return thread;
+		}
+
+	}
+
 	protected void sendMessageToClient(Message<?> message) {
 		try {
 			this.clientOutboundChannel.send(message);
@@ -299,8 +577,9 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		for (String beanName : this.applicationContext.getBeanNamesForType(Object.class)) {
-			Class<?> handlerType = this.applicationContext.getType(beanName);
+		ApplicationContext context = getApplicationContext();
+		for (String beanName : context.getBeanNamesForType(Object.class)) {
+			Class<?> handlerType = context.getType(beanName);
 			if (handlerType != null) {
 				final Class<?> userType = ClassUtils.getUserClass(handlerType);
 				detectWampMethods(beanName, userType);
@@ -314,10 +593,11 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				(MethodFilter) method -> AnnotationUtils.findAnnotation(method, WampProcedure.class) != null);
 
 		for (Method method : methods) {
-			WampProcedure annotation = AnnotationUtils.findAnnotation(method, WampProcedure.class);
+			WampProcedure annotation = Objects
+				.requireNonNull(AnnotationUtils.findAnnotation(method, WampProcedure.class));
 
 			InvocableHandlerMethod handlerMethod = new InvocableHandlerMethod(
-					new HandlerMethod(this.applicationContext.getBean(beanName), method));
+					new HandlerMethod(getApplicationContext().getBean(beanName), method));
 
 			String procedure = (String) AnnotationUtils.getValue(annotation);
 			if (!StringUtils.hasText(procedure)) {
@@ -336,6 +616,10 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	private ApplicationContext getApplicationContext() {
+		return Objects.requireNonNull(this.applicationContext);
 	}
 
 }

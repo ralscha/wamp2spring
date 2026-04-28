@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.rpc;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -52,8 +53,8 @@ public class CallParameterTest extends BaseWampTest {
 		ResultMessage result = (ResultMessage) receivedMessage;
 		assertThat(result.getRequestId()).isEqualTo(1L);
 		assertThat(result.getArgumentsKw()).isNull();
-		assertThat(result.getArguments()).hasSize(1);
-		assertThat((String) result.getArguments().get(0)).startsWith("headerMethod called: ");
+		assertThat(Objects.requireNonNull(result.getArguments())).hasSize(1);
+		assertThat((String) Objects.requireNonNull(result.getArguments()).get(0)).startsWith("headerMethod called: ");
 	}
 
 	@Test

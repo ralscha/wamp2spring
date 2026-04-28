@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@NonNullApi
+@NullMarked
 package ch.rasc.wamp2spring.security.servlet;
 
-import org.springframework.lang.NonNullApi;
+import org.jspecify.annotations.NullMarked;

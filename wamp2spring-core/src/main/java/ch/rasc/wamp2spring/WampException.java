@@ -18,7 +18,7 @@ package ch.rasc.wamp2spring;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * User exception that can be thrown at procedure invocation
@@ -27,11 +27,11 @@ public class WampException extends Exception {
 
 	public static class Builder {
 
-		private List<Object> arguments;
+		@Nullable private List<Object> arguments;
 
-		private Map<String, Object> argumentsKw;
+		@Nullable private Map<String, Object> argumentsKw;
 
-		private Throwable throwable;
+		@Nullable private Throwable throwable;
 
 		public Builder arguments(List<Object> param) {
 			this.arguments = param;
@@ -56,9 +56,9 @@ public class WampException extends Exception {
 
 	private final String uri;
 
-	private final List<Object> arguments;
+	@Nullable private final List<Object> arguments;
 
-	private final Map<String, Object> argumentsKw;
+	@Nullable private final Map<String, Object> argumentsKw;
 
 	protected WampException(String uri, @Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw,
 			@Nullable Throwable throwable) {
