@@ -28,11 +28,10 @@ import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 
+import ch.rasc.wamp2spring.util.CollectionHelper;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;
-
-import ch.rasc.wamp2spring.util.CollectionHelper;
 
 /**
  * [PUBLISH, Request|id, Options|dict, Topic|uri]
@@ -55,6 +54,8 @@ public class PublishMessage extends WampMessage {
 
 	private final boolean retain;
 
+	@Nullable private final String rkey;
+
 	private final String topic;
 
 	@Nullable private final Set<Number> exclude;
@@ -75,7 +76,7 @@ public class PublishMessage extends WampMessage {
 
 	private PublishMessage(long requestId, String topic, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean acknowledge, boolean excludeMe, boolean discloseMe,
-			boolean retain, @Nullable Set<Number> exclude, @Nullable Set<Number> eligible,
+			boolean retain, @Nullable String rkey, @Nullable Set<Number> exclude, @Nullable Set<Number> eligible,
 			@Nullable Set<String> excludeAuthIds, @Nullable Set<String> eligibleAuthIds,
 			@Nullable Set<String> excludeAuthRoles, @Nullable Set<String> eligibleAuthRoles) {
 		super(CODE);
@@ -87,6 +88,7 @@ public class PublishMessage extends WampMessage {
 		this.excludeMe = excludeMe;
 		this.discloseMe = discloseMe;
 		this.retain = retain;
+		this.rkey = rkey;
 		this.exclude = exclude;
 		this.eligible = eligible;
 		this.excludeAuthIds = excludeAuthIds;
@@ -97,7 +99,7 @@ public class PublishMessage extends WampMessage {
 
 	PublishMessage(Builder builder) {
 		this(builder.requestId, builder.topic, builder.arguments, builder.argumentsKw, builder.acknowledge,
-				builder.excludeMe, builder.discloseMe, builder.retain, builder.exclude, builder.eligible,
+				builder.excludeMe, builder.discloseMe, builder.retain, builder.rkey, builder.exclude, builder.eligible,
 				builder.excludeAuthIds, builder.eligibleAuthIds, builder.excludeAuthRoles, builder.eligibleAuthRoles);
 	}
 
@@ -118,6 +120,8 @@ public class PublishMessage extends WampMessage {
 		boolean acknowledge;
 
 		boolean retain;
+
+		@Nullable String rkey;
 
 		@Nullable List<Object> arguments;
 
@@ -158,6 +162,11 @@ public class PublishMessage extends WampMessage {
 
 		public Builder retain() {
 			this.retain = true;
+			return this;
+		}
+
+		public Builder rkey(String rkey) {
+			this.rkey = rkey;
 			return this;
 		}
 
@@ -249,6 +258,7 @@ public class PublishMessage extends WampMessage {
 		boolean excludeMe = true;
 		boolean discloseMe = false;
 		boolean retain = false;
+		String rkey = null;
 		Set<Number> exclude = null;
 		Set<Number> eligible = null;
 		Set<String> excludeAuthIds = null;
@@ -262,6 +272,7 @@ public class PublishMessage extends WampMessage {
 			excludeMe = (boolean) options.getOrDefault("exclude_me", true);
 			discloseMe = (boolean) options.getOrDefault("disclose_me", false);
 			retain = (boolean) options.getOrDefault("retain", false);
+			rkey = (String) options.get("rkey");
 
 			List<Number> excludeArray = (List<Number>) options.get("exclude");
 			if (excludeArray != null) {
@@ -310,7 +321,7 @@ public class PublishMessage extends WampMessage {
 		}
 
 		return new PublishMessage(request, topic, arguments, argumentsKw, acknowledge, excludeMe, discloseMe, retain,
-				exclude, eligible, excludeAuthIds, eligibleAuthIds, excludeAuthRoles, eligibleAuthRoles);
+				rkey, exclude, eligible, excludeAuthIds, eligibleAuthIds, excludeAuthRoles, eligibleAuthRoles);
 	}
 
 	@Override
@@ -333,6 +344,10 @@ public class PublishMessage extends WampMessage {
 
 		if (this.retain) {
 			generator.writeBooleanProperty("retain", this.retain);
+		}
+
+		if (this.rkey != null) {
+			generator.writeStringProperty("rkey", this.rkey);
 		}
 
 		if (this.exclude != null) {
@@ -395,6 +410,10 @@ public class PublishMessage extends WampMessage {
 
 	public boolean isRetain() {
 		return this.retain;
+	}
+
+	public @Nullable String getRkey() {
+		return this.rkey;
 	}
 
 	public String getTopic() {

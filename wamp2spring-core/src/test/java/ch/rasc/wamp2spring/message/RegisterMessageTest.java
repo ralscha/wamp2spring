@@ -15,11 +15,10 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
@@ -58,6 +57,12 @@ public class RegisterMessageTest extends BaseMessageTest {
 		assertThat(registerMessage.getInvokePolicy()).isEqualTo(InvocationPolicy.ROUNDROBIN);
 		json = serializeToJson(registerMessage);
 		assertThat(json).isEqualTo("[64,2,{\"invoke\":\"roundrobin\"},\"com.myapp.worker\"]");
+
+		registerMessage = new RegisterMessage(3L, "com.myapp.worker", false, MatchPolicy.EXACT,
+				InvocationPolicy.SHARDED);
+		assertThat(registerMessage.getInvokePolicy()).isEqualTo(InvocationPolicy.SHARDED);
+		json = serializeToJson(registerMessage);
+		assertThat(json).isEqualTo("[64,3,{\"invoke\":\"sharded\"},\"com.myapp.worker\"]");
 	}
 
 	@Test
@@ -94,6 +99,10 @@ public class RegisterMessageTest extends BaseMessageTest {
 		assertThat(registerMessage.getRequestId()).isEqualTo(3L);
 		assertThat(registerMessage.getProcedure()).isEqualTo("com.myapp.worker");
 		assertThat(registerMessage.getInvokePolicy()).isEqualTo(InvocationPolicy.LAST);
+
+		json = "[64, 4, {\"invoke\":\"sharded\"},\"com.myapp.worker\"]";
+		registerMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		assertThat(registerMessage.getInvokePolicy()).isEqualTo(InvocationPolicy.SHARDED);
 
 	}
 

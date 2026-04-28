@@ -35,6 +35,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(111);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(1);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).isNull();
@@ -47,6 +48,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(1);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(111);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("Hello world");
@@ -62,6 +64,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(1);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(111);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("johnny");
@@ -77,6 +80,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getCaller()).isEqualTo(17218L);
 		assertThat(invocationMessage.getCallerAuthId()).isNull();
 		assertThat(invocationMessage.getCallerAuthRole()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("Hello world");
@@ -108,11 +112,20 @@ public class InvocationMessageTest extends BaseMessageTest {
 
 		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", 9,
 				true, null, Arrays.asList("Hello world"), null);
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isTrue();
 		assertThat(invocationMessage.getCallerTrustLevel()).isEqualTo(9);
 		json = serializeToJson(invocationMessage);
 		assertThat(json).isEqualTo(
 				"[68,1,111,{\"caller\":17218,\"procedure\":\"com.myapp.orders.create\",\"caller_authid\":\"caller1\",\"caller_authrole\":\"admin\",\"caller_trustlevel\":9,\"receive_progress\":true},[\"Hello world\"]]");
+
+		invocationMessage = new InvocationMessage(1, 111, 17218L, "com.myapp.orders.create", "caller1", "admin", 9,
+				true, false, null, Arrays.asList("Hello world"), null);
+		assertThat(invocationMessage.isProgress()).isTrue();
+		assertThat(invocationMessage.isReceiveProgress()).isFalse();
+		json = serializeToJson(invocationMessage);
+		assertThat(json).isEqualTo(
+				"[68,1,111,{\"caller\":17218,\"procedure\":\"com.myapp.orders.create\",\"caller_authid\":\"caller1\",\"caller_authrole\":\"admin\",\"caller_trustlevel\":9,\"progress\":true},[\"Hello world\"]]");
 	}
 
 	@Test
@@ -124,6 +137,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823526L);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).isNull();
@@ -135,6 +149,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823527L);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly("Hello, world!");
@@ -146,6 +161,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getRequestId()).isEqualTo(6131533L);
 		assertThat(invocationMessage.getRegistrationId()).isEqualTo(9823528L);
 		assertThat(invocationMessage.getCaller()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly(23, 7);
@@ -171,6 +187,7 @@ public class InvocationMessageTest extends BaseMessageTest {
 		assertThat(invocationMessage.getProcedure()).isNull();
 		assertThat(invocationMessage.getCallerAuthId()).isNull();
 		assertThat(invocationMessage.getCallerAuthRole()).isNull();
+		assertThat(invocationMessage.isProgress()).isFalse();
 		assertThat(invocationMessage.isReceiveProgress()).isFalse();
 		assertThat(invocationMessage.getTimeout()).isNull();
 		assertThat(invocationMessage.getArguments()).containsExactly(23, 7);
@@ -211,6 +228,10 @@ public class InvocationMessageTest extends BaseMessageTest {
 		json = "[68, 6131533, 9823528, {\"caller\": 3335656, \"receive_progress\": true}, [23, 7]]";
 		invocationMessage = deserializeInvocationMessage(json);
 		assertThat(invocationMessage.isReceiveProgress()).isTrue();
+
+		json = "[68, 6131533, 9823528, {\"caller\": 3335656, \"progress\": true}, [23, 7]]";
+		invocationMessage = deserializeInvocationMessage(json);
+		assertThat(invocationMessage.isProgress()).isTrue();
 	}
 
 	private InvocationMessage deserializeInvocationMessage(String json) throws IOException {

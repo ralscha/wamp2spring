@@ -702,6 +702,80 @@ public class RpcMessageHandlerTest {
 	}
 
 	@Test
+	public void progressiveInvocationIsRejectedWhenCallerDidNotAnnounceFeature() {
+		registerProcedure();
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.test", List.of("chunk"), null, false, true, false);
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, false, false, false));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.OPTION_NOT_ALLOWED.getExternalValue());
+	}
+
+	@Test
+	public void progressiveInvocationIsRejectedWhenCalleeDoesNotSupportFeature() {
+		registerProcedure();
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.test", List.of("chunk"), null, false, true, false);
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, false, false, true));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.FEATURE_NOT_SUPPORTED.getExternalValue());
+	}
+
+	@Test
+	public void progressiveInvocationContinuationReusesInvocationRequestId() {
+		registerProcedure("callee-ws", "com.myapp.test", MatchPolicy.EXACT, InvocationPolicy.SINGLE, true, true, false,
+				true, true, false);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage firstChunk = new CallMessage(10L, "com.myapp.test", List.of("chunk-1"), null, false, true, true,
+				120L);
+		firstChunk.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		firstChunk.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, true, true, true));
+		this.rpcMessageHandler.handleMessage(firstChunk);
+
+		InvocationMessage firstInvocation = captureSingleInvocation(1);
+		assertThat(firstInvocation.isProgress()).isTrue();
+		assertThat(firstInvocation.isReceiveProgress()).isTrue();
+		assertThat(firstInvocation.getTimeout()).isEqualTo(120L);
+		assertThat(firstInvocation.getArguments()).containsExactly("chunk-1");
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage finalChunk = new CallMessage(10L, "com.myapp.test", List.of("chunk-2"), null, false, false, false);
+		finalChunk.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		finalChunk.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(true, true, true, true));
+		this.rpcMessageHandler.handleMessage(finalChunk);
+
+		InvocationMessage secondInvocation = captureSingleInvocation(1);
+		assertThat(secondInvocation.getRequestId()).isEqualTo(firstInvocation.getRequestId());
+		assertThat(secondInvocation.isProgress()).isFalse();
+		assertThat(secondInvocation.isReceiveProgress()).isTrue();
+		assertThat(secondInvocation.getTimeout()).isEqualTo(120L);
+		assertThat(secondInvocation.getArguments()).containsExactly("chunk-2");
+	}
+
+	@Test
 	public void progressiveYieldKeepsInvocationOpenUntilFinalResult() {
 		registerProcedure("callee-ws", "com.myapp.test", MatchPolicy.EXACT, InvocationPolicy.SINGLE, true, false, false,
 				true);
@@ -887,6 +961,58 @@ public class RpcMessageHandlerTest {
 	}
 
 	@Test
+	public void shardedRegistrationRequiresDealerFeature() {
+		Features features = new Features();
+		features.disable(Feature.DEALER_SHARDED_REGISTRATION);
+		ProcedureRegistry procedureRegistry = new ProcedureRegistry(features);
+		RpcMessageHandler disabledFeatureHandler = new RpcMessageHandler(this.clientInboundChannel,
+				this.clientOutboundChannel, procedureRegistry, this.handlerMethodService, features);
+		disabledFeatureHandler.setApplicationContext(this.applicationContext);
+		disabledFeatureHandler.start();
+
+		RegisterMessage registerMessage = new RegisterMessage(1L, "com.myapp.worker", false, MatchPolicy.EXACT,
+				InvocationPolicy.SHARDED);
+		registerMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 200L);
+		registerMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "callee-ws");
+		disabledFeatureHandler.handleMessage(registerMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.OPTION_NOT_ALLOWED.getExternalValue());
+
+		disabledFeatureHandler.stop();
+	}
+
+	@Test
+	public void shardedCallsRequireCallerFeature() {
+		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.SHARDED, true, false,
+				false, false, false, false, true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		CallMessage callMessage = new CallMessage(10L, "com.myapp.worker", null, null, false, false, false, null,
+				"tenant-a");
+		callMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
+		callMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, callerRoles(false, false));
+		this.rpcMessageHandler.handleMessage(callMessage);
+
+		ArgumentCaptor<WampMessage> errorCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(errorCaptor.capture());
+		ErrorMessage errorMessage = errorCaptor.getAllValues()
+			.stream()
+			.filter(ErrorMessage.class::isInstance)
+			.map(ErrorMessage.class::cast)
+			.findFirst()
+			.orElseThrow();
+		assertThat(errorMessage.getError()).isEqualTo(WampError.OPTION_NOT_ALLOWED.getExternalValue());
+	}
+
+	@Test
 	public void sharedRegistrationRoundRobinDispatchesAcrossCallees() {
 		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN);
 		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN);
@@ -942,10 +1068,10 @@ public class RpcMessageHandlerTest {
 
 	@Test
 	public void unavailableErrorReroutesRoundRobinInvocationToNextCallee() {
-		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
-				false, false, false, true);
-		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
-				false, false, false, true);
+		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true, false,
+				false, false, true);
+		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true, false,
+				false, false, true);
 		Mockito.clearInvocations(this.clientOutboundChannel);
 
 		CallMessage callMessage = new CallMessage(10L, "com.myapp.worker");
@@ -969,10 +1095,10 @@ public class RpcMessageHandlerTest {
 
 	@Test
 	public void unavailableErrorReturnsNoAvailableCalleeAfterAllSharedCalleesFail() {
-		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
-				false, false, false, true);
-		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true,
-				false, false, false, true);
+		registerProcedure("callee-1", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true, false,
+				false, false, true);
+		registerProcedure("callee-2", "com.myapp.worker", MatchPolicy.EXACT, InvocationPolicy.ROUNDROBIN, true, false,
+				false, false, true);
 		Mockito.clearInvocations(this.clientOutboundChannel);
 
 		CallMessage callMessage = new CallMessage(10L, "com.myapp.worker");
@@ -1123,19 +1249,40 @@ public class RpcMessageHandlerTest {
 			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported) {
 		registerProcedure(webSocketSessionId, procedure, matchPolicy, invocationPolicy, callCancelingSupported,
-				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported, false);
+				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported, false, false,
+				false);
 	}
 
 	private void registerProcedure(String webSocketSessionId, String procedure, MatchPolicy matchPolicy,
 			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
 			boolean callRerouteSupported) {
+		registerProcedure(webSocketSessionId, procedure, matchPolicy, invocationPolicy, callCancelingSupported,
+				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported, false,
+				callRerouteSupported, false);
+	}
+
+	private void registerProcedure(String webSocketSessionId, String procedure, MatchPolicy matchPolicy,
+			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
+			boolean progressiveCallInvocationsSupported, boolean callRerouteSupported) {
+		registerProcedure(webSocketSessionId, procedure, matchPolicy, invocationPolicy, callCancelingSupported,
+				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported,
+				progressiveCallInvocationsSupported, callRerouteSupported, false);
+	}
+
+	private void registerProcedure(String webSocketSessionId, String procedure, MatchPolicy matchPolicy,
+			InvocationPolicy invocationPolicy, boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
+			boolean progressiveCallInvocationsSupported, boolean callRerouteSupported,
+			boolean shardedRegistrationSupported) {
 		RegisterMessage registerMessage = new RegisterMessage(1L, procedure, false, matchPolicy, invocationPolicy);
 		registerMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, Math.abs((long) webSocketSessionId.hashCode()));
 		registerMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
-		registerMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, calleeRoles(callCancelingSupported,
-				callTimeoutSupported, registrationRevocationSupported, progressiveCallResultsSupported,
-				callRerouteSupported));
+		registerMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES,
+				calleeRoles(callCancelingSupported, callTimeoutSupported, registrationRevocationSupported,
+						progressiveCallResultsSupported, progressiveCallInvocationsSupported, callRerouteSupported,
+						shardedRegistrationSupported));
 		this.rpcMessageHandler.handleMessage(registerMessage);
 	}
 
@@ -1146,12 +1293,13 @@ public class RpcMessageHandlerTest {
 	private static List<WampRole> calleeRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported) {
 		return calleeRoles(callCancelingSupported, callTimeoutSupported, registrationRevocationSupported,
-				progressiveCallResultsSupported, false);
+				progressiveCallResultsSupported, false, false, false);
 	}
 
 	private static List<WampRole> calleeRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean registrationRevocationSupported, boolean progressiveCallResultsSupported,
-			boolean callRerouteSupported) {
+			boolean progressiveCallInvocationsSupported, boolean callRerouteSupported,
+			boolean shardedRegistrationSupported) {
 		WampRole callee = new WampRole("callee");
 		if (callCancelingSupported) {
 			callee.addFeature(Feature.DEALER_CALL_CANCELING.getExternalValue());
@@ -1165,18 +1313,36 @@ public class RpcMessageHandlerTest {
 		if (progressiveCallResultsSupported) {
 			callee.addFeature(Feature.DEALER_PROGRESSIVE_CALL_RESULTS.getExternalValue());
 		}
+		if (progressiveCallInvocationsSupported) {
+			callee.addFeature(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS.getExternalValue());
+		}
 		if (callRerouteSupported) {
 			callee.addFeature(Feature.DEALER_CALL_REROUTE.getExternalValue());
+		}
+		if (shardedRegistrationSupported) {
+			callee.addFeature(Feature.DEALER_SHARDED_REGISTRATION.getExternalValue());
 		}
 		return List.of(callee);
 	}
 
 	private static List<WampRole> callerRoles(boolean callCancelingSupported, boolean callTimeoutSupported) {
-		return callerRoles(callCancelingSupported, callTimeoutSupported, false);
+		return callerRoles(callCancelingSupported, callTimeoutSupported, false, false);
 	}
 
 	private static List<WampRole> callerRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
 			boolean progressiveCallResultsSupported) {
+		return callerRoles(callCancelingSupported, callTimeoutSupported, progressiveCallResultsSupported, false, false);
+	}
+
+	private static List<WampRole> callerRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean progressiveCallResultsSupported, boolean progressiveCallInvocationsSupported) {
+		return callerRoles(callCancelingSupported, callTimeoutSupported, progressiveCallResultsSupported,
+				progressiveCallInvocationsSupported, false);
+	}
+
+	private static List<WampRole> callerRoles(boolean callCancelingSupported, boolean callTimeoutSupported,
+			boolean progressiveCallResultsSupported, boolean progressiveCallInvocationsSupported,
+			boolean shardedRegistrationSupported) {
 		WampRole caller = new WampRole("caller");
 		if (callCancelingSupported) {
 			caller.addFeature(Feature.DEALER_CALL_CANCELING.getExternalValue());
@@ -1186,6 +1352,12 @@ public class RpcMessageHandlerTest {
 		}
 		if (progressiveCallResultsSupported) {
 			caller.addFeature(Feature.DEALER_PROGRESSIVE_CALL_RESULTS.getExternalValue());
+		}
+		if (progressiveCallInvocationsSupported) {
+			caller.addFeature(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS.getExternalValue());
+		}
+		if (shardedRegistrationSupported) {
+			caller.addFeature(Feature.DEALER_SHARDED_REGISTRATION.getExternalValue());
 		}
 		return List.of(caller);
 	}

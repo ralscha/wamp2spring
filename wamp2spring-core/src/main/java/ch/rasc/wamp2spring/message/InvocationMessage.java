@@ -22,13 +22,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.jspecify.annotations.Nullable;
 
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.core.JsonParser;
-import tools.jackson.core.JsonToken;
-
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.rpc.Procedure;
 import ch.rasc.wamp2spring.util.IdGenerator;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
 
 /**
  * [INVOCATION, Request|id, REGISTERED.Registration|id, Details|dict]
@@ -62,25 +61,35 @@ public class InvocationMessage extends WampMessage {
 
 	@Nullable private final Long timeout;
 
+	private final boolean progress;
+
 	private final boolean receiveProgress;
 
 	@Nullable private final Map<String, Object> argumentsKw;
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller, @Nullable Long timeout,
 			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
-		this(requestId, registrationId, caller, null, null, null, null, false, timeout, arguments, argumentsKw);
+		this(requestId, registrationId, caller, null, null, null, null, false, false, timeout, arguments, argumentsKw);
 	}
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller,
 			@Nullable String callerAuthId, @Nullable String callerAuthRole, @Nullable Long timeout,
 			@Nullable List<Object> arguments, @Nullable Map<String, Object> argumentsKw) {
-		this(requestId, registrationId, caller, null, callerAuthId, callerAuthRole, null, false, timeout, arguments,
-				argumentsKw);
+		this(requestId, registrationId, caller, null, callerAuthId, callerAuthRole, null, false, false, timeout,
+				arguments, argumentsKw);
 	}
 
 	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller, @Nullable String procedure,
 			@Nullable String callerAuthId, @Nullable String callerAuthRole, @Nullable Number callerTrustLevel,
 			boolean receiveProgress, @Nullable Long timeout, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw) {
+		this(requestId, registrationId, caller, procedure, callerAuthId, callerAuthRole, callerTrustLevel, false,
+				receiveProgress, timeout, arguments, argumentsKw);
+	}
+
+	public InvocationMessage(long requestId, long registrationId, @Nullable Number caller, @Nullable String procedure,
+			@Nullable String callerAuthId, @Nullable String callerAuthRole, @Nullable Number callerTrustLevel,
+			boolean progress, boolean receiveProgress, @Nullable Long timeout, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw) {
 		super(CODE);
 		this.requestId = requestId;
@@ -90,6 +99,7 @@ public class InvocationMessage extends WampMessage {
 		this.callerAuthId = callerAuthId;
 		this.callerAuthRole = callerAuthRole;
 		this.callerTrustLevel = callerTrustLevel;
+		this.progress = progress;
 		this.receiveProgress = receiveProgress;
 		this.timeout = timeout;
 		this.arguments = arguments;
@@ -97,13 +107,18 @@ public class InvocationMessage extends WampMessage {
 	}
 
 	public InvocationMessage(Procedure procedure, CallMessage callMessage) {
-		this(IdGenerator.newLinearId(lastRequest), procedure.getRegistrationId(),
-				getDisclosedCaller(procedure, callMessage),
+		this(IdGenerator.newLinearId(lastRequest), procedure, callMessage, callMessage);
+	}
+
+	public InvocationMessage(long requestId, Procedure procedure, CallMessage callMessage, CallMessage optionsSource) {
+		this(requestId, procedure.getRegistrationId(), getDisclosedCaller(procedure, optionsSource),
 				procedure.getMatchPolicy() != MatchPolicy.EXACT ? callMessage.getProcedure() : null,
-				getDisclosedCallerAuthId(procedure, callMessage), getDisclosedCallerAuthRole(procedure, callMessage),
-				getDisclosedCallerTrustLevel(procedure, callMessage),
-				procedure.isProgressiveCallResultsSupported() && callMessage.isReceiveProgress(),
-				procedure.isCallTimeoutSupported() ? callMessage.getTimeout() : null, callMessage.getArguments(),
+				getDisclosedCallerAuthId(procedure, optionsSource),
+				getDisclosedCallerAuthRole(procedure, optionsSource),
+				getDisclosedCallerTrustLevel(procedure, optionsSource),
+				procedure.isProgressiveCallInvocationsSupported() && callMessage.isProgress(),
+				procedure.isProgressiveCallResultsSupported() && optionsSource.isReceiveProgress(),
+				procedure.isCallTimeoutSupported() ? optionsSource.getTimeout() : null, callMessage.getArguments(),
 				callMessage.getArgumentsKw());
 		setReceiverWebSocketSessionId(procedure.getWebSocketSessionId());
 	}
@@ -121,6 +136,7 @@ public class InvocationMessage extends WampMessage {
 		String callerAuthId = null;
 		String callerAuthRole = null;
 		Number callerTrustLevel = null;
+		boolean progress = false;
 		boolean receiveProgress = false;
 		Long timeout = null;
 		Map<String, Object> details = ParserUtil.readObject(jp);
@@ -130,6 +146,7 @@ public class InvocationMessage extends WampMessage {
 			callerAuthId = (String) details.get("caller_authid");
 			callerAuthRole = (String) details.get("caller_authrole");
 			callerTrustLevel = (Number) details.get("caller_trustlevel");
+			progress = (boolean) details.getOrDefault("progress", false);
 			receiveProgress = (boolean) details.getOrDefault("receive_progress", false);
 			Object timeoutValue = details.get("timeout");
 			if (timeoutValue instanceof Number timeoutNumber) {
@@ -150,7 +167,7 @@ public class InvocationMessage extends WampMessage {
 		}
 
 		return new InvocationMessage(request, registration, caller, procedure, callerAuthId, callerAuthRole,
-				callerTrustLevel, receiveProgress, timeout, arguments, argumentsKw);
+				callerTrustLevel, progress, receiveProgress, timeout, arguments, argumentsKw);
 	}
 
 	@Override
@@ -175,6 +192,9 @@ public class InvocationMessage extends WampMessage {
 		}
 		if (this.callerTrustLevel != null) {
 			generator.writeNumberProperty("caller_trustlevel", this.callerTrustLevel.longValue());
+		}
+		if (this.progress) {
+			generator.writeBooleanProperty("progress", true);
 		}
 		if (this.receiveProgress) {
 			generator.writeBooleanProperty("receive_progress", true);
@@ -239,6 +259,10 @@ public class InvocationMessage extends WampMessage {
 		return this.timeout;
 	}
 
+	public boolean isProgress() {
+		return this.progress;
+	}
+
 	public boolean isReceiveProgress() {
 		return this.receiveProgress;
 	}
@@ -248,8 +272,8 @@ public class InvocationMessage extends WampMessage {
 		return "InvocationMessage [requestId=" + this.requestId + ", registrationId=" + this.registrationId
 				+ ", arguments=" + this.arguments + ", caller=" + this.caller + ", procedure=" + this.procedure
 				+ ", callerAuthId=" + this.callerAuthId + ", callerAuthRole=" + this.callerAuthRole
-				+ ", callerTrustLevel=" + this.callerTrustLevel + ", receiveProgress=" + this.receiveProgress
-				+ ", timeout=" + this.timeout + ", argumentsKw=" + this.argumentsKw + "]";
+				+ ", callerTrustLevel=" + this.callerTrustLevel + ", progress=" + this.progress + ", receiveProgress="
+				+ this.receiveProgress + ", timeout=" + this.timeout + ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 	@Nullable private static Number getDisclosedCaller(Procedure procedure, CallMessage callMessage) {

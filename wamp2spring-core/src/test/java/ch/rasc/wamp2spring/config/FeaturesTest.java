@@ -35,14 +35,17 @@ public class FeaturesTest {
 		feat.disable(Feature.DEALER_CALL_CANCELING);
 		feat.disable(Feature.DEALER_CALL_TIMEOUT);
 		feat.disable(Feature.DEALER_PROGRESSIVE_CALL_RESULTS);
+		feat.disable(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS);
 		feat.disable(Feature.DEALER_CALLER_IDENTIFICATION);
 		feat.disable(Feature.DEALER_PATTERN_BASED_REGISTRATION);
 		feat.disable(Feature.DEALER_SHARED_REGISTRATION);
+		feat.disable(Feature.DEALER_SHARDED_REGISTRATION);
 		feat.disable(Feature.DEALER_REGISTRATION_META_API);
 		feat.disable(Feature.DEALER_SESSION_META_API);
 		feat.disable(Feature.DEALER_TESTAMENT_META_API);
 		feat.disable(Feature.DEALER_REGISTRATION_REVOCATION);
 		feat.disable(Feature.BROKER_PUBLISHER_IDENTIFICATION);
+		feat.disable(Feature.BROKER_SHARDED_SUBSCRIPTION);
 		feat.disable(Feature.BROKER_EVENT_HISTORY);
 		feat.disable(Feature.BROKER_SESSION_META_API);
 		feat.disable(Feature.BROKER_SUBSCRIPTION_META_API);
@@ -53,9 +56,11 @@ public class FeaturesTest {
 		assertThat(feat.isEnabled(Feature.DEALER_CALL_CANCELING)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_CALL_TIMEOUT)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_PROGRESSIVE_CALL_RESULTS)).isFalse();
+		assertThat(feat.isEnabled(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_PATTERN_BASED_REGISTRATION)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_SHARED_REGISTRATION)).isFalse();
+		assertThat(feat.isEnabled(Feature.DEALER_SHARDED_REGISTRATION)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_REGISTRATION_META_API)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_SESSION_META_API)).isFalse();
 		assertThat(feat.isEnabled(Feature.DEALER_TESTAMENT_META_API)).isFalse();
@@ -64,6 +69,7 @@ public class FeaturesTest {
 		assertThat(feat.isEnabled(Feature.BROKER_PUBLISHER_EXCLUSION)).isTrue();
 		assertThat(feat.isEnabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)).isFalse();
 		assertThat(feat.isEnabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)).isTrue();
+		assertThat(feat.isEnabled(Feature.BROKER_SHARDED_SUBSCRIPTION)).isFalse();
 		assertThat(feat.isEnabled(Feature.BROKER_EVENT_RETENTION)).isTrue();
 		assertThat(feat.isEnabled(Feature.BROKER_EVENT_HISTORY)).isFalse();
 		assertThat(feat.isEnabled(Feature.BROKER_SESSION_META_API)).isFalse();
@@ -75,9 +81,11 @@ public class FeaturesTest {
 		assertThat(feat.isDisabled(Feature.DEALER_CALL_CANCELING)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_CALL_TIMEOUT)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_PROGRESSIVE_CALL_RESULTS)).isTrue();
+		assertThat(feat.isDisabled(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_CALLER_IDENTIFICATION)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_PATTERN_BASED_REGISTRATION)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_SHARED_REGISTRATION)).isTrue();
+		assertThat(feat.isDisabled(Feature.DEALER_SHARDED_REGISTRATION)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_REGISTRATION_META_API)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_SESSION_META_API)).isTrue();
 		assertThat(feat.isDisabled(Feature.DEALER_TESTAMENT_META_API)).isTrue();
@@ -86,6 +94,7 @@ public class FeaturesTest {
 		assertThat(feat.isDisabled(Feature.BROKER_PUBLISHER_EXCLUSION)).isFalse();
 		assertThat(feat.isDisabled(Feature.BROKER_PUBLISHER_IDENTIFICATION)).isTrue();
 		assertThat(feat.isDisabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)).isFalse();
+		assertThat(feat.isDisabled(Feature.BROKER_SHARDED_SUBSCRIPTION)).isTrue();
 		assertThat(feat.isDisabled(Feature.BROKER_EVENT_RETENTION)).isFalse();
 		assertThat(feat.isDisabled(Feature.BROKER_EVENT_HISTORY)).isTrue();
 		assertThat(feat.isDisabled(Feature.BROKER_SESSION_META_API)).isTrue();
@@ -98,48 +107,63 @@ public class FeaturesTest {
 		Features feat = new Features();
 		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALL_CANCELING,
 				Feature.DEALER_CALL_TIMEOUT, Feature.DEALER_PROGRESSIVE_CALL_RESULTS,
-				Feature.DEALER_CALLER_IDENTIFICATION, Feature.DEALER_PATTERN_BASED_REGISTRATION,
-				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
+				Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS, Feature.DEALER_CALLER_IDENTIFICATION,
+				Feature.DEALER_PATTERN_BASED_REGISTRATION, Feature.DEALER_SHARED_REGISTRATION,
+				Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
 				Feature.DEALER_SESSION_META_API, Feature.DEALER_TESTAMENT_META_API,
 				Feature.DEALER_REGISTRATION_REVOCATION);
 
 		feat.disable(Feature.DEALER_CALL_CANCELING);
 		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALL_TIMEOUT,
-				Feature.DEALER_PROGRESSIVE_CALL_RESULTS, Feature.DEALER_CALLER_IDENTIFICATION,
-				Feature.DEALER_PATTERN_BASED_REGISTRATION, Feature.DEALER_SHARED_REGISTRATION,
-				Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
+				Feature.DEALER_PROGRESSIVE_CALL_RESULTS, Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS,
+				Feature.DEALER_CALLER_IDENTIFICATION, Feature.DEALER_PATTERN_BASED_REGISTRATION,
+				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE,
+				Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
 				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
 
 		feat.disable(Feature.DEALER_CALL_TIMEOUT);
 		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_PROGRESSIVE_CALL_RESULTS,
-				Feature.DEALER_CALLER_IDENTIFICATION, Feature.DEALER_PATTERN_BASED_REGISTRATION,
-				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
+				Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS, Feature.DEALER_CALLER_IDENTIFICATION,
+				Feature.DEALER_PATTERN_BASED_REGISTRATION, Feature.DEALER_SHARED_REGISTRATION,
+				Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
 				Feature.DEALER_SESSION_META_API, Feature.DEALER_TESTAMENT_META_API,
 				Feature.DEALER_REGISTRATION_REVOCATION);
 
 		feat.disable(Feature.DEALER_PROGRESSIVE_CALL_RESULTS);
-		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALLER_IDENTIFICATION,
-				Feature.DEALER_PATTERN_BASED_REGISTRATION, Feature.DEALER_SHARED_REGISTRATION,
-				Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
-				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
-
-		feat.disable(Feature.DEALER_CALLER_IDENTIFICATION);
-		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_PATTERN_BASED_REGISTRATION,
-				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
-				Feature.DEALER_SESSION_META_API, Feature.DEALER_TESTAMENT_META_API,
-				Feature.DEALER_REGISTRATION_REVOCATION);
-
-		feat.disable(Feature.DEALER_PATTERN_BASED_REGISTRATION);
-		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_SHARED_REGISTRATION,
-				Feature.DEALER_CALL_REROUTE,
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS,
+				Feature.DEALER_CALLER_IDENTIFICATION, Feature.DEALER_PATTERN_BASED_REGISTRATION,
+				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE,
 				Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
 				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
 
-		feat.disable(Feature.DEALER_SHARED_REGISTRATION);
-		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALL_REROUTE,
-				Feature.DEALER_REGISTRATION_META_API,
+		feat.disable(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALLER_IDENTIFICATION,
+				Feature.DEALER_PATTERN_BASED_REGISTRATION, Feature.DEALER_SHARED_REGISTRATION,
+				Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
 				Feature.DEALER_SESSION_META_API, Feature.DEALER_TESTAMENT_META_API,
 				Feature.DEALER_REGISTRATION_REVOCATION);
+
+		feat.disable(Feature.DEALER_CALLER_IDENTIFICATION);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_PATTERN_BASED_REGISTRATION,
+				Feature.DEALER_SHARED_REGISTRATION, Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE,
+				Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
+				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
+
+		feat.disable(Feature.DEALER_PATTERN_BASED_REGISTRATION);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_SHARED_REGISTRATION,
+				Feature.DEALER_SHARDED_REGISTRATION, Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API,
+				Feature.DEALER_SESSION_META_API, Feature.DEALER_TESTAMENT_META_API,
+				Feature.DEALER_REGISTRATION_REVOCATION);
+
+		feat.disable(Feature.DEALER_SHARED_REGISTRATION);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_SHARDED_REGISTRATION,
+				Feature.DEALER_CALL_REROUTE, Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
+				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
+
+		feat.disable(Feature.DEALER_SHARDED_REGISTRATION);
+		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_CALL_REROUTE,
+				Feature.DEALER_REGISTRATION_META_API, Feature.DEALER_SESSION_META_API,
+				Feature.DEALER_TESTAMENT_META_API, Feature.DEALER_REGISTRATION_REVOCATION);
 
 		feat.disable(Feature.DEALER_CALL_REROUTE);
 		assertThat(feat.enabledDealerFeatures()).containsExactly(Feature.DEALER_REGISTRATION_META_API,
@@ -166,28 +190,35 @@ public class FeaturesTest {
 		Features feat = new Features();
 		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING,
 				Feature.BROKER_PUBLISHER_EXCLUSION, Feature.BROKER_PUBLISHER_IDENTIFICATION,
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY,
-				Feature.BROKER_SESSION_META_API, Feature.BROKER_SUBSCRIPTION_META_API,
-				Feature.BROKER_SUBSCRIPTION_REVOCATION);
+				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_SHARDED_SUBSCRIPTION,
+				Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY, Feature.BROKER_SESSION_META_API,
+				Feature.BROKER_SUBSCRIPTION_META_API, Feature.BROKER_SUBSCRIPTION_REVOCATION);
 
 		feat.disable(Feature.BROKER_SUBSCRIBER_BLACKWHITE_LISTING);
 		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PUBLISHER_EXCLUSION,
 				Feature.BROKER_PUBLISHER_IDENTIFICATION, Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
-				Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY, Feature.BROKER_SESSION_META_API,
-				Feature.BROKER_SUBSCRIPTION_META_API, Feature.BROKER_SUBSCRIPTION_REVOCATION);
-
-		feat.disable(Feature.BROKER_PUBLISHER_EXCLUSION);
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PUBLISHER_IDENTIFICATION,
-				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY,
+				Feature.BROKER_SHARDED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY,
 				Feature.BROKER_SESSION_META_API, Feature.BROKER_SUBSCRIPTION_META_API,
 				Feature.BROKER_SUBSCRIPTION_REVOCATION);
 
-		feat.disable(Feature.BROKER_PUBLISHER_IDENTIFICATION);
-		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
+		feat.disable(Feature.BROKER_PUBLISHER_EXCLUSION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PUBLISHER_IDENTIFICATION,
+				Feature.BROKER_PATTERN_BASED_SUBSCRIPTION, Feature.BROKER_SHARDED_SUBSCRIPTION,
 				Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY, Feature.BROKER_SESSION_META_API,
 				Feature.BROKER_SUBSCRIPTION_META_API, Feature.BROKER_SUBSCRIPTION_REVOCATION);
 
+		feat.disable(Feature.BROKER_PUBLISHER_IDENTIFICATION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION,
+				Feature.BROKER_SHARDED_SUBSCRIPTION, Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY,
+				Feature.BROKER_SESSION_META_API, Feature.BROKER_SUBSCRIPTION_META_API,
+				Feature.BROKER_SUBSCRIPTION_REVOCATION);
+
 		feat.disable(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION);
+		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_SHARDED_SUBSCRIPTION,
+				Feature.BROKER_EVENT_RETENTION, Feature.BROKER_EVENT_HISTORY, Feature.BROKER_SESSION_META_API,
+				Feature.BROKER_SUBSCRIPTION_META_API, Feature.BROKER_SUBSCRIPTION_REVOCATION);
+
+		feat.disable(Feature.BROKER_SHARDED_SUBSCRIPTION);
 		assertThat(feat.enabledBrokerFeatures()).containsExactly(Feature.BROKER_EVENT_RETENTION,
 				Feature.BROKER_EVENT_HISTORY, Feature.BROKER_SESSION_META_API, Feature.BROKER_SUBSCRIPTION_META_API,
 				Feature.BROKER_SUBSCRIPTION_REVOCATION);

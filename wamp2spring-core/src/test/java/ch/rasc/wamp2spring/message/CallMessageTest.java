@@ -35,6 +35,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getArguments()).isNull();
 		assertThat(callMessage.getArgumentsKw()).isNull();
@@ -46,6 +47,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getArguments()).containsExactly("Hello world");
 		assertThat(callMessage.getArgumentsKw()).isNull();
@@ -60,6 +62,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getArguments()).containsExactly("johnny");
 		assertThat(callMessage.getArgumentsKw()).containsExactly(MapEntry.entry("firstname", "John"),
@@ -72,6 +75,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(1);
 		assertThat(callMessage.getProcedure()).isEqualTo("call");
 		assertThat(callMessage.isDiscloseMe()).isTrue();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).containsExactly("Hello world");
@@ -84,10 +88,23 @@ public class CallMessageTest extends BaseMessageTest {
 		json = serializeToJson(callMessage);
 		assertThat(json).isEqualTo("[48,1,{\"timeout\":5000},\"call\",[\"Hello world\"]]");
 
+		callMessage = new CallMessage(1, "call", Arrays.asList("Hello world"), null, false, false, false, null,
+				"shard-a");
+		assertThat(callMessage.getRkey()).isEqualTo("shard-a");
+		json = serializeToJson(callMessage);
+		assertThat(json).isEqualTo("[48,1,{\"rkey\":\"shard-a\"},\"call\",[\"Hello world\"]]");
+
 		callMessage = new CallMessage(1, "call", Arrays.asList("Hello world"), null, false, true);
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isTrue();
 		json = serializeToJson(callMessage);
 		assertThat(json).isEqualTo("[48,1,{\"receive_progress\":true},\"call\",[\"Hello world\"]]");
+
+		callMessage = new CallMessage(1, "call", Arrays.asList("Hello world"), null, false, true, false);
+		assertThat(callMessage.isProgress()).isTrue();
+		assertThat(callMessage.isReceiveProgress()).isFalse();
+		json = serializeToJson(callMessage);
+		assertThat(json).isEqualTo("[48,1,{\"progress\":true},\"call\",[\"Hello world\"]]");
 
 		Map<String, Object> binaryArgumentsKw = new HashMap<>();
 		binaryArgumentsKw.put("blob", new byte[] { 4, 5, 6 });
@@ -106,6 +123,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.ping");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).isNull();
@@ -117,6 +135,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.echo");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).containsExactly("Hello, world!");
@@ -128,6 +147,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.add2");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).containsExactly(23, 7);
@@ -139,6 +159,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.user.new");
 		assertThat(callMessage.isDiscloseMe()).isFalse();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).containsExactly("johnny");
@@ -151,6 +172,7 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getRequestId()).isEqualTo(7814135L);
 		assertThat(callMessage.getProcedure()).isEqualTo("com.myapp.add2");
 		assertThat(callMessage.isDiscloseMe()).isTrue();
+		assertThat(callMessage.isProgress()).isFalse();
 		assertThat(callMessage.isReceiveProgress()).isFalse();
 		assertThat(callMessage.getTimeout()).isNull();
 		assertThat(callMessage.getArguments()).containsExactly(23, 7);
@@ -167,9 +189,17 @@ public class CallMessageTest extends BaseMessageTest {
 		assertThat(callMessage.getArguments()).containsExactly(23, 7);
 		assertThat(callMessage.getArgumentsKw()).isNull();
 
+		json = "[48, 7814135, {\"rkey\":\"shard-a\"}, \"com.myapp.add2\", [23, 7]]";
+		callMessage = deserializeCallMessage(json);
+		assertThat(callMessage.getRkey()).isEqualTo("shard-a");
+
 		json = "[48, 7814135, {\"receive_progress\":true}, \"com.myapp.add2\", [23, 7]]";
 		callMessage = deserializeCallMessage(json);
 		assertThat(callMessage.isReceiveProgress()).isTrue();
+
+		json = "[48, 7814135, {\"progress\":true}, \"com.myapp.add2\", [23, 7]]";
+		callMessage = deserializeCallMessage(json);
+		assertThat(callMessage.isProgress()).isTrue();
 
 		json = "[48, 7814135, {}, \"com.myapp.binary\", [\"\\u0000AQID\"], {\"blob\":\"\\u0000BAUG\"}]";
 		callMessage = deserializeCallMessage(json);

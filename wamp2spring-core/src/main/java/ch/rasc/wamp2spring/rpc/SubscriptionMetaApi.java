@@ -108,9 +108,11 @@ public class SubscriptionMetaApi {
 	@WampProcedure(LOOKUP)
 	public WampResult lookup(CallMessage callMessage) throws WampException {
 		MatchPolicy matchPolicy = Objects.requireNonNullElse(matchPolicyOption(callMessage), MatchPolicy.EXACT);
+		String nkey = nkeyOption(callMessage);
 		String topic = stringArgument(callMessage, 0);
 		WampUriValidator.validateSubscriptionTopic(topic, matchPolicy);
-		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(callMessage.getRealm(), topic, matchPolicy);
+		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(callMessage.getRealm(), topic, matchPolicy,
+				nkey);
 		return new WampResult().add(subscriptionId);
 	}
 
@@ -225,6 +227,17 @@ public class SubscriptionMetaApi {
 		}
 		MatchPolicy matchPolicy = MatchPolicy.fromExtValue(match);
 		return matchPolicy != null ? matchPolicy : MatchPolicy.EXACT;
+	}
+
+	@Nullable
+	@SuppressWarnings("unchecked")
+	private static String nkeyOption(CallMessage callMessage) {
+		List<Object> arguments = callMessage.getArguments();
+		if (arguments == null || arguments.size() < 2 || !(arguments.get(1) instanceof Map<?, ?>)) {
+			return null;
+		}
+
+		return (String) ((Map<String, Object>) arguments.get(1)).get("nkey");
 	}
 
 	private static Object argument(CallMessage callMessage, int index) {

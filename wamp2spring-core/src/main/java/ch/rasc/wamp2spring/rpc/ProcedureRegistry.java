@@ -173,8 +173,40 @@ public class ProcedureRegistry {
 	}
 
 	synchronized WampMessage createInvocationMessage(CallMessage callMessage) {
-		Procedure procedure = findProcedure(callMessage.getRealm(), callMessage.getProcedure());
+		ProcedureSlot procedureSlot = findProcedureSlot(callMessage.getRealm(), callMessage.getProcedure());
+		if (procedureSlot == null) {
+			return new ErrorMessage(callMessage, WampError.NO_SUCH_PROCEDURE);
+		}
+		if (procedureSlot.getInvocationPolicy() == InvocationPolicy.SHARDED && callMessage.getRkey() == null) {
+			return new ErrorMessage(callMessage, WampError.INVALID_ARGUMENT);
+		}
+
+		Procedure procedure = procedureSlot.selectProcedure(callMessage.getRkey());
 		if (procedure != null) {
+			String webSocketSessionId = callMessage.getWebSocketSessionId();
+			if (webSocketSessionId != null) {
+				CallKey callKey = new CallKey(webSocketSessionId, callMessage.getRequestId());
+				Long continuationInvocationRequestId = this.pendingCalls.get(callKey);
+				if (continuationInvocationRequestId != null) {
+					CallProc existingCallProc = this.pendingInvocations.get(continuationInvocationRequestId);
+					if (existingCallProc == null) {
+						this.pendingCalls.remove(callKey);
+					}
+					else if (!existingCallProc.progressiveCallInvocation || !Objects
+						.equals(existingCallProc.callMessage.getProcedure(), callMessage.getProcedure())) {
+						return new ErrorMessage(callMessage, WampError.PROTOCOL_VIOLATION);
+					}
+					else {
+						return new InvocationMessage(continuationInvocationRequestId, existingCallProc.procedure,
+								callMessage, existingCallProc.callMessage);
+					}
+				}
+			}
+
+			if (callMessage.isProgress() && !procedure.isProgressiveCallInvocationsSupported()) {
+				return new ErrorMessage(callMessage, WampError.FEATURE_NOT_SUPPORTED);
+			}
+
 			if (callMessage.isReceiveProgress() && !procedure.isProgressiveCallResultsSupported()) {
 				return new ErrorMessage(callMessage, WampError.FEATURE_NOT_SUPPORTED);
 			}
@@ -190,11 +222,6 @@ public class ProcedureRegistry {
 		}
 
 		return new ErrorMessage(callMessage, WampError.NO_SUCH_PROCEDURE);
-	}
-
-	@Nullable private Procedure findProcedure(@Nullable String realm, String procedureUri) {
-		ProcedureSlot procedureSlot = findProcedureSlot(realm, procedureUri);
-		return procedureSlot != null ? procedureSlot.selectProcedure() : null;
 	}
 
 	@Nullable private ProcedureSlot findProcedureSlot(@Nullable String realm, String procedureUri) {
@@ -387,7 +414,8 @@ public class ProcedureRegistry {
 		}
 
 		callProc.procedure.removePendingInvocation(errorMessage.getRequestId());
-		ProcedureSlot procedureSlot = findProcedureSlot(callProc.callMessage.getRealm(), callProc.callMessage.getProcedure());
+		ProcedureSlot procedureSlot = findProcedureSlot(callProc.callMessage.getRealm(),
+				callProc.callMessage.getProcedure());
 		if (procedureSlot == null) {
 			if (callProc.callKey != null) {
 				this.pendingCalls.remove(callProc.callKey);
@@ -444,6 +472,8 @@ public class ProcedureRegistry {
 
 		Procedure procedure;
 
+		final boolean progressiveCallInvocation;
+
 		@Nullable final CallKey callKey;
 
 		final java.util.Set<String> attemptedCalleeSessionIds = new java.util.HashSet<>();
@@ -451,6 +481,7 @@ public class ProcedureRegistry {
 		public CallProc(CallMessage callMessage, Procedure procedure) {
 			this.callMessage = callMessage;
 			this.procedure = procedure;
+			this.progressiveCallInvocation = callMessage.isProgress();
 			String webSocketSessionId = callMessage.getWebSocketSessionId();
 			this.callKey = webSocketSessionId != null ? new CallKey(webSocketSessionId, callMessage.getRequestId())
 					: null;
@@ -605,17 +636,23 @@ public class ProcedureRegistry {
 			return this.matchPolicy;
 		}
 
+		InvocationPolicy getInvocationPolicy() {
+			return this.invocationPolicy;
+		}
+
 		boolean isEmpty() {
 			return this.procedures.isEmpty();
 		}
 
-		Procedure selectProcedure() {
+		Procedure selectProcedure(@Nullable String rkey) {
 			int size = this.procedures.size();
 			if (size == 1) {
 				return this.procedures.get(0);
 			}
 
 			switch (this.invocationPolicy) {
+				case SHARDED:
+					return this.procedures.get(Math.floorMod(Objects.requireNonNull(rkey).hashCode(), size));
 				case ROUNDROBIN:
 					Procedure roundRobinProcedure = this.procedures.get(this.roundRobinIndex % size);
 					this.roundRobinIndex = (this.roundRobinIndex + 1) % size;
@@ -652,8 +689,8 @@ public class ProcedureRegistry {
 					return null;
 				case RANDOM:
 					List<Procedure> candidates = this.procedures.stream()
-							.filter(candidate -> !excludedCallees.contains(candidate.getWebSocketSessionId()))
-							.toList();
+						.filter(candidate -> !excludedCallees.contains(candidate.getWebSocketSessionId()))
+						.toList();
 					if (candidates.isEmpty()) {
 						return null;
 					}
@@ -674,6 +711,7 @@ public class ProcedureRegistry {
 						}
 					}
 					return null;
+				case SHARDED:
 				case SINGLE:
 				default:
 					return null;

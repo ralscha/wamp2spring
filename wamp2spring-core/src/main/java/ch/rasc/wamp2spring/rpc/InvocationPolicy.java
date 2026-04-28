@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
 
 public enum InvocationPolicy {
 
-	SINGLE("single"), ROUNDROBIN("roundrobin"), RANDOM("random"), FIRST("first"), LAST("last");
+	SINGLE("single"), ROUNDROBIN("roundrobin"), RANDOM("random"), FIRST("first"), LAST("last"), SHARDED("sharded");
 
 	private final String externalValue;
 

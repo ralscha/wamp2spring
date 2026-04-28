@@ -20,12 +20,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.Mac;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.jspecify.annotations.Nullable;
@@ -46,6 +49,8 @@ import ch.rasc.wamp2spring.auth.WampAuthentication;
 import ch.rasc.wamp2spring.auth.WampCraAuthenticationInfo;
 import ch.rasc.wamp2spring.auth.WampCraAuthenticationProvider;
 import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
+import ch.rasc.wamp2spring.auth.WampScramAuthenticationInfo;
+import ch.rasc.wamp2spring.auth.WampScramAuthenticationProvider;
 import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.AuthenticateMessage;
 import ch.rasc.wamp2spring.message.ChallengeMessage;
@@ -213,6 +218,59 @@ public class ConnectionTest extends BaseWampTest {
 	}
 
 	@Test
+	public void wampScramAuthenticationSuccessTest() throws Exception {
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
+			String clientNonce = "fyko+d2lbbFgONRv9qkxdawL";
+			HelloMessage helloMessage = new HelloMessage("realm",
+					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
+					List.of("wamp-scram"), "alice", Map.of("tenant", "demo", "nonce", clientNonce));
+			sendMessage(DataFormat.JSON, wsSession, helloMessage);
+
+			ChallengeMessage challengeMessage = (ChallengeMessage) result.getWampMessage();
+			assertThat(challengeMessage.getAuthMethod()).isEqualTo("wamp-scram");
+			assertThat(challengeMessage.getExtra()).containsEntry("kdf", "pbkdf2");
+			assertThat(challengeMessage.getExtra()).containsEntry("salt", "QSXCR+Q6sek8bf92");
+
+			result.reset();
+			WampScramExchange exchange = wampScramExchange("alice", "demo-secret", clientNonce, challengeMessage);
+			sendMessage(DataFormat.JSON, wsSession, new AuthenticateMessage(exchange.proof(),
+					Map.of("nonce", challengeMessage.getExtra().get("nonce"))));
+
+			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
+			assertThat(welcomeMessage.getAuthId()).isEqualTo("alice");
+			assertThat(welcomeMessage.getAuthRole()).isEqualTo("admin");
+			assertThat(welcomeMessage.getAuthMethod()).isEqualTo("wamp-scram");
+			assertThat(welcomeMessage.getAuthProvider()).isEqualTo("static");
+			assertThat(welcomeMessage.getAuthExtra()).containsEntry("tenant", "demo");
+			assertThat(welcomeMessage.getAuthExtra()).containsEntry("verifier", exchange.verifier());
+		}
+	}
+
+	@Test
+	public void wampScramAuthenticationFailureTest() throws Exception {
+		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
+		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
+			String clientNonce = "fyko+d2lbbFgONRv9qkxdawL";
+			HelloMessage helloMessage = new HelloMessage("realm",
+					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
+					List.of("wamp-scram"), "alice", Map.of("tenant", "demo", "nonce", clientNonce));
+			sendMessage(DataFormat.JSON, wsSession, helloMessage);
+
+			ChallengeMessage challengeMessage = (ChallengeMessage) result.getWampMessage();
+			assertThat(challengeMessage.getAuthMethod()).isEqualTo("wamp-scram");
+
+			result.reset();
+			WampScramExchange exchange = wampScramExchange("alice", "wrong-secret", clientNonce, challengeMessage);
+			sendMessage(DataFormat.JSON, wsSession, new AuthenticateMessage(exchange.proof(),
+					Map.of("nonce", challengeMessage.getExtra().get("nonce"))));
+
+			AbortMessage abortMessage = (AbortMessage) result.getWampMessage();
+			assertThat(abortMessage.getReason()).isEqualTo(WampError.NOT_AUTHORIZED.getExternalValue());
+		}
+	}
+
+	@Test
 	public void dynamicAuthenticationSuccessTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
@@ -308,6 +366,18 @@ public class ConnectionTest extends BaseWampTest {
 		}
 
 		@Bean
+		WampScramAuthenticationProvider wampScramAuthenticationProvider() {
+			return new WampScramAuthenticationProvider((authId, helloAuthExtra) -> {
+				if ("alice".equals(authId)) {
+					return WampScramAuthenticationInfo.pbkdf2("demo-secret", "QSXCR+Q6sek8bf92", 4096,
+							new WampAuthentication(authId, "admin", "static",
+									Map.of("tenant", Objects.requireNonNull(helloAuthExtra).get("tenant"))));
+				}
+				return null;
+			});
+		}
+
+		@Bean
 		DynamicAuthenticationProvider dynamicAuthenticationProvider() {
 			return new DynamicAuthenticationProvider(new DynamicAuthenticationProcedure() {
 				@Override
@@ -335,6 +405,32 @@ public class ConnectionTest extends BaseWampTest {
 
 	}
 
+	private static WampScramExchange wampScramExchange(String authId, String password, String clientNonce,
+			ChallengeMessage challengeMessage) {
+		try {
+			String serverNonce = Objects.requireNonNull((String) challengeMessage.getExtra().get("nonce"));
+			String salt = Objects.requireNonNull((String) challengeMessage.getExtra().get("salt"));
+			int iterations = (int) Objects.requireNonNull(challengeMessage.getExtra().get("iterations"));
+			String clientFirstBare = "n=" + escapeScram(authId) + ",r=" + clientNonce;
+			String serverFirst = "r=" + serverNonce + ",s=" + salt + ",i=" + iterations;
+			String clientFinalNoProof = "c="
+					+ Base64.getEncoder().encodeToString("n,,".getBytes(StandardCharsets.UTF_8)) + ",r=" + serverNonce;
+			String authMessage = clientFirstBare + ',' + serverFirst + ',' + clientFinalNoProof;
+			byte[] saltedPassword = pbkdf2(password, salt, iterations);
+			byte[] clientKey = hmac(saltedPassword, "Client Key");
+			byte[] storedKey = MessageDigest.getInstance("SHA-256").digest(clientKey);
+			byte[] clientSignature = hmac(storedKey, authMessage);
+			byte[] clientProof = xor(clientKey, clientSignature);
+			byte[] serverKey = hmac(saltedPassword, "Server Key");
+			byte[] serverSignature = hmac(serverKey, authMessage);
+			return new WampScramExchange(Base64.getEncoder().encodeToString(clientProof),
+					Base64.getEncoder().encodeToString(serverSignature));
+		}
+		catch (GeneralSecurityException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	private static String wampCraSignature(String secret, String challenge) {
 		try {
 			Mac mac = Mac.getInstance("HmacSHA256");
@@ -345,6 +441,42 @@ public class ConnectionTest extends BaseWampTest {
 		catch (GeneralSecurityException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	private static byte[] pbkdf2(String password, String salt, int iterations) {
+		try {
+			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), Base64.getDecoder().decode(salt), iterations, 256);
+			return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+		}
+		catch (GeneralSecurityException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	private static byte[] hmac(byte[] key, String value) {
+		try {
+			Mac mac = Mac.getInstance("HmacSHA256");
+			mac.init(new SecretKeySpec(key, "HmacSHA256"));
+			return mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
+		}
+		catch (GeneralSecurityException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	private static byte[] xor(byte[] left, byte[] right) {
+		byte[] result = new byte[left.length];
+		for (int i = 0; i < left.length; i++) {
+			result[i] = (byte) (left[i] ^ right[i]);
+		}
+		return result;
+	}
+
+	private static String escapeScram(String value) {
+		return value.replace("=", "=3D").replace(",", "=2C");
+	}
+
+	private record WampScramExchange(String proof, String verifier) {
 	}
 
 }

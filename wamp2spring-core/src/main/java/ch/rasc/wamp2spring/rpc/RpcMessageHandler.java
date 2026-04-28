@@ -192,7 +192,13 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
 			}
+			if (registerMessage.getInvokePolicy() == InvocationPolicy.SHARDED
+					&& this.features.isDisabled(Feature.DEALER_SHARDED_REGISTRATION)) {
+				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
 			if (registerMessage.getInvokePolicy() != InvocationPolicy.SINGLE
+					&& registerMessage.getInvokePolicy() != InvocationPolicy.SHARDED
 					&& this.features.isDisabled(Feature.DEALER_SHARED_REGISTRATION)) {
 				sendMessageToClient(new ErrorMessage(registerMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
@@ -263,8 +269,24 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				return;
 			}
 
+			if (callMessage.getRkey() != null && (!this.features.isEnabled(Feature.DEALER_SHARDED_REGISTRATION)
+					|| !callerSupportsFeature(callMessage, Feature.DEALER_SHARDED_REGISTRATION))) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+
+			if (callMessage.isProgress() && (!this.features.isEnabled(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS)
+					|| !callerSupportsFeature(callMessage, Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS))) {
+				sendMessageToClient(new ErrorMessage(callMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
+
 			InvocableHandlerMethod handlerMethod = this.wampMethods.get(callMessage.getProcedure());
 			if (handlerMethod != null) {
+				if (callMessage.isProgress()) {
+					sendMessageToClient(new ErrorMessage(callMessage, WampError.FEATURE_NOT_SUPPORTED));
+					return;
+				}
 				callWampMethod(callMessage, handlerMethod);
 			}
 			else {
@@ -438,7 +460,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 	private void handleErrorMessage(ErrorMessage errorMessage) {
 		cancelTimeoutTask(errorMessage.getRequestId());
 		if (isUnavailableInvocationError(errorMessage)) {
-			ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry.getPendingInvocation(errorMessage.getRequestId());
+			ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry
+				.getPendingInvocation(errorMessage.getRequestId());
 			if (pendingCall != null && this.features.isEnabled(Feature.DEALER_CALL_REROUTE)
 					&& pendingCall.getProcedure().isCallRerouteSupported()) {
 				InvocationMessage reroutedInvocation = this.procedureRegistry.rerouteInvocation(errorMessage);

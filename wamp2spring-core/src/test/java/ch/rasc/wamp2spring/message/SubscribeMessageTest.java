@@ -15,11 +15,10 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
@@ -68,6 +67,12 @@ public class SubscribeMessageTest extends BaseMessageTest {
 
 		json = serializeToJson(subscribeMessage);
 		assertThat(json).isEqualTo("[32,2,{\"match\":\"wildcard\",\"get_retained\":true},\"topic2\"]");
+
+		subscribeMessage = new SubscribeMessage(3, "topic3", MatchPolicy.EXACT, false, "node-a", null);
+		assertThat(subscribeMessage.getNkey()).isEqualTo("node-a");
+
+		json = serializeToJson(subscribeMessage);
+		assertThat(json).isEqualTo("[32,3,{\"nkey\":\"node-a\"},\"topic3\"]");
 	}
 
 	@Test
@@ -118,6 +123,16 @@ public class SubscribeMessageTest extends BaseMessageTest {
 		assertThat(subscribeMessage.getTopic()).isEqualTo("topic2");
 		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.WILDCARD);
 		assertThat(subscribeMessage.isGetRetained()).isTrue();
+
+		json = "[32,3,{\"nkey\":\"node-a\"},\"topic3\"]";
+		subscribeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+
+		assertThat(subscribeMessage.getCode()).isEqualTo(32);
+		assertThat(subscribeMessage.getRequestId()).isEqualTo(3);
+		assertThat(subscribeMessage.getTopic()).isEqualTo("topic3");
+		assertThat(subscribeMessage.getMatchPolicy()).isEqualTo(MatchPolicy.EXACT);
+		assertThat(subscribeMessage.isGetRetained()).isFalse();
+		assertThat(subscribeMessage.getNkey()).isEqualTo("node-a");
 	}
 
 }

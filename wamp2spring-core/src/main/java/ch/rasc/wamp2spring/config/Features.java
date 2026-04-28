@@ -53,6 +53,9 @@ public class Features {
 		if (isEnabled(Feature.DEALER_PROGRESSIVE_CALL_RESULTS)) {
 			dealerFeatures.add(Feature.DEALER_PROGRESSIVE_CALL_RESULTS);
 		}
+		if (isEnabled(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS)) {
+			dealerFeatures.add(Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS);
+		}
 		if (isEnabled(Feature.DEALER_CALLER_IDENTIFICATION)) {
 			dealerFeatures.add(Feature.DEALER_CALLER_IDENTIFICATION);
 		}
@@ -61,6 +64,9 @@ public class Features {
 		}
 		if (isEnabled(Feature.DEALER_SHARED_REGISTRATION)) {
 			dealerFeatures.add(Feature.DEALER_SHARED_REGISTRATION);
+		}
+		if (isEnabled(Feature.DEALER_SHARDED_REGISTRATION)) {
+			dealerFeatures.add(Feature.DEALER_SHARDED_REGISTRATION);
 		}
 		if (isEnabled(Feature.DEALER_CALL_REROUTE)) {
 			dealerFeatures.add(Feature.DEALER_CALL_REROUTE);
@@ -93,6 +99,9 @@ public class Features {
 		}
 		if (isEnabled(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION)) {
 			brokerFeatures.add(Feature.BROKER_PATTERN_BASED_SUBSCRIPTION);
+		}
+		if (isEnabled(Feature.BROKER_SHARDED_SUBSCRIPTION)) {
+			brokerFeatures.add(Feature.BROKER_SHARDED_SUBSCRIPTION);
 		}
 		if (isEnabled(Feature.BROKER_EVENT_RETENTION)) {
 			brokerFeatures.add(Feature.BROKER_EVENT_RETENTION);

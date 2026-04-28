@@ -22,6 +22,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import ch.rasc.wamp2spring.config.Features;
+import ch.rasc.wamp2spring.message.CallMessage;
+import ch.rasc.wamp2spring.message.InvocationMessage;
 import ch.rasc.wamp2spring.message.RegisterMessage;
 import ch.rasc.wamp2spring.message.UnregisterMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
@@ -102,6 +104,25 @@ public class ProcedureRegistryTest {
 			.containsExactly(secondRealm.getRegistrationId());
 	}
 
+	@Test
+	public void shardedRegistrationRoutesCallsByRkey() {
+		ProcedureRegistry registry = new ProcedureRegistry(new Features());
+
+		registry.register(registerMessage(1L, 101L, "callee-1", "com.myapp.worker", InvocationPolicy.SHARDED));
+		registry.register(registerMessage(2L, 202L, "callee-2", "com.myapp.worker", InvocationPolicy.SHARDED));
+
+		InvocationMessage firstShardInvocation = (InvocationMessage) registry
+			.createInvocationMessage(callMessage(10L, "com.myapp.worker", "b"));
+		InvocationMessage repeatedShardInvocation = (InvocationMessage) registry
+			.createInvocationMessage(callMessage(11L, "com.myapp.worker", "b"));
+		InvocationMessage otherShardInvocation = (InvocationMessage) registry
+			.createInvocationMessage(callMessage(12L, "com.myapp.worker", "a"));
+
+		assertThat(firstShardInvocation.getWebSocketSessionId()).isEqualTo("callee-1");
+		assertThat(repeatedShardInvocation.getWebSocketSessionId()).isEqualTo("callee-1");
+		assertThat(otherShardInvocation.getWebSocketSessionId()).isEqualTo("callee-2");
+	}
+
 	private static RegisterMessage registerMessage(long requestId, long wampSessionId, String webSocketSessionId,
 			String procedure, InvocationPolicy invocationPolicy) {
 		return registerMessage(requestId, wampSessionId, webSocketSessionId, null, procedure, invocationPolicy);
@@ -119,6 +140,12 @@ public class ProcedureRegistryTest {
 	private static UnregisterMessage unregisterMessage(long requestId, long registrationId, String webSocketSessionId) {
 		UnregisterMessage message = new UnregisterMessage(requestId, registrationId);
 		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
+		return message;
+	}
+
+	private static CallMessage callMessage(long requestId, String procedure, String rkey) {
+		CallMessage message = new CallMessage(requestId, procedure, null, null, false, false, false, null, rkey);
+		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "caller-ws");
 		return message;
 	}
 

@@ -18,15 +18,11 @@ package ch.rasc.wamp2spring.servlet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,29 +42,17 @@ import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.ObjectMapper;
 
 import ch.rasc.wamp2spring.WampError;
-import ch.rasc.wamp2spring.auth.WampAuthentication;
-import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
-import ch.rasc.wamp2spring.auth.WampAuthenticationException;
 import ch.rasc.wamp2spring.auth.WampAuthenticationProvider;
-import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
-import ch.rasc.wamp2spring.event.WampDisconnectEvent;
-import ch.rasc.wamp2spring.event.WampSessionEstablishedEvent;
-import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.AuthenticateMessage;
-import ch.rasc.wamp2spring.message.ChallengeMessage;
 import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.InvocationMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
-import ch.rasc.wamp2spring.message.WampRole;
-import ch.rasc.wamp2spring.message.WelcomeMessage;
-import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.MessagePackCodec;
-import ch.rasc.wamp2spring.util.WampUriValidator;
 
 /**
  * A WebSocket {@link SubProtocolHandler} implementation for the WAMP v2 protocol.
@@ -76,16 +60,6 @@ import ch.rasc.wamp2spring.util.WampUriValidator;
 public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEventPublisherAware {
 
 	private static final Log logger = LogFactory.getLog(WampSubProtocolHandler.class);
-
-	private static final String WAMP_PRINCIPAL = "wamp2spring.principal";
-
-	private static final String WAMP_AUTH_METHOD = "wamp2spring.auth.method";
-
-	private static final String WAMP_AUTH_PROVIDER = "wamp2spring.auth.provider";
-
-	private static final String WAMP_PENDING_AUTH = "wamp2spring.pending.auth";
-
-	private static final String WAMP_REALM = "wamp2spring.realm";
 
 	public static final String JSON_PROTOCOL = "wamp.2.json";
 
@@ -106,13 +80,13 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 
 	private final ObjectMapper smileObjectMapper;
 
-	private final List<WampRole> roles;
-
-	private final Set<Long> wampSessionIds = ConcurrentHashMap.newKeySet();
-
 	private final MessageChannel clientInboundChannel;
 
+	private final Features features;
+
 	private final Map<String, WampAuthenticationProvider> authenticationProviders;
+
+	@Nullable private WampSessionSupport sessionSupport;
 
 	@Nullable private ApplicationEventPublisher applicationEventPublisher;
 
@@ -124,27 +98,10 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 		this.cborObjectMapper = cborObjectMapper;
 		this.smileObjectMapper = smileObjectMapper;
 		this.clientInboundChannel = clientInboundChannel;
+		this.features = features;
 		this.authenticationProviders = new LinkedHashMap<>();
 		for (WampAuthenticationProvider authenticationProvider : authenticationProviders) {
 			this.authenticationProviders.putIfAbsent(authenticationProvider.getAuthMethod(), authenticationProvider);
-		}
-
-		this.roles = new ArrayList<>();
-
-		if (features.isEnabled(Feature.DEALER)) {
-			WampRole dealer = new WampRole(Feature.DEALER.getExternalValue());
-			for (Feature feature : features.enabledDealerFeatures()) {
-				dealer.addFeature(feature.getExternalValue());
-			}
-			this.roles.add(dealer);
-		}
-
-		if (features.isEnabled(Feature.BROKER)) {
-			WampRole broker = new WampRole(Feature.BROKER.getExternalValue());
-			for (Feature feature : features.enabledBrokerFeatures()) {
-				broker.addFeature(feature.getExternalValue());
-			}
-			this.roles.add(broker);
 		}
 	}
 
@@ -173,7 +130,7 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 				handleAuthenticateMessage(session, authenticateMessage);
 			}
 			else if (wampMessage instanceof AbortMessage) {
-				session.getAttributes().remove(WAMP_PENDING_AUTH);
+				session.getAttributes().remove(WampSessionSupport.WAMP_PENDING_AUTH);
 				session.close(CloseStatus.GOING_AWAY);
 			}
 			else if (wampMessage instanceof GoodbyeMessage) {
@@ -183,10 +140,12 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 			}
 			else {
 				if (wampMessage.getWampSessionId() == null) {
-					handleProtocolViolation(session,
-							session.getAttributes().get(WAMP_PENDING_AUTH) != null
+					AbortMessage abortMessage = new AbortMessage(WampError.PROTOCOL_VIOLATION,
+							session.getAttributes().get(WampSessionSupport.WAMP_PENDING_AUTH) != null
 									? "Expected AUTHENTICATE while authentication was in progress."
 									: "Received message before session was established.");
+					handleMessageToClient(session, abortMessage);
+					session.close(CloseStatus.PROTOCOL_ERROR);
 					return;
 				}
 				outputChannel.send(wampMessage);
@@ -243,141 +202,24 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 	}
 
 	private void populateHeaders(WebSocketSession session, WampMessage wampMessage) {
-		wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
-		wampMessage.setHeader(WampMessageHeader.PRINCIPAL, currentPrincipal(session));
-		wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
-				session.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name()));
-		wampMessage.setHeader(WampMessageHeader.WAMP_REALM, session.getAttributes().get(WAMP_REALM));
-		wampMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES,
-				session.getAttributes().get(WampMessageHeader.WAMP_PEER_ROLES.name()));
-		wampMessage.setHeader(WampMessageHeader.AUTH_METHOD, session.getAttributes().get(WAMP_AUTH_METHOD));
-		wampMessage.setHeader(WampMessageHeader.AUTH_PROVIDER, session.getAttributes().get(WAMP_AUTH_PROVIDER));
+		getSessionSupport().populateHeaders(session.getId(), session.getPrincipal(), session.getAttributes(),
+				wampMessage);
 	}
 
 	private void handleHelloMessage(WebSocketSession session, HelloMessage helloMessage) throws IOException {
-		if (session.getAttributes().get(WAMP_PENDING_AUTH) != null) {
-			handleProtocolViolation(session, "Received HELLO message while authentication was in progress.");
-			return;
-		}
-
-		if (helloMessage.getWampSessionId() != null) {
-			handleProtocolViolation(session, "Received HELLO message after session was established.");
-			return;
-		}
-
-		try {
-			WampUriValidator.validateRealmUri(helloMessage.getRealm());
-		}
-		catch (WampException ex) {
-			handleAuthenticationFailure(session,
-					new WampAuthenticationException(WampError.INVALID_URI, "HELLO realm is not a valid URI."));
-			return;
-		}
-
-		WampAuthenticationProvider authenticationProvider = resolveAuthenticationProvider(helloMessage);
-		if (authenticationProvider != null) {
-			try {
-				WampAuthenticationChallenge challenge = authenticationProvider.challenge(helloMessage);
-				session.getAttributes()
-					.put(WAMP_PENDING_AUTH, new PendingAuthentication(helloMessage, authenticationProvider, challenge));
-				handleMessageToClient(session,
-						new ChallengeMessage(authenticationProvider.getAuthMethod(), challenge.getExtra()));
-			}
-			catch (WampAuthenticationException ex) {
-				handleAuthenticationFailure(session, ex);
-			}
-			return;
-		}
-
-		if (!helloMessage.getAuthMethods().isEmpty()) {
-			handleAuthenticationFailure(session, new WampAuthenticationException(WampError.NO_SUCH_AUTH_METHOD,
-					"No requested WAMP auth method is supported."));
-			return;
-		}
-
-		Principal principal = currentPrincipal(session);
-		establishSession(session, helloMessage, principal, principal == null ? "anonymous" : "transport",
-				principal == null ? "static" : "transport", null);
+		handleMessageToClient(session,
+				getSessionSupport()
+					.handleHelloMessage(session.getId(), session.getPrincipal(), session.getAttributes(), helloMessage)
+					.message());
 	}
 
 	private void handleAuthenticateMessage(WebSocketSession session, AuthenticateMessage authenticateMessage)
 			throws IOException {
-		PendingAuthentication pendingAuthentication = (PendingAuthentication) session.getAttributes()
-			.get(WAMP_PENDING_AUTH);
-		if (pendingAuthentication == null) {
-			handleProtocolViolation(session, "Received AUTHENTICATE message without an outstanding CHALLENGE.");
-			return;
-		}
-
-		try {
-			WampAuthentication authentication = pendingAuthentication.authenticationProvider()
-				.authenticate(pendingAuthentication.helloMessage(), authenticateMessage,
-						pendingAuthentication.challenge());
-			session.getAttributes().remove(WAMP_PENDING_AUTH);
-			establishSession(session, pendingAuthentication.helloMessage(), authentication.getPrincipal(),
-					pendingAuthentication.authenticationProvider().getAuthMethod(), authentication.getAuthProvider(),
-					authentication.getAuthExtra());
-		}
-		catch (WampAuthenticationException ex) {
-			session.getAttributes().remove(WAMP_PENDING_AUTH);
-			handleAuthenticationFailure(session, ex);
-		}
-	}
-
-	private void establishSession(WebSocketSession session, HelloMessage helloMessage, @Nullable Principal principal,
-			String authMethod, String authProvider, @Nullable Map<String, Object> authExtra) throws IOException {
-		long newWampSessionId = IdGenerator.newRandomId(this.wampSessionIds);
-		this.wampSessionIds.add(newWampSessionId);
-		session.getAttributes().put(WampMessageHeader.WAMP_SESSION_ID.name(), newWampSessionId);
-		session.getAttributes().put(WAMP_REALM, helloMessage.getRealm());
-		session.getAttributes().put(WampMessageHeader.WAMP_PEER_ROLES.name(), helloMessage.getRoles());
-		if (principal != null) {
-			session.getAttributes().put(WAMP_PRINCIPAL, principal);
-		}
-		else {
-			session.getAttributes().remove(WAMP_PRINCIPAL);
-		}
-		session.getAttributes().put(WAMP_AUTH_METHOD, authMethod);
-		session.getAttributes().put(WAMP_AUTH_PROVIDER, authProvider);
-
-		WelcomeMessage welcomeMessage = new WelcomeMessage(newWampSessionId, this.roles, null, helloMessage.getAuthId(),
-				principal != null ? authRole(principal) : null, authMethod, authProvider, authExtra);
-		welcomeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
-		welcomeMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
-		welcomeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, newWampSessionId);
-		welcomeMessage.setHeader(WampMessageHeader.WAMP_REALM, helloMessage.getRealm());
-		welcomeMessage.setHeader(WampMessageHeader.AUTH_METHOD, authMethod);
-		welcomeMessage.setHeader(WampMessageHeader.AUTH_PROVIDER, authProvider);
-		handleMessageToClient(session, welcomeMessage);
-
-		getApplicationEventPublisher().publishEvent(new WampSessionEstablishedEvent(welcomeMessage));
-	}
-
-	private void handleProtocolViolation(WebSocketSession session, String message) throws IOException {
-		logger.error(message);
-		handleMessageToClient(session, new AbortMessage(WampError.PROTOCOL_VIOLATION, message));
-		session.close(CloseStatus.PROTOCOL_ERROR);
-	}
-
-	private void handleAuthenticationFailure(WebSocketSession session, WampAuthenticationException ex)
-			throws IOException {
-		handleMessageToClient(session, new AbortMessage(ex.getError(), ex.getMessage()));
-		session.close(CloseStatus.PROTOCOL_ERROR);
-	}
-
-	@Nullable private Principal currentPrincipal(WebSocketSession session) {
-		Principal principal = (Principal) session.getAttributes().get(WAMP_PRINCIPAL);
-		return principal != null ? principal : session.getPrincipal();
-	}
-
-	@Nullable private WampAuthenticationProvider resolveAuthenticationProvider(HelloMessage helloMessage) {
-		for (String authMethod : helloMessage.getAuthMethods()) {
-			WampAuthenticationProvider authenticationProvider = this.authenticationProviders.get(authMethod);
-			if (authenticationProvider != null) {
-				return authenticationProvider;
-			}
-		}
-		return null;
+		handleMessageToClient(session,
+				getSessionSupport()
+					.handleAuthenticateMessage(session.getId(), session.getPrincipal(), session.getAttributes(),
+							authenticateMessage)
+					.message());
 	}
 
 	@Override
@@ -391,17 +233,21 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 
 		String acceptedProtocol = session.getAcceptedProtocol();
 		if (acceptedProtocol != null) {
-			if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-				isBinary = true;
-				objectMapper = this.msgpackObjectMapper;
-			}
-			else if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
-				isBinary = true;
-				objectMapper = this.smileObjectMapper;
-			}
-			else if (CBOR_PROTOCOL.equals(acceptedProtocol)) {
-				isBinary = true;
-				objectMapper = this.cborObjectMapper;
+			switch (acceptedProtocol) {
+				case MSGPACK_PROTOCOL -> {
+					isBinary = true;
+					objectMapper = this.msgpackObjectMapper;
+				}
+				case SMILE_PROTOCOL -> {
+					isBinary = true;
+					objectMapper = this.smileObjectMapper;
+				}
+				case CBOR_PROTOCOL -> {
+					isBinary = true;
+					objectMapper = this.cborObjectMapper;
+				}
+				default -> {
+				}
 			}
 
 			try {
@@ -421,7 +267,7 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 					session.close(CloseStatus.GOING_AWAY);
 				}
 			}
-			catch (Throwable ex) {
+			catch (Exception | Error ex) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Failed to send WebSocket message to client in session " + session.getId(), ex);
 				}
@@ -469,15 +315,7 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 
 	@Override
 	public void afterSessionEnded(WebSocketSession session, CloseStatus closeStatus, MessageChannel outputChannel) {
-		Long wampSessionId = (Long) session.getAttributes().get(WampMessageHeader.WAMP_SESSION_ID.name());
-		if (wampSessionId != null) {
-			getApplicationEventPublisher().publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(),
-					currentPrincipal(session), (String) session.getAttributes().get(WAMP_REALM)));
-			this.wampSessionIds.remove(wampSessionId);
-			session.getAttributes().remove(WampMessageHeader.WAMP_SESSION_ID.name());
-			session.getAttributes().remove(WAMP_REALM);
-		}
-		session.getAttributes().remove(WAMP_PENDING_AUTH);
+		getSessionSupport().afterSessionEnded(session.getId(), session.getPrincipal(), session.getAttributes());
 	}
 
 	@Override
@@ -490,18 +328,18 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 		this.applicationEventPublisher = applicationEventPublisher;
 	}
 
-	@Nullable private static String authRole(Principal principal) {
-		WampMessage helper = new AbortMessage(WampError.NETWORK_FAILURE);
-		helper.setHeader(WampMessageHeader.PRINCIPAL, principal);
-		return helper.getAuthRole();
-	}
-
 	private ApplicationEventPublisher getApplicationEventPublisher() {
 		return Objects.requireNonNull(this.applicationEventPublisher);
 	}
 
-	private record PendingAuthentication(HelloMessage helloMessage, WampAuthenticationProvider authenticationProvider,
-			WampAuthenticationChallenge challenge) {
+	private WampSessionSupport getSessionSupport() {
+		WampSessionSupport support = this.sessionSupport;
+		if (support == null) {
+			support = new WampSessionSupport(this.features, this.authenticationProviders.values().stream().toList(),
+					getApplicationEventPublisher());
+			this.sessionSupport = support;
+		}
+		return support;
 	}
 
 }

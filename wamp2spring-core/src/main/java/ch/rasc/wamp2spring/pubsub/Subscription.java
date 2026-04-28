@@ -38,6 +38,8 @@ class Subscription {
 
 	private final long createdTimeMillis;
 
+	@Nullable private final String nkey;
+
 	@Nullable private final Map<String, Object> options;
 
 	@Nullable private volatile List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
@@ -51,6 +53,7 @@ class Subscription {
 
 		this.subscriptionId = subscriptionId;
 		this.subscribers = ConcurrentHashMap.newKeySet();
+		this.nkey = options != null ? (String) options.get("nkey") : null;
 		this.options = options;
 	}
 
@@ -83,6 +86,10 @@ class Subscription {
 
 	@Nullable String getRealm() {
 		return this.realm;
+	}
+
+	@Nullable String getNkey() {
+		return this.nkey;
 	}
 
 	MatchPolicy getMatchPolicy() {

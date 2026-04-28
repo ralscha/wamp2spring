@@ -106,18 +106,23 @@ public class ReflectionMetaApi {
 
 	private WampResult listProcedures(@Nullable String realm) {
 		return WampResult.create(resourceUris(this.procedureRegistry.listRegistrations(realm).values(),
-				registrationIds -> registrationIds.stream().map(this.procedureRegistry::getRegistration).filter(Objects::nonNull)
-					.map(ProcedureDetail::getProcedure).toList()));
+				registrationIds -> registrationIds.stream()
+					.map(this.procedureRegistry::getRegistration)
+					.filter(Objects::nonNull)
+					.map(ProcedureDetail::getProcedure)
+					.toList()));
 	}
 
 	private WampResult listTopics(@Nullable String realm) {
 		return WampResult.create(resourceUris(this.subscriptionRegistry.listSubscriptions(realm).values(),
-				subscriptionIds -> subscriptionIds.stream().map(this.subscriptionRegistry::getSubscription)
-					.filter(Objects::nonNull).map(SubscriptionDetail::getTopic).toList()));
+				subscriptionIds -> subscriptionIds.stream()
+					.map(this.subscriptionRegistry::getSubscription)
+					.filter(Objects::nonNull)
+					.map(SubscriptionDetail::getTopic)
+					.toList()));
 	}
 
-	@Nullable
-	private Map<String, Object> describeProcedure(@Nullable String realm, String procedureUri) {
+	@Nullable private Map<String, Object> describeProcedure(@Nullable String realm, String procedureUri) {
 		Map<MatchPolicy, List<Long>> registrationsByPolicy = this.procedureRegistry.listRegistrations(realm);
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			for (Long registrationId : Objects.requireNonNull(registrationsByPolicy.get(matchPolicy))) {
@@ -130,8 +135,7 @@ public class ReflectionMetaApi {
 		return null;
 	}
 
-	@Nullable
-	private Map<String, Object> describeTopic(@Nullable String realm, String topicUri) {
+	@Nullable private Map<String, Object> describeTopic(@Nullable String realm, String topicUri) {
 		Map<MatchPolicy, List<Long>> subscriptionsByPolicy = this.subscriptionRegistry.listSubscriptions(realm);
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			for (Long subscriptionId : Objects.requireNonNull(subscriptionsByPolicy.get(matchPolicy))) {
@@ -144,8 +148,7 @@ public class ReflectionMetaApi {
 		return null;
 	}
 
-	@Nullable
-	private static Map<String, Object> describeError(String errorUri) {
+	@Nullable private static Map<String, Object> describeError(String errorUri) {
 		for (WampError error : WampError.values()) {
 			if (error.getExternalValue().equals(errorUri) && isErrorUri(error)) {
 				Map<String, Object> result = new LinkedHashMap<>();

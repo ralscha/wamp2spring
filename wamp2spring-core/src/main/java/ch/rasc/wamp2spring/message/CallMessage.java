@@ -42,7 +42,11 @@ public class CallMessage extends WampMessage {
 
 	private final boolean discloseMe;
 
+	private final boolean progress;
+
 	private final boolean receiveProgress;
+
+	@Nullable private final String rkey;
 
 	@Nullable private final Long timeout;
 
@@ -64,24 +68,43 @@ public class CallMessage extends WampMessage {
 
 	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean discloseMe) {
-		this(requestId, procedure, arguments, argumentsKw, discloseMe, false, null);
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, false, false, null);
 	}
 
 	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean receiveProgress) {
-		this(requestId, procedure, arguments, argumentsKw, discloseMe, receiveProgress, null);
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, false, receiveProgress, null);
 	}
 
 	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
 			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean receiveProgress,
 			@Nullable Long timeout) {
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, false, receiveProgress, timeout, null);
+	}
+
+	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean progress, boolean receiveProgress) {
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, progress, receiveProgress, null, null);
+	}
+
+	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean progress, boolean receiveProgress,
+			@Nullable Long timeout) {
+		this(requestId, procedure, arguments, argumentsKw, discloseMe, progress, receiveProgress, timeout, null);
+	}
+
+	public CallMessage(long requestId, String procedure, @Nullable List<Object> arguments,
+			@Nullable Map<String, Object> argumentsKw, boolean discloseMe, boolean progress, boolean receiveProgress,
+			@Nullable Long timeout, @Nullable String rkey) {
 		super(CODE);
 		this.requestId = requestId;
 		this.procedure = procedure;
 		this.arguments = arguments;
 		this.argumentsKw = argumentsKw;
 		this.discloseMe = discloseMe;
+		this.progress = progress;
 		this.receiveProgress = receiveProgress;
+		this.rkey = rkey;
 		this.timeout = timeout;
 	}
 
@@ -90,17 +113,39 @@ public class CallMessage extends WampMessage {
 		long request = jp.getLongValue();
 
 		boolean discloseMe = false;
+		boolean progress = false;
 		boolean receiveProgress = false;
 		Long timeout = null;
 		jp.nextToken();
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
 			discloseMe = (boolean) options.getOrDefault("disclose_me", false);
+			progress = (boolean) options.getOrDefault("progress", false);
 			receiveProgress = (boolean) options.getOrDefault("receive_progress", false);
+			Object resourceKey = options.get("rkey");
+			String rkey = resourceKey instanceof String resourceKeyString ? resourceKeyString : null;
 			Object timeoutOption = options.get("timeout");
 			if (timeoutOption instanceof Number timeoutNumber) {
 				timeout = timeoutNumber.longValue();
 			}
+
+			jp.nextToken();
+			String procedure = jp.getValueAsString();
+
+			List<Object> arguments = null;
+			JsonToken token = jp.nextToken();
+			if (token == JsonToken.START_ARRAY) {
+				arguments = ParserUtil.readArray(jp);
+			}
+
+			Map<String, Object> argumentsKw = null;
+			token = jp.nextToken();
+			if (token == JsonToken.START_OBJECT) {
+				argumentsKw = ParserUtil.readObject(jp);
+			}
+
+			return new CallMessage(request, procedure, arguments, argumentsKw, discloseMe, progress, receiveProgress,
+					timeout, rkey);
 		}
 
 		jp.nextToken();
@@ -118,7 +163,8 @@ public class CallMessage extends WampMessage {
 			argumentsKw = ParserUtil.readObject(jp);
 		}
 
-		return new CallMessage(request, procedure, arguments, argumentsKw, discloseMe, receiveProgress, timeout);
+		return new CallMessage(request, procedure, arguments, argumentsKw, discloseMe, progress, receiveProgress,
+				timeout);
 	}
 
 	@Override
@@ -130,8 +176,14 @@ public class CallMessage extends WampMessage {
 		if (this.discloseMe) {
 			generator.writeBooleanProperty("disclose_me", this.discloseMe);
 		}
+		if (this.progress) {
+			generator.writeBooleanProperty("progress", true);
+		}
 		if (this.receiveProgress) {
 			generator.writeBooleanProperty("receive_progress", this.receiveProgress);
+		}
+		if (this.rkey != null) {
+			generator.writeStringProperty("rkey", this.rkey);
 		}
 		Long timeoutValue = this.timeout;
 		if (timeoutValue != null) {
@@ -177,8 +229,16 @@ public class CallMessage extends WampMessage {
 		return this.discloseMe;
 	}
 
+	public boolean isProgress() {
+		return this.progress;
+	}
+
 	public boolean isReceiveProgress() {
 		return this.receiveProgress;
+	}
+
+	@Nullable public String getRkey() {
+		return this.rkey;
 	}
 
 	@Nullable public Long getTimeout() {
@@ -188,8 +248,9 @@ public class CallMessage extends WampMessage {
 	@Override
 	public String toString() {
 		return "CallMessage [requestId=" + this.requestId + ", procedure=" + this.procedure + ", discloseMe="
-				+ this.discloseMe + ", receiveProgress=" + this.receiveProgress + ", timeout=" + this.timeout
-				+ ", arguments=" + this.arguments + ", argumentsKw=" + this.argumentsKw + "]";
+				+ this.discloseMe + ", progress=" + this.progress + ", receiveProgress=" + this.receiveProgress
+				+ ", rkey=" + this.rkey + ", timeout=" + this.timeout + ", arguments=" + this.arguments
+				+ ", argumentsKw=" + this.argumentsKw + "]";
 	}
 
 }

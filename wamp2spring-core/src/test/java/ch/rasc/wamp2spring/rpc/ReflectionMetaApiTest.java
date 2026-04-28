@@ -53,37 +53,39 @@ public class ReflectionMetaApiTest {
 		WampResult topicList = api.listTopics();
 		WampResult errorList = api.listErrors();
 		WampResult procedureDescribe = api
-				.describeProcedure(new CallMessage(10L, ReflectionMetaApi.PROCEDURE_DESCRIBE, List.of("com.myapp.worker")));
+			.describeProcedure(new CallMessage(10L, ReflectionMetaApi.PROCEDURE_DESCRIBE, List.of("com.myapp.worker")));
 		WampResult topicDescribe = api
-				.describeTopic(new CallMessage(11L, ReflectionMetaApi.TOPIC_DESCRIBE, List.of("com.myapp.orders")));
-		WampResult errorDescribe = api.describeError(
-				new CallMessage(12L, ReflectionMetaApi.ERROR_DESCRIBE, List.of(WampError.NO_SUCH_PROCEDURE.getExternalValue())));
-		WampResult missingDescribe = api
-				.describeProcedure(new CallMessage(13L, ReflectionMetaApi.PROCEDURE_DESCRIBE, List.of("com.myapp.missing")));
+			.describeTopic(new CallMessage(11L, ReflectionMetaApi.TOPIC_DESCRIBE, List.of("com.myapp.orders")));
+		WampResult errorDescribe = api.describeError(new CallMessage(12L, ReflectionMetaApi.ERROR_DESCRIBE,
+				List.of(WampError.NO_SUCH_PROCEDURE.getExternalValue())));
+		WampResult missingDescribe = api.describeProcedure(
+				new CallMessage(13L, ReflectionMetaApi.PROCEDURE_DESCRIBE, List.of("com.myapp.missing")));
 
 		assertThat((List<String>) Objects.requireNonNull(procedureList.getResults()).get(0))
-				.containsExactly("com.myapp.worker", "com.myapp.worker.prefix");
+			.containsExactly("com.myapp.worker", "com.myapp.worker.prefix");
 		assertThat((List<String>) Objects.requireNonNull(topicList.getResults()).get(0))
-				.containsExactly("com.myapp.orders", "com.myapp.orders.prefix");
+			.containsExactly("com.myapp.orders", "com.myapp.orders.prefix");
 		assertThat((List<String>) Objects.requireNonNull(errorList.getResults()).get(0))
-				.contains(WampError.NO_SUCH_PROCEDURE.getExternalValue(), WampError.FEATURE_NOT_SUPPORTED.getExternalValue())
-				.doesNotContain(WampError.GOODBYE_AND_OUT.getExternalValue());
+			.contains(WampError.NO_SUCH_PROCEDURE.getExternalValue(),
+					WampError.FEATURE_NOT_SUPPORTED.getExternalValue())
+			.doesNotContain(WampError.GOODBYE_AND_OUT.getExternalValue());
 
 		Map<String, Object> procedureDescription = (Map<String, Object>) Objects
-				.requireNonNull(procedureDescribe.getResults()).get(0);
+			.requireNonNull(procedureDescribe.getResults())
+			.get(0);
 		assertThat(procedureDescription).containsEntry("uri", "com.myapp.worker");
 		assertThat(procedureDescription).containsEntry("type", "procedure");
 		assertThat(procedureDescription).containsEntry("match", MatchPolicy.EXACT.getExternalValue());
 		assertThat(procedureDescription.get("invoke")).isEqualTo(InvocationPolicy.SINGLE.getExternalValue());
 
 		Map<String, Object> topicDescription = (Map<String, Object>) Objects.requireNonNull(topicDescribe.getResults())
-				.get(0);
+			.get(0);
 		assertThat(topicDescription).containsEntry("uri", "com.myapp.orders");
 		assertThat(topicDescription).containsEntry("type", "topic");
 		assertThat(topicDescription).containsEntry("match", MatchPolicy.EXACT.getExternalValue());
 
 		Map<String, Object> errorDescription = (Map<String, Object>) Objects.requireNonNull(errorDescribe.getResults())
-				.get(0);
+			.get(0);
 		assertThat(errorDescription).containsEntry("uri", WampError.NO_SUCH_PROCEDURE.getExternalValue());
 		assertThat(errorDescription).containsEntry("type", "error");
 		assertThat(errorDescription).containsEntry("name", WampError.NO_SUCH_PROCEDURE.name());
@@ -121,9 +123,9 @@ public class ReflectionMetaApiTest {
 		topicList.setHeader(WampMessageHeader.WAMP_REALM, "realm.two");
 
 		assertThat((List<String>) Objects.requireNonNull(api.listProcedures(procedureList).getResults()).get(0))
-				.containsExactly("com.myapp.realm.one");
+			.containsExactly("com.myapp.realm.one");
 		assertThat((List<String>) Objects.requireNonNull(api.listTopics(topicList).getResults()).get(0))
-				.containsExactly("com.myapp.topic.two");
+			.containsExactly("com.myapp.topic.two");
 	}
 
 	private static void register(ProcedureRegistry procedureRegistry, RegisterMessage message) {
@@ -137,7 +139,8 @@ public class ReflectionMetaApiTest {
 
 	private static RegisterMessage registerMessage(long requestId, long wampSessionId, String webSocketSessionId,
 			String procedure, MatchPolicy matchPolicy) {
-		RegisterMessage message = new RegisterMessage(requestId, procedure, false, matchPolicy, InvocationPolicy.SINGLE);
+		RegisterMessage message = new RegisterMessage(requestId, procedure, false, matchPolicy,
+				InvocationPolicy.SINGLE);
 		message.setHeader(WampMessageHeader.WAMP_SESSION_ID, wampSessionId);
 		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
 		return message;

@@ -48,6 +48,8 @@ public class Procedure {
 
 	private final boolean progressiveCallResultsSupported;
 
+	private final boolean progressiveCallInvocationsSupported;
+
 	private final boolean registrationRevocationSupported;
 
 	private final boolean callRerouteSupported;
@@ -79,6 +81,8 @@ public class Procedure {
 		this.callTimeoutSupported = supportsCallTimeout(registerMessage.getPeerRoles());
 		this.progressiveCallResultsSupported = supportsProgressiveCallResults(registerMessage.getPeerRoles(),
 				this.callCancelingSupported);
+		this.progressiveCallInvocationsSupported = supportsProgressiveCallInvocations(registerMessage.getPeerRoles(),
+				this.callCancelingSupported);
 		this.registrationRevocationSupported = supportsRegistrationRevocation(registerMessage.getPeerRoles());
 		this.callRerouteSupported = supportsCallReroute(registerMessage.getPeerRoles());
 		this.invocationPolicy = registerMessage.getInvokePolicy();
@@ -107,6 +111,11 @@ public class Procedure {
 	private static boolean supportsProgressiveCallResults(@Nullable List<WampRole> roles,
 			boolean callCancelingSupported) {
 		return callCancelingSupported && supportsFeature(roles, Feature.DEALER_PROGRESSIVE_CALL_RESULTS);
+	}
+
+	private static boolean supportsProgressiveCallInvocations(@Nullable List<WampRole> roles,
+			boolean callCancelingSupported) {
+		return callCancelingSupported && supportsFeature(roles, Feature.DEALER_PROGRESSIVE_CALL_INVOCATIONS);
 	}
 
 	private static boolean supportsFeature(@Nullable List<WampRole> roles, Feature feature) {
@@ -179,6 +188,10 @@ public class Procedure {
 		return this.progressiveCallResultsSupported;
 	}
 
+	public boolean isProgressiveCallInvocationsSupported() {
+		return this.progressiveCallInvocationsSupported;
+	}
+
 	public boolean isCallRerouteSupported() {
 		return this.callRerouteSupported;
 	}
@@ -202,9 +215,10 @@ public class Procedure {
 				+ this.invocationPolicy + ", discloseCaller=" + this.discloseCaller + ", callCancelingSupported="
 				+ this.callCancelingSupported + ", callTimeoutSupported=" + this.callTimeoutSupported
 				+ ", progressiveCallResultsSupported=" + this.progressiveCallResultsSupported
+				+ ", progressiveCallInvocationsSupported=" + this.progressiveCallInvocationsSupported
 				+ ", registrationRevocationSupported=" + this.registrationRevocationSupported
-				+ ", callRerouteSupported=" + this.callRerouteSupported + ", registrationId="
-				+ this.registrationId + ", pendingInvocations=" + this.pendingInvocations + "]";
+				+ ", callRerouteSupported=" + this.callRerouteSupported + ", registrationId=" + this.registrationId
+				+ ", pendingInvocations=" + this.pendingInvocations + "]";
 	}
 
 	private static int componentCount(String procedure) {

@@ -66,6 +66,7 @@ import ch.rasc.wamp2spring.message.UnsubscribeMessage;
 import ch.rasc.wamp2spring.message.UnsubscribedMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
+import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.InvocableHandlerMethod;
@@ -180,6 +181,11 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				sendMessageToClient(new ErrorMessage(subscribeMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
 			}
+			if (subscribeMessage.getNkey() != null && (!this.features.isEnabled(Feature.BROKER_SHARDED_SUBSCRIPTION)
+					|| !subscriberSupportsFeature(subscribeMessage, Feature.BROKER_SHARDED_SUBSCRIPTION))) {
+				sendMessageToClient(new ErrorMessage(subscribeMessage, WampError.OPTION_NOT_ALLOWED));
+				return;
+			}
 
 			SubscribeResult result = this.subscriptionRegistry.subscribe(subscribeMessage);
 			sendMessageToClient(new SubscribedMessage(subscribeMessage, result.getSubscription().getSubscriptionId()));
@@ -214,6 +220,11 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				if (publishMessage.getWebSocketSessionId() != null) {
 					sendMessageToClient(new ErrorMessage(publishMessage, WampError.DISCLOSE_ME_DISALLOWED));
 				}
+				return;
+			}
+			if (publishMessage.getRkey() != null && (!this.features.isEnabled(Feature.BROKER_SHARDED_SUBSCRIPTION)
+					|| !publisherSupportsFeature(publishMessage, Feature.BROKER_SHARDED_SUBSCRIPTION))) {
+				sendMessageToClient(new ErrorMessage(publishMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
 			}
 
@@ -256,7 +267,10 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 			Subscriber subscriber = new Subscriber(Objects.requireNonNull(subscribeMessage.getWebSocketSessionId()),
 					Objects.requireNonNull(subscribeMessage.getWampSessionId()));
 			for (PublishMessage retainedMessage : retainedMessages) {
-				publishRetentionEvent(subscription, subscriber, retainedMessage);
+				if (this.subscriptionRegistry.findSubscriptions(retainedMessage, retainedMessage.getTopic())
+					.contains(subscription)) {
+					publishRetentionEvent(subscription, subscriber, retainedMessage);
+				}
 			}
 		}
 	}
@@ -307,6 +321,36 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 			}
 		}
 		return true;
+	}
+
+	private static boolean publisherSupportsFeature(WampMessage message, Feature feature) {
+		List<WampRole> peerRoles = message.getPeerRoles();
+		if (peerRoles == null) {
+			return false;
+		}
+
+		for (WampRole role : peerRoles) {
+			if ("publisher".equals(role.getRole()) && role.hasFeature(feature.getExternalValue())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean subscriberSupportsFeature(WampMessage message, Feature feature) {
+		List<WampRole> peerRoles = message.getPeerRoles();
+		if (peerRoles == null) {
+			return false;
+		}
+
+		for (WampRole role : peerRoles) {
+			if ("subscriber".equals(role.getRole()) && role.hasFeature(feature.getExternalValue())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private Collection<WampAuthorizer> getAuthorizers() {

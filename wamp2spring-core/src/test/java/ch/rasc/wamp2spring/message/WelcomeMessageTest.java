@@ -42,7 +42,7 @@ public class WelcomeMessageTest extends BaseMessageTest {
 		assertThat(welcomeMessage.getAuthMethod()).isEqualTo("ticket");
 
 		String json = serializeToJson(welcomeMessage);
-		String expected = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"event_history\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
+		String expected = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"progressive_call_invocations\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"sharded_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"sharded_subscription\":true,\"event_history\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
 		ObjectMapper om = new ObjectMapper();
 		assertThat(om.readValue(json, List.class)).isEqualTo(om.readValue(expected, List.class));
 	}
@@ -58,7 +58,7 @@ public class WelcomeMessageTest extends BaseMessageTest {
 		assertThat(welcomeMessage.getRoles()).containsExactly(new WampRole("broker"));
 		assertThat(welcomeMessage.getAuthMethod()).isEqualTo("anonymous");
 
-		json = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"event_history\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
+		json = "[2,9129137332,{\"roles\":{\"dealer\":{\"features\":{\"progressive_call_results\":true,\"progressive_call_invocations\":true,\"caller_identification\":true,\"pattern_based_registration\":true,\"shared_registration\":true,\"sharded_registration\":true,\"registration_meta_api\":true,\"session_meta_api\":true,\"registration_revocation\":true}},\"broker\":{\"features\":{\"subscriber_blackwhite_listing\":true,\"publisher_exclusion\":true,\"publisher_identification\":true,\"pattern_based_subscription\":true,\"sharded_subscription\":true,\"event_history\":true,\"session_meta_api\":true,\"subscription_meta_api\":true,\"subscription_revocation\":true}}},\"realm\":\"realm\",\"authid\":\"alice\",\"authrole\":\"admin\",\"authmethod\":\"ticket\",\"authprovider\":\"static\",\"authextra\":{\"tenant\":\"demo\"}}]";
 		welcomeMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(welcomeMessage.getCode()).isEqualTo(2);
 		assertThat(welcomeMessage.getSessionId()).isEqualTo(9129137332L);
@@ -75,9 +75,11 @@ public class WelcomeMessageTest extends BaseMessageTest {
 
 		WampRole dealer = new WampRole("dealer");
 		dealer.addFeature("progressive_call_results");
+		dealer.addFeature("progressive_call_invocations");
 		dealer.addFeature("caller_identification");
 		dealer.addFeature("pattern_based_registration");
 		dealer.addFeature("shared_registration");
+		dealer.addFeature("sharded_registration");
 		dealer.addFeature("registration_meta_api");
 		dealer.addFeature("session_meta_api");
 		dealer.addFeature("registration_revocation");
@@ -88,6 +90,7 @@ public class WelcomeMessageTest extends BaseMessageTest {
 		broker.addFeature("publisher_exclusion");
 		broker.addFeature("publisher_identification");
 		broker.addFeature("pattern_based_subscription");
+		broker.addFeature("sharded_subscription");
 		broker.addFeature("event_history");
 		broker.addFeature("session_meta_api");
 		broker.addFeature("subscription_meta_api");

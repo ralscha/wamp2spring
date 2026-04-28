@@ -1,9 +1,0 @@
-<settings>
-    <servers>
-        <server>
-            <id>ossrh</id>
-            <username>${repo.username}</username>
-            <password>${repo.password}</password>
-        </server>
-    </servers>
-</settings>  

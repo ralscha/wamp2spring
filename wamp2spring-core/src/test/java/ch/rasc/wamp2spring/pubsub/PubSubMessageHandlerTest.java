@@ -15,13 +15,13 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.security.Principal;
 import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -132,6 +132,36 @@ public class PubSubMessageHandlerTest {
 	}
 
 	@Test
+	public void shardedSubscriptionRoutesEventsByRkey() {
+		subscribe("ws-1", 1L, new TestPrincipal("alice", "ROLE_USER"), false, "node-a", true);
+		subscribe("ws-2", 2L, new TestPrincipal("bob", "ROLE_ADMIN"), false, "node-b", true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		PublishMessage firstPublishMessage = PublishMessage.builder(10L, "topic")
+			.rkey("b")
+			.addArgument("payload-1")
+			.build();
+		firstPublishMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "pub-ws");
+		firstPublishMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, List.of(publisherRole(true)));
+		this.pubSubMessageHandler.handleMessage(firstPublishMessage);
+
+		PublishMessage secondPublishMessage = PublishMessage.builder(11L, "topic")
+			.rkey("a")
+			.addArgument("payload-2")
+			.build();
+		secondPublishMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "pub-ws");
+		secondPublishMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, List.of(publisherRole(true)));
+		this.pubSubMessageHandler.handleMessage(secondPublishMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(2)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getAllValues()).filteredOn(EventMessage.class::isInstance)
+			.map(EventMessage.class::cast)
+			.extracting(EventMessage::getWebSocketSessionId)
+			.containsExactly("ws-1", "ws-2");
+	}
+
+	@Test
 	public void excludeAuthRoleFiltersSubscribers() {
 		subscribe("ws-1", 1L, new TestPrincipal("alice", "ROLE_USER"));
 		subscribe("ws-2", 2L, new TestPrincipal("bob", "ROLE_ADMIN"));
@@ -231,19 +261,66 @@ public class PubSubMessageHandlerTest {
 			.isEqualTo(WampError.AUTHORIZATION_FAILED.getExternalValue());
 	}
 
+	@Test
+	public void shardedSubscriptionRequiresBrokerFeature() {
+		Features features = new Features();
+		features.disable(ch.rasc.wamp2spring.config.Feature.BROKER_SHARDED_SUBSCRIPTION);
+		this.pubSubMessageHandler = new PubSubMessageHandler(this.clientInboundChannel, this.brokerChannel,
+				this.clientOutboundChannel, new SubscriptionRegistry(), this.handlerMethodService, features,
+				this.eventStore);
+		this.pubSubMessageHandler.setApplicationContext(this.applicationContext);
+		this.pubSubMessageHandler.start();
+
+		SubscribeMessage subscribeMessage = new SubscribeMessage(1L, "topic", MatchPolicy.EXACT, false, "node-a", null);
+		subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "ws-1");
+		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 1L);
+		subscribeMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, List.of(subscriberRole(false, true)));
+
+		this.pubSubMessageHandler.handleMessage(subscribeMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getValue()).isInstanceOf(ErrorMessage.class);
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.OPTION_NOT_ALLOWED.getExternalValue());
+	}
+
+	@Test
+	public void shardedPublishRequiresPublisherFeature() {
+		subscribe("ws-1", 1L, new TestPrincipal("alice", "ROLE_USER"), false, "node-a", true);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		PublishMessage publishMessage = PublishMessage.builder(10L, "topic").rkey("a").addArgument("payload").build();
+		publishMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "pub-ws");
+		publishMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, List.of(publisherRole(false)));
+
+		this.pubSubMessageHandler.handleMessage(publishMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getValue()).isInstanceOf(ErrorMessage.class);
+		assertThat(((ErrorMessage) messageCaptor.getValue()).getError())
+			.isEqualTo(WampError.OPTION_NOT_ALLOWED.getExternalValue());
+	}
+
 	private long subscribe(String webSocketSessionId, long wampSessionId, Principal principal) {
 		return subscribe(webSocketSessionId, wampSessionId, principal, false);
 	}
 
 	private long subscribe(String webSocketSessionId, long wampSessionId, Principal principal,
 			boolean subscriptionRevocationSupported) {
-		SubscribeMessage subscribeMessage = new SubscribeMessage(wampSessionId, "topic");
+		return subscribe(webSocketSessionId, wampSessionId, principal, subscriptionRevocationSupported, null, false);
+	}
+
+	private long subscribe(String webSocketSessionId, long wampSessionId, Principal principal,
+			boolean subscriptionRevocationSupported, @Nullable String nkey, boolean shardedSubscriptionSupported) {
+		SubscribeMessage subscribeMessage = new SubscribeMessage(wampSessionId, "topic", MatchPolicy.EXACT, false, nkey,
+				null);
 		subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
 		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, wampSessionId);
 		subscribeMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
-		if (subscriptionRevocationSupported) {
-			WampRole subscriberRole = new WampRole("subscriber");
-			subscriberRole.addFeature("subscription_revocation");
+		if (subscriptionRevocationSupported || shardedSubscriptionSupported) {
+			WampRole subscriberRole = subscriberRole(subscriptionRevocationSupported, shardedSubscriptionSupported);
 			subscribeMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES, List.of(subscriberRole));
 		}
 		this.pubSubMessageHandler.handleMessage(subscribeMessage);
@@ -258,6 +335,26 @@ public class PubSubMessageHandlerTest {
 			.orElseThrow();
 		Mockito.clearInvocations(this.clientOutboundChannel);
 		return subscriptionId;
+	}
+
+	private static WampRole subscriberRole(boolean subscriptionRevocationSupported,
+			boolean shardedSubscriptionSupported) {
+		WampRole subscriberRole = new WampRole("subscriber");
+		if (subscriptionRevocationSupported) {
+			subscriberRole.addFeature("subscription_revocation");
+		}
+		if (shardedSubscriptionSupported) {
+			subscriberRole.addFeature("sharded_subscription");
+		}
+		return subscriberRole;
+	}
+
+	private static WampRole publisherRole(boolean shardedSubscriptionSupported) {
+		WampRole publisherRole = new WampRole("publisher");
+		if (shardedSubscriptionSupported) {
+			publisherRole.addFeature("sharded_subscription");
+		}
+		return publisherRole;
 	}
 
 	private EventMessage captureSingleEvent() {

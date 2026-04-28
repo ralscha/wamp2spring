@@ -15,13 +15,12 @@
  */
 package ch.rasc.wamp2spring.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
@@ -180,6 +179,11 @@ public class PublishMessageTest extends BaseMessageTest {
 		json = serializeToJson(publishMessage);
 		assertThat(json)
 			.isEqualTo("[16,2,{\"eligible_authid\":[\"alice\"],\"exclude_authrole\":[\"admin\"]},\"event\"]");
+
+		publishMessage = PublishMessage.builder(3, "event").rkey("shard-a").build();
+		assertThat(publishMessage.getRkey()).isEqualTo("shard-a");
+		json = serializeToJson(publishMessage);
+		assertThat(json).isEqualTo("[16,3,{\"rkey\":\"shard-a\"},\"event\"]");
 	}
 
 	@Test
@@ -294,6 +298,14 @@ public class PublishMessageTest extends BaseMessageTest {
 		assertThat(publishMessage.isExcludeMe()).isTrue();
 		assertThat(publishMessage.getArguments()).containsExactly(23);
 		assertThat(publishMessage.getArgumentsKw()).isNull();
+
+		json = "[16, 523412, {\"rkey\": \"shard-a\"}, \"com.myapp.mytopic\", [23]]";
+		publishMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
+		assertThat(publishMessage.getCode()).isEqualTo(16);
+		assertThat(publishMessage.getRequestId()).isEqualTo(523412L);
+		assertThat(publishMessage.getTopic()).isEqualTo("com.myapp.mytopic");
+		assertThat(publishMessage.getRkey()).isEqualTo("shard-a");
+		assertThat(publishMessage.getArguments()).containsExactly(23);
 	}
 
 }

@@ -17,14 +17,14 @@ package ch.rasc.wamp2spring.message;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
-
-import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 /**
  * A Subscriber subscribes to a topic with this message.
@@ -42,6 +42,8 @@ public class SubscribeMessage extends WampMessage {
 	private final String topic;
 
 	private final boolean getRetained;
+
+	@Nullable private final String nkey;
 
 	@Nullable private final Map<String, Object> options;
 
@@ -63,13 +65,26 @@ public class SubscribeMessage extends WampMessage {
 
 	public SubscribeMessage(long requestId, String topic, MatchPolicy match, boolean getRetained,
 			@Nullable Map<String, Object> options) {
+		this(requestId, topic, match, getRetained, null, options);
+	}
+
+	public SubscribeMessage(long requestId, String topic, MatchPolicy match, boolean getRetained, @Nullable String nkey,
+			@Nullable Map<String, Object> options) {
 		super(CODE);
 		this.requestId = requestId;
 		this.matchPolicy = match;
 		this.topic = topic;
 		this.getRetained = getRetained;
-		if (options != null) {
-			this.options = Collections.unmodifiableMap(options);
+		this.nkey = nkey;
+		if (options != null || nkey != null) {
+			Map<String, Object> normalizedOptions = new LinkedHashMap<>();
+			if (options != null) {
+				normalizedOptions.putAll(options);
+			}
+			if (nkey != null) {
+				normalizedOptions.put("nkey", nkey);
+			}
+			this.options = Collections.unmodifiableMap(normalizedOptions);
 		}
 		else {
 			this.options = null;
@@ -84,6 +99,7 @@ public class SubscribeMessage extends WampMessage {
 
 		jp.nextToken();
 		boolean getRetained = false;
+		String nkey = null;
 		Map<String, Object> options = ParserUtil.readObject(jp);
 		if (options != null) {
 			String extValue = (String) options.get("match");
@@ -94,12 +110,13 @@ public class SubscribeMessage extends WampMessage {
 				}
 			}
 			getRetained = (boolean) options.getOrDefault("get_retained", false);
+			nkey = (String) options.get("nkey");
 		}
 
 		jp.nextToken();
 		String topic = jp.getValueAsString();
 
-		return new SubscribeMessage(request, topic, match, getRetained, options);
+		return new SubscribeMessage(request, topic, match, getRetained, nkey, options);
 	}
 
 	@Override
@@ -113,6 +130,9 @@ public class SubscribeMessage extends WampMessage {
 		}
 		if (this.getRetained) {
 			generator.writeBooleanProperty("get_retained", this.getRetained);
+		}
+		if (this.nkey != null) {
+			generator.writeStringProperty("nkey", this.nkey);
 		}
 		generator.writeEndObject();
 
@@ -149,6 +169,10 @@ public class SubscribeMessage extends WampMessage {
 		return this.getRetained;
 	}
 
+	public @Nullable String getNkey() {
+		return this.nkey;
+	}
+
 	/**
 	 * Returns the Options dictionary. Third argument of a SUBSCRIBE message.
 	 * <p>
@@ -163,7 +187,7 @@ public class SubscribeMessage extends WampMessage {
 	@Override
 	public String toString() {
 		return "SubscribeMessage [requestId=" + this.requestId + ", matchPolicy=" + this.matchPolicy + ", topic="
-				+ this.topic + ", getRetained=" + this.getRetained + "]";
+				+ this.topic + ", getRetained=" + this.getRetained + ", nkey=" + this.nkey + "]";
 	}
 
 }
