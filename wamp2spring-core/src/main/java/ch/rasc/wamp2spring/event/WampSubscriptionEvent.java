@@ -33,7 +33,7 @@ public abstract class WampSubscriptionEvent extends WampEvent {
 	public WampSubscriptionEvent(WampMessage wampMessage, SubscriptionDetail subscriptionDetail) {
 		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
 				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
-				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider());
 		this.subscriptionDetail = subscriptionDetail;
 	}
 

@@ -15,10 +15,10 @@
  */
 package ch.rasc.wamp2spring.rpc;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Objects;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import ch.rasc.wamp2spring.config.Features;
@@ -83,25 +83,23 @@ public class ProcedureRegistryTest {
 	}
 
 	@Test
-	public void registrationsAreIsolatedByRealm() {
+	public void registrationsIgnoreRealmForConflicts() {
 		ProcedureRegistry registry = new ProcedureRegistry(new Features());
 
 		RegisterResult firstRealm = registry
-			.register(registerMessage(1L, 101L, "callee-1", "realm-one", "com.myapp.worker", InvocationPolicy.SINGLE));
+			.register(registerMessage(1L, 101L, "callee-1", "com.myapp.worker", InvocationPolicy.SINGLE));
 		RegisterResult secondRealm = registry
-			.register(registerMessage(2L, 202L, "callee-2", "realm-two", "com.myapp.worker", InvocationPolicy.SINGLE));
+			.register(registerMessage(2L, 202L, "callee-2", "com.myapp.worker", InvocationPolicy.SINGLE));
 
 		assertThat(firstRealm.isSuccess()).isTrue();
-		assertThat(secondRealm.isSuccess()).isTrue();
-		assertThat(secondRealm.getRegistrationId()).isNotEqualTo(firstRealm.getRegistrationId());
-		assertThat(registry.lookupRegistration("realm-one", "com.myapp.worker", MatchPolicy.EXACT))
+		assertThat(secondRealm.isSuccess()).isFalse();
+		assertThat(secondRealm.getRegistrationId()).isEqualTo(-1L);
+		assertThat(registry.lookupRegistration("com.myapp.worker", MatchPolicy.EXACT))
 			.isEqualTo(firstRealm.getRegistrationId());
-		assertThat(registry.lookupRegistration("realm-two", "com.myapp.worker", MatchPolicy.EXACT))
-			.isEqualTo(secondRealm.getRegistrationId());
-		assertThat(registry.matchRegistration("realm-one", "com.myapp.worker"))
+		assertThat(registry.lookupRegistration("com.myapp.worker", MatchPolicy.EXACT))
 			.isEqualTo(firstRealm.getRegistrationId());
-		assertThat(registry.listRegistrations("realm-two").get(MatchPolicy.EXACT))
-			.containsExactly(secondRealm.getRegistrationId());
+		assertThat(registry.matchRegistration("com.myapp.worker")).isEqualTo(firstRealm.getRegistrationId());
+		assertThat(registry.listRegistrations().get(MatchPolicy.EXACT)).containsExactly(firstRealm.getRegistrationId());
 	}
 
 	@Test
@@ -125,15 +123,9 @@ public class ProcedureRegistryTest {
 
 	private static RegisterMessage registerMessage(long requestId, long wampSessionId, String webSocketSessionId,
 			String procedure, InvocationPolicy invocationPolicy) {
-		return registerMessage(requestId, wampSessionId, webSocketSessionId, null, procedure, invocationPolicy);
-	}
-
-	private static RegisterMessage registerMessage(long requestId, long wampSessionId, String webSocketSessionId,
-			@Nullable String realm, String procedure, InvocationPolicy invocationPolicy) {
 		RegisterMessage message = new RegisterMessage(requestId, procedure, false, MatchPolicy.EXACT, invocationPolicy);
 		message.setHeader(WampMessageHeader.WAMP_SESSION_ID, wampSessionId);
 		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
-		message.setHeader(WampMessageHeader.WAMP_REALM, realm);
 		return message;
 	}
 

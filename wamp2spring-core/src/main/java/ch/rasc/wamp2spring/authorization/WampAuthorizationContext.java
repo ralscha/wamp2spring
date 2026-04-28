@@ -68,8 +68,4 @@ public final class WampAuthorizationContext {
 		return this.message.getAuthRole();
 	}
 
-	@Nullable public String getRealm() {
-		return this.message.getRealm();
-	}
-
 }

@@ -34,7 +34,7 @@ public abstract class WampProcedureEvent extends WampEvent {
 	public WampProcedureEvent(WampMessage wampMessage, String procedure, long registrationId) {
 		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
 				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
-				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider());
 		this.procedure = procedure;
 		this.registrationId = registrationId;
 	}

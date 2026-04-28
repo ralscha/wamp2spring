@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.rpc;
 
-import org.jspecify.annotations.Nullable;
-
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 public class ProcedureDetail {
@@ -27,22 +25,14 @@ public class ProcedureDetail {
 
 	private final String procedure;
 
-	@Nullable private final String realm;
-
 	private final MatchPolicy matchPolicy;
 
 	private final InvocationPolicy invocationPolicy;
 
 	public ProcedureDetail(long registrationId, long created, String procedure, MatchPolicy matchPolicy,
 			InvocationPolicy invocationPolicy) {
-		this(registrationId, created, null, procedure, matchPolicy, invocationPolicy);
-	}
-
-	public ProcedureDetail(long registrationId, long created, @Nullable String realm, String procedure,
-			MatchPolicy matchPolicy, InvocationPolicy invocationPolicy) {
 		this.registrationId = registrationId;
 		this.created = created;
-		this.realm = realm;
 		this.procedure = procedure;
 		this.matchPolicy = matchPolicy;
 		this.invocationPolicy = invocationPolicy;
@@ -58,10 +48,6 @@ public class ProcedureDetail {
 
 	public String getProcedure() {
 		return this.procedure;
-	}
-
-	@Nullable public String getRealm() {
-		return this.realm;
 	}
 
 	public MatchPolicy getMatchPolicy() {

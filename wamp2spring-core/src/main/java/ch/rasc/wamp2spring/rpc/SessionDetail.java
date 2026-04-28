@@ -23,8 +23,6 @@ public final class SessionDetail {
 
 	private final String webSocketSessionId;
 
-	@Nullable private final String realm;
-
 	@Nullable private final String authId;
 
 	@Nullable private final String authRole;
@@ -37,20 +35,14 @@ public final class SessionDetail {
 
 	public SessionDetail(long sessionId, String webSocketSessionId, @Nullable String authId, @Nullable String authRole,
 			long created) {
-		this(sessionId, webSocketSessionId, null, authId, authRole, authId == null ? "anonymous" : "transport",
+		this(sessionId, webSocketSessionId, authId, authRole, authId == null ? "anonymous" : "transport",
 				authId == null ? "static" : "transport", created);
 	}
 
 	public SessionDetail(long sessionId, String webSocketSessionId, @Nullable String authId, @Nullable String authRole,
 			String authMethod, String authProvider, long created) {
-		this(sessionId, webSocketSessionId, null, authId, authRole, authMethod, authProvider, created);
-	}
-
-	public SessionDetail(long sessionId, String webSocketSessionId, @Nullable String realm, @Nullable String authId,
-			@Nullable String authRole, String authMethod, String authProvider, long created) {
 		this.sessionId = sessionId;
 		this.webSocketSessionId = webSocketSessionId;
-		this.realm = realm;
 		this.authId = authId;
 		this.authRole = authRole;
 		this.authMethod = authMethod;
@@ -64,10 +56,6 @@ public final class SessionDetail {
 
 	public String getWebSocketSessionId() {
 		return this.webSocketSessionId;
-	}
-
-	@Nullable public String getRealm() {
-		return this.realm;
 	}
 
 	@Nullable public String getAuthId() {

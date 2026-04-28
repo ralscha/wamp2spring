@@ -339,31 +339,30 @@ public class SubscriptionRegistryTest {
 	}
 
 	@Test
-	public void subscriptionsAreIsolatedByRealm() {
+	public void subscriptionsIgnoreRealm() {
 		SubscribeMessage firstRealm = new SubscribeMessage(1, "topic");
 		firstRealm.setHeader(WampMessageHeader.WAMP_SESSION_ID, 123L);
 		firstRealm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "one");
-		firstRealm.setHeader(WampMessageHeader.WAMP_REALM, "realm-one");
 		SubscribeResult firstResult = this.subscriptionRegistry.subscribe(firstRealm);
 
 		SubscribeMessage secondRealm = new SubscribeMessage(2, "topic");
 		secondRealm.setHeader(WampMessageHeader.WAMP_SESSION_ID, 321L);
 		secondRealm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "two");
-		secondRealm.setHeader(WampMessageHeader.WAMP_REALM, "realm-two");
 		SubscribeResult secondResult = this.subscriptionRegistry.subscribe(secondRealm);
 
 		assertThat(firstResult.isCreated()).isTrue();
-		assertThat(secondResult.isCreated()).isTrue();
+		assertThat(secondResult.isCreated()).isFalse();
 		assertThat(secondResult.getSubscription().getSubscriptionId())
-			.isNotEqualTo(firstResult.getSubscription().getSubscriptionId());
-		assertThat(this.subscriptionRegistry.lookupSubscription("realm-one", "topic", MatchPolicy.EXACT))
 			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
-		assertThat(this.subscriptionRegistry.lookupSubscription("realm-two", "topic", MatchPolicy.EXACT))
-			.isEqualTo(secondResult.getSubscription().getSubscriptionId());
-		assertThat(this.subscriptionRegistry.getMatchSubscriptions("realm-one", "topic"))
+		assertThat(this.subscriptionRegistry.lookupSubscription("topic", MatchPolicy.EXACT))
+			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.lookupSubscription("topic", MatchPolicy.EXACT))
+			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.getMatchSubscriptions("topic"))
 			.containsExactly(firstResult.getSubscription().getSubscriptionId());
-		assertThat(this.subscriptionRegistry.getMatchSubscriptions("realm-two", "topic"))
-			.containsExactly(secondResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.getMatchSubscriptions("topic"))
+			.containsExactly(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.hasSubscribers("topic")).isTrue();
 	}
 
 	@Test

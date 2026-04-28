@@ -131,7 +131,7 @@ public class WampLongpollControllerTest {
 	@Test
 	public void helloReturnsWelcomeOnReceive() throws IOException {
 		String transportId = openJsonTransport();
-		HelloMessage helloMessage = new HelloMessage("realm",
+		HelloMessage helloMessage = new HelloMessage(
 				List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")));
 
 		int sendStatus = this.restClient.post()
@@ -176,7 +176,7 @@ public class WampLongpollControllerTest {
 	@Test
 	public void goodbyeIsReturnedAndTransportRemovedAfterDrain() throws IOException {
 		String transportId = openJsonTransport();
-		HelloMessage helloMessage = new HelloMessage("realm",
+		HelloMessage helloMessage = new HelloMessage(
 				List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")));
 
 		this.restClient.post()
@@ -279,7 +279,7 @@ public class WampLongpollControllerTest {
 	}
 
 	private WelcomeMessage helloAndReceiveWelcome(String transportId) throws IOException {
-		HelloMessage helloMessage = new HelloMessage("realm",
+		HelloMessage helloMessage = new HelloMessage(
 				List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")));
 		int sendStatus = this.restClient.post()
 			.uri("/wamp/{transportId}/send", transportId)

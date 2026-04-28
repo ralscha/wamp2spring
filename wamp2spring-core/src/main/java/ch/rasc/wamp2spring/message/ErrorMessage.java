@@ -21,11 +21,10 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import ch.rasc.wamp2spring.WampError;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;
-
-import ch.rasc.wamp2spring.WampError;
 
 /**
  * [ERROR, REQUEST.Type|int, REQUEST.Request|id, Details|dict, Error|uri]

@@ -27,13 +27,11 @@ import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 
 /**
- * [HELLO, Realm|uri, Details|dict]
+ * [HELLO, Details|dict]
  */
 public class HelloMessage extends WampMessage {
 
 	static final int CODE = 1;
-
-	@Nullable private final String realm;
 
 	private final List<WampRole> roles;
 
@@ -43,14 +41,13 @@ public class HelloMessage extends WampMessage {
 
 	@Nullable private final Map<String, Object> authExtra;
 
-	public HelloMessage(@Nullable String realm, List<WampRole> roles) {
-		this(realm, roles, List.of(), null, null);
+	public HelloMessage(List<WampRole> roles) {
+		this(roles, List.of(), null, null);
 	}
 
-	public HelloMessage(@Nullable String realm, List<WampRole> roles, @Nullable List<String> authMethods,
-			@Nullable String authId, @Nullable Map<String, Object> authExtra) {
+	public HelloMessage(List<WampRole> roles, @Nullable List<String> authMethods, @Nullable String authId,
+			@Nullable Map<String, Object> authExtra) {
 		super(CODE);
-		this.realm = realm;
 		this.roles = roles;
 		this.authMethods = authMethods != null ? List.copyOf(authMethods) : List.of();
 		this.authId = authId;
@@ -60,13 +57,11 @@ public class HelloMessage extends WampMessage {
 	@SuppressWarnings("unchecked")
 	public static HelloMessage deserialize(JsonParser jp) throws IOException {
 		jp.nextToken();
-		String realm = jp.getValueAsString();
 
 		List<WampRole> roles = new ArrayList<>();
 		List<String> authMethods = List.of();
 		String authId = null;
 		Map<String, Object> authExtra = null;
-		jp.nextToken();
 		Map<String, Object> details = ParserUtil.readObject(jp);
 		if (details != null) {
 			Map<String, Map<String, Map<String, Boolean>>> rolesMap = (Map<String, Map<String, Map<String, Boolean>>>) details
@@ -98,13 +93,12 @@ public class HelloMessage extends WampMessage {
 			authExtra = (Map<String, Object>) details.get("authextra");
 		}
 
-		return new HelloMessage(realm, roles, authMethods, authId, authExtra);
+		return new HelloMessage(roles, authMethods, authId, authExtra);
 	}
 
 	@Override
 	public void serialize(JsonGenerator generator) throws IOException {
 		generator.writeNumber(getCode());
-		generator.writeString(this.realm);
 		generator.writeStartObject();
 		generator.writeObjectPropertyStart("roles");
 		for (WampRole wampRole : this.roles) {
@@ -135,11 +129,6 @@ public class HelloMessage extends WampMessage {
 		generator.writeEndObject();
 	}
 
-	@Override
-	@Nullable public String getRealm() {
-		return this.realm;
-	}
-
 	public List<WampRole> getRoles() {
 		return this.roles;
 	}
@@ -159,8 +148,8 @@ public class HelloMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "HelloMessage [realm=" + this.realm + ", roles=" + this.roles + ", authMethods=" + this.authMethods
-				+ ", authId=" + this.authId + "]";
+		return "HelloMessage [roles=" + this.roles + ", authMethods=" + this.authMethods + ", authId=" + this.authId
+				+ "]";
 	}
 
 }

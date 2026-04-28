@@ -39,7 +39,6 @@ import ch.rasc.wamp2spring.event.WampSubscriptionSubscribedEvent;
 import ch.rasc.wamp2spring.event.WampSubscriptionUnsubscribedEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.pubsub.EventHistoryEntry;
 import ch.rasc.wamp2spring.pubsub.EventStore;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
@@ -87,18 +86,10 @@ public class SubscriptionMetaApi {
 		this.eventStore = eventStore;
 	}
 
-	public WampResult list() {
-		return list((String) null);
-	}
-
 	@WampProcedure(LIST)
-	public WampResult list(CallMessage callMessage) {
-		return list(callMessage.getRealm());
-	}
-
-	private WampResult list(@Nullable String realm) {
+	public WampResult list() {
 		Map<String, List<Long>> result = new LinkedHashMap<>();
-		Map<MatchPolicy, List<Long>> subscriptions = this.subscriptionRegistry.listSubscriptions(realm);
+		Map<MatchPolicy, List<Long>> subscriptions = this.subscriptionRegistry.listSubscriptions();
 		result.put("exact", subscriptions.get(MatchPolicy.EXACT));
 		result.put("prefix", subscriptions.get(MatchPolicy.PREFIX));
 		result.put("wildcard", subscriptions.get(MatchPolicy.WILDCARD));
@@ -108,11 +99,9 @@ public class SubscriptionMetaApi {
 	@WampProcedure(LOOKUP)
 	public WampResult lookup(CallMessage callMessage) throws WampException {
 		MatchPolicy matchPolicy = Objects.requireNonNullElse(matchPolicyOption(callMessage), MatchPolicy.EXACT);
-		String nkey = nkeyOption(callMessage);
 		String topic = stringArgument(callMessage, 0);
 		WampUriValidator.validateSubscriptionTopic(topic, matchPolicy);
-		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(callMessage.getRealm(), topic, matchPolicy,
-				nkey);
+		Long subscriptionId = this.subscriptionRegistry.lookupSubscription(topic, matchPolicy);
 		return new WampResult().add(subscriptionId);
 	}
 
@@ -120,24 +109,24 @@ public class SubscriptionMetaApi {
 	public WampResult match(CallMessage callMessage) throws WampException {
 		String topic = stringArgument(callMessage, 0);
 		WampUriValidator.validateSubscriptionTopic(topic, MatchPolicy.EXACT);
-		return WampResult.create(this.subscriptionRegistry.getMatchSubscriptions(callMessage.getRealm(), topic));
+		return WampResult.create(this.subscriptionRegistry.getMatchSubscriptions(topic));
 	}
 
 	@WampProcedure(GET)
 	public WampResult get(CallMessage callMessage) throws WampException {
-		return WampResult.create(toMetaDetail(requireSubscription(callMessage, longArgument(callMessage, 0))));
+		return WampResult.create(toMetaDetail(requireSubscription(longArgument(callMessage, 0))));
 	}
 
 	@WampProcedure(LIST_SUBSCRIBERS)
 	public WampResult listSubscribers(CallMessage callMessage) throws WampException {
 		long subscriptionId = longArgument(callMessage, 0);
-		requireSubscription(callMessage, subscriptionId);
+		requireSubscription(subscriptionId);
 		return WampResult.create(this.subscriptionRegistry.listSubscribers(subscriptionId));
 	}
 
 	@WampProcedure(COUNT_SUBSCRIBERS)
 	public WampResult countSubscribers(CallMessage callMessage) throws WampException {
-		SubscriptionDetail detail = requireSubscription(callMessage, longArgument(callMessage, 0));
+		SubscriptionDetail detail = requireSubscription(longArgument(callMessage, 0));
 		Integer subscriberCount = this.subscriptionRegistry.countSubscribers(detail.getId());
 		if (subscriberCount == null) {
 			throw noSuchSubscription();
@@ -147,7 +136,7 @@ public class SubscriptionMetaApi {
 
 	@WampProcedure(GET_EVENTS)
 	public WampResult getEvents(CallMessage callMessage) throws WampException {
-		SubscriptionDetail detail = requireSubscription(callMessage, longArgument(callMessage, 0));
+		SubscriptionDetail detail = requireSubscription(longArgument(callMessage, 0));
 		Map<String, Object> options = callMessage.getArgumentsKw() != null ? callMessage.getArgumentsKw() : Map.of();
 		List<EventHistoryEntry> history = this.eventStore.getHistory(detail.getId());
 		List<EventHistoryEntry> filteredHistory = filterHistory(history, detail, callMessage, options);
@@ -160,37 +149,34 @@ public class SubscriptionMetaApi {
 
 	@EventListener
 	public void onSubscriptionCreated(WampSubscriptionCreatedEvent event) {
-		publishEvent(event.getRealm(), ON_CREATE, event.getWampSessionId(),
-				toMetaDetail(event.getSubscriptionDetail()));
+		publishEvent(ON_CREATE, event.getWampSessionId(), toMetaDetail(event.getSubscriptionDetail()));
 	}
 
 	@EventListener
 	public void onSubscriptionSubscribed(WampSubscriptionSubscribedEvent event) {
-		publishEvent(event.getRealm(), ON_SUBSCRIBE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
+		publishEvent(ON_SUBSCRIBE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
 	}
 
 	@EventListener
 	public void onSubscriptionUnsubscribed(WampSubscriptionUnsubscribedEvent event) {
-		publishEvent(event.getRealm(), ON_UNSUBSCRIBE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
+		publishEvent(ON_UNSUBSCRIBE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
 	}
 
 	@EventListener
 	public void onSubscriptionDeleted(WampSubscriptionDeletedEvent event) {
-		publishEvent(event.getRealm(), ON_DELETE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
+		publishEvent(ON_DELETE, event.getWampSessionId(), event.getSubscriptionDetail().getId());
 	}
 
-	private void publishEvent(@Nullable String realm, String topic, @Nullable Object first, Object second) {
+	private void publishEvent(String topic, @Nullable Object first, Object second) {
 		List<Object> arguments = new ArrayList<>(2);
 		arguments.add(first);
 		arguments.add(second);
-		PublishMessage publishMessage = this.wampPublisher.publishMessageBuilder(topic).arguments(arguments).build();
-		publishMessage.setHeader(WampMessageHeader.WAMP_REALM, realm);
-		this.wampPublisher.publish(publishMessage);
+		this.wampPublisher.publish(this.wampPublisher.publishMessageBuilder(topic).arguments(arguments).build());
 	}
 
-	private SubscriptionDetail requireSubscription(CallMessage callMessage, long subscriptionId) throws WampException {
+	private SubscriptionDetail requireSubscription(long subscriptionId) throws WampException {
 		SubscriptionDetail detail = this.subscriptionRegistry.getSubscription(subscriptionId);
-		if (detail == null || !Objects.equals(callMessage.getRealm(), detail.getRealm())) {
+		if (detail == null) {
 			throw noSuchSubscription();
 		}
 		return detail;
@@ -207,6 +193,9 @@ public class SubscriptionMetaApi {
 
 	private static long longArgument(CallMessage callMessage, int index) {
 		Object value = argument(callMessage, index);
+		if (value == null) {
+			throw new IllegalArgumentException("missing call argument");
+		}
 		if (value instanceof Number number) {
 			return number.longValue();
 		}
@@ -227,17 +216,6 @@ public class SubscriptionMetaApi {
 		}
 		MatchPolicy matchPolicy = MatchPolicy.fromExtValue(match);
 		return matchPolicy != null ? matchPolicy : MatchPolicy.EXACT;
-	}
-
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private static String nkeyOption(CallMessage callMessage) {
-		List<Object> arguments = callMessage.getArguments();
-		if (arguments == null || arguments.size() < 2 || !(arguments.get(1) instanceof Map<?, ?>)) {
-			return null;
-		}
-
-		return (String) ((Map<String, Object>) arguments.get(1)).get("nkey");
 	}
 
 	private static Object argument(CallMessage callMessage, int index) {
@@ -471,7 +449,6 @@ public class SubscriptionMetaApi {
 	private static Map<String, Object> toMetaDetail(SubscriptionDetail detail) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("id", detail.getId());
-		result.put("realm", detail.getRealm());
 		result.put("created", CREATED_FORMATTER.format(Instant.ofEpochMilli(detail.getCreatedTimeMillis())));
 		result.put("uri", detail.getTopic());
 		result.put("match", detail.getMatchPolicy().getExternalValue());

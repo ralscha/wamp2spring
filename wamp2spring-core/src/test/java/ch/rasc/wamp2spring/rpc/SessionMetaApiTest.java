@@ -180,7 +180,7 @@ public class SessionMetaApiTest {
 	}
 
 	private static WelcomeMessage welcomeMessage(long sessionId, String webSocketSessionId, Principal principal) {
-		WelcomeMessage message = new WelcomeMessage(sessionId, List.of(new WampRole("dealer")), "realm1");
+		WelcomeMessage message = new WelcomeMessage(sessionId, List.of(new WampRole("dealer")));
 		message.setHeader(WampMessageHeader.WAMP_SESSION_ID, sessionId);
 		message.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, webSocketSessionId);
 		message.setHeader(WampMessageHeader.PRINCIPAL, principal);

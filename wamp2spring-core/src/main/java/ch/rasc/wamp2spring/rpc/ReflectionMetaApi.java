@@ -62,32 +62,34 @@ public class ReflectionMetaApi {
 		this.subscriptionRegistry = subscriptionRegistry;
 	}
 
-	public WampResult listProcedures() {
-		return listProcedures((String) null);
-	}
-
 	@WampProcedure(PROCEDURE_LIST)
-	public WampResult listProcedures(CallMessage callMessage) {
-		return listProcedures(callMessage.getRealm());
-	}
-
-	public WampResult listTopics() {
-		return listTopics((String) null);
+	public WampResult listProcedures() {
+		return WampResult.create(resourceUris(this.procedureRegistry.listRegistrations().values(),
+				registrationIds -> registrationIds.stream()
+					.map(this.procedureRegistry::getRegistration)
+					.filter(Objects::nonNull)
+					.map(ProcedureDetail::getProcedure)
+					.toList()));
 	}
 
 	@WampProcedure(TOPIC_LIST)
-	public WampResult listTopics(CallMessage callMessage) {
-		return listTopics(callMessage.getRealm());
+	public WampResult listTopics() {
+		return WampResult.create(resourceUris(this.subscriptionRegistry.listSubscriptions().values(),
+				subscriptionIds -> subscriptionIds.stream()
+					.map(this.subscriptionRegistry::getSubscription)
+					.filter(Objects::nonNull)
+					.map(SubscriptionDetail::getTopic)
+					.toList()));
 	}
 
 	@WampProcedure(PROCEDURE_DESCRIBE)
 	public WampResult describeProcedure(CallMessage callMessage) {
-		return new WampResult().add(describeProcedure(callMessage.getRealm(), stringArgument(callMessage, 0)));
+		return new WampResult().add(describeProcedure(stringArgument(callMessage, 0)));
 	}
 
 	@WampProcedure(TOPIC_DESCRIBE)
 	public WampResult describeTopic(CallMessage callMessage) {
-		return new WampResult().add(describeTopic(callMessage.getRealm(), stringArgument(callMessage, 0)));
+		return new WampResult().add(describeTopic(stringArgument(callMessage, 0)));
 	}
 
 	public WampResult listErrors() {
@@ -104,26 +106,8 @@ public class ReflectionMetaApi {
 		return new WampResult().add(describeError(stringArgument(callMessage, 0)));
 	}
 
-	private WampResult listProcedures(@Nullable String realm) {
-		return WampResult.create(resourceUris(this.procedureRegistry.listRegistrations(realm).values(),
-				registrationIds -> registrationIds.stream()
-					.map(this.procedureRegistry::getRegistration)
-					.filter(Objects::nonNull)
-					.map(ProcedureDetail::getProcedure)
-					.toList()));
-	}
-
-	private WampResult listTopics(@Nullable String realm) {
-		return WampResult.create(resourceUris(this.subscriptionRegistry.listSubscriptions(realm).values(),
-				subscriptionIds -> subscriptionIds.stream()
-					.map(this.subscriptionRegistry::getSubscription)
-					.filter(Objects::nonNull)
-					.map(SubscriptionDetail::getTopic)
-					.toList()));
-	}
-
-	@Nullable private Map<String, Object> describeProcedure(@Nullable String realm, String procedureUri) {
-		Map<MatchPolicy, List<Long>> registrationsByPolicy = this.procedureRegistry.listRegistrations(realm);
+	@Nullable private Map<String, Object> describeProcedure(String procedureUri) {
+		Map<MatchPolicy, List<Long>> registrationsByPolicy = this.procedureRegistry.listRegistrations();
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			for (Long registrationId : Objects.requireNonNull(registrationsByPolicy.get(matchPolicy))) {
 				ProcedureDetail detail = this.procedureRegistry.getRegistration(registrationId);
@@ -135,8 +119,8 @@ public class ReflectionMetaApi {
 		return null;
 	}
 
-	@Nullable private Map<String, Object> describeTopic(@Nullable String realm, String topicUri) {
-		Map<MatchPolicy, List<Long>> subscriptionsByPolicy = this.subscriptionRegistry.listSubscriptions(realm);
+	@Nullable private Map<String, Object> describeTopic(String topicUri) {
+		Map<MatchPolicy, List<Long>> subscriptionsByPolicy = this.subscriptionRegistry.listSubscriptions();
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			for (Long subscriptionId : Objects.requireNonNull(subscriptionsByPolicy.get(matchPolicy))) {
 				SubscriptionDetail detail = this.subscriptionRegistry.getSubscription(subscriptionId);
@@ -165,7 +149,6 @@ public class ReflectionMetaApi {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("uri", detail.getProcedure());
 		result.put("registration", detail.getRegistrationId());
-		result.put("realm", detail.getRealm());
 		result.put("created", CREATED_FORMATTER.format(Instant.ofEpochMilli(detail.getCreated())));
 		result.put("match", detail.getMatchPolicy().getExternalValue());
 		result.put("invoke", detail.getInvocationPolicy().getExternalValue());
@@ -177,7 +160,6 @@ public class ReflectionMetaApi {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("uri", detail.getTopic());
 		result.put("subscription", detail.getId());
-		result.put("realm", detail.getRealm());
 		result.put("created", CREATED_FORMATTER.format(Instant.ofEpochMilli(detail.getCreatedTimeMillis())));
 		result.put("match", detail.getMatchPolicy().getExternalValue());
 		result.put("type", "topic");

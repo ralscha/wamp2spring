@@ -36,8 +36,6 @@ import ch.rasc.wamp2spring.event.WampProcedureUnregisteredEvent;
 import ch.rasc.wamp2spring.event.WampRegistrationCreatedEvent;
 import ch.rasc.wamp2spring.event.WampRegistrationDeletedEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
-import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.util.WampUriValidator;
 
@@ -75,18 +73,10 @@ public class RegistrationMetaApi {
 		this.wampPublisher = wampPublisher;
 	}
 
-	public WampResult list() {
-		return list((String) null);
-	}
-
 	@WampProcedure(LIST)
-	public WampResult list(CallMessage callMessage) {
-		return list(callMessage.getRealm());
-	}
-
-	private WampResult list(@Nullable String realm) {
+	public WampResult list() {
 		Map<String, List<Long>> result = new LinkedHashMap<>();
-		Map<MatchPolicy, List<Long>> registrations = this.procedureRegistry.listRegistrations(realm);
+		Map<MatchPolicy, List<Long>> registrations = this.procedureRegistry.listRegistrations();
 		result.put("exact", registrations.get(MatchPolicy.EXACT));
 		result.put("prefix", registrations.get(MatchPolicy.PREFIX));
 		result.put("wildcard", registrations.get(MatchPolicy.WILDCARD));
@@ -98,7 +88,7 @@ public class RegistrationMetaApi {
 		MatchPolicy matchPolicy = Objects.requireNonNullElse(matchPolicyOption(callMessage), MatchPolicy.EXACT);
 		String procedure = stringArgument(callMessage, 0);
 		WampUriValidator.validateProcedureRegistrationUri(procedure, matchPolicy);
-		Long registrationId = this.procedureRegistry.lookupRegistration(callMessage.getRealm(), procedure, matchPolicy);
+		Long registrationId = this.procedureRegistry.lookupRegistration(procedure, matchPolicy);
 		return new WampResult().add(registrationId);
 	}
 
@@ -106,25 +96,25 @@ public class RegistrationMetaApi {
 	public WampResult match(CallMessage callMessage) throws WampException {
 		String procedure = stringArgument(callMessage, 0);
 		WampUriValidator.validateCallUri(procedure);
-		Long registrationId = this.procedureRegistry.matchRegistration(callMessage.getRealm(), procedure);
+		Long registrationId = this.procedureRegistry.matchRegistration(procedure);
 		return new WampResult().add(registrationId);
 	}
 
 	@WampProcedure(GET)
 	public WampResult get(CallMessage callMessage) throws WampException {
-		return WampResult.create(toMetaDetail(requireRegistration(callMessage, longArgument(callMessage, 0))));
+		return WampResult.create(toMetaDetail(requireRegistration(longArgument(callMessage, 0))));
 	}
 
 	@WampProcedure(LIST_CALLEES)
 	public WampResult listCallees(CallMessage callMessage) throws WampException {
 		long registrationId = longArgument(callMessage, 0);
-		requireRegistration(callMessage, registrationId);
+		requireRegistration(registrationId);
 		return WampResult.create(this.procedureRegistry.listCallees(registrationId));
 	}
 
 	@WampProcedure(COUNT_CALLEES)
 	public WampResult countCallees(CallMessage callMessage) throws WampException {
-		ProcedureDetail detail = requireRegistration(callMessage, longArgument(callMessage, 0));
+		ProcedureDetail detail = requireRegistration(longArgument(callMessage, 0));
 		Integer calleeCount = this.procedureRegistry.countCallees(detail.getRegistrationId());
 		if (calleeCount == null) {
 			throw noSuchRegistration();
@@ -136,37 +126,35 @@ public class RegistrationMetaApi {
 	public void onRegistrationCreated(WampRegistrationCreatedEvent event) {
 		ProcedureDetail detail = this.procedureRegistry.getRegistration(event.getRegistrationId());
 		if (detail != null) {
-			publishEvent(event.getRealm(), ON_CREATE, event.getWampSessionId(), toMetaDetail(detail));
+			publishEvent(ON_CREATE, event.getWampSessionId(), toMetaDetail(detail));
 		}
 	}
 
 	@EventListener
 	public void onProcedureRegistered(WampProcedureRegisteredEvent event) {
-		publishEvent(event.getRealm(), ON_REGISTER, event.getWampSessionId(), event.getRegistrationId());
+		publishEvent(ON_REGISTER, event.getWampSessionId(), event.getRegistrationId());
 	}
 
 	@EventListener
 	public void onProcedureUnregistered(WampProcedureUnregisteredEvent event) {
-		publishEvent(event.getRealm(), ON_UNREGISTER, event.getWampSessionId(), event.getRegistrationId());
+		publishEvent(ON_UNREGISTER, event.getWampSessionId(), event.getRegistrationId());
 	}
 
 	@EventListener
 	public void onRegistrationDeleted(WampRegistrationDeletedEvent event) {
-		publishEvent(event.getRealm(), ON_DELETE, event.getWampSessionId(), event.getRegistrationId());
+		publishEvent(ON_DELETE, event.getWampSessionId(), event.getRegistrationId());
 	}
 
-	private void publishEvent(@Nullable String realm, String topic, @Nullable Object first, Object second) {
+	private void publishEvent(String topic, @Nullable Object first, Object second) {
 		List<Object> arguments = new ArrayList<>(2);
 		arguments.add(first);
 		arguments.add(second);
-		PublishMessage publishMessage = this.wampPublisher.publishMessageBuilder(topic).arguments(arguments).build();
-		publishMessage.setHeader(WampMessageHeader.WAMP_REALM, realm);
-		this.wampPublisher.publish(publishMessage);
+		this.wampPublisher.publish(this.wampPublisher.publishMessageBuilder(topic).arguments(arguments).build());
 	}
 
-	private ProcedureDetail requireRegistration(CallMessage callMessage, long registrationId) throws WampException {
+	private ProcedureDetail requireRegistration(long registrationId) throws WampException {
 		ProcedureDetail detail = this.procedureRegistry.getRegistration(registrationId);
-		if (detail == null || !Objects.equals(callMessage.getRealm(), detail.getRealm())) {
+		if (detail == null) {
 			throw noSuchRegistration();
 		}
 		return detail;
@@ -183,6 +171,9 @@ public class RegistrationMetaApi {
 
 	private static long longArgument(CallMessage callMessage, int index) {
 		Object value = argument(callMessage, index);
+		if (value == null) {
+			throw new IllegalArgumentException("missing call argument");
+		}
 		if (value instanceof Number number) {
 			return number.longValue();
 		}
@@ -216,7 +207,6 @@ public class RegistrationMetaApi {
 	private static Map<String, Object> toMetaDetail(ProcedureDetail detail) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("id", detail.getRegistrationId());
-		result.put("realm", detail.getRealm());
 		result.put("created", CREATED_FORMATTER.format(Instant.ofEpochMilli(detail.getCreated())));
 		result.put("uri", detail.getProcedure());
 		result.put("match", detail.getMatchPolicy().getExternalValue());

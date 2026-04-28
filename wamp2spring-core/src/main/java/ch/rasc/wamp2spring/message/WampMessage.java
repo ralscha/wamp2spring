@@ -145,10 +145,6 @@ public abstract class WampMessage implements Message<Object> {
 		return getHeader(WampMessageHeader.WAMP_SESSION_ID);
 	}
 
-	@Nullable public String getRealm() {
-		return getHeader(WampMessageHeader.WAMP_REALM);
-	}
-
 	@Nullable public List<WampRole> getPeerRoles() {
 		return getHeader(WampMessageHeader.WAMP_PEER_ROLES);
 	}
@@ -157,7 +153,6 @@ public abstract class WampMessage implements Message<Object> {
 		setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, message.getWebSocketSessionId());
 		setHeader(WampMessageHeader.PRINCIPAL, message.getPrincipal());
 		setHeader(WampMessageHeader.WAMP_SESSION_ID, message.getWampSessionId());
-		setHeader(WampMessageHeader.WAMP_REALM, message.getRealm());
 		setHeader(WampMessageHeader.WAMP_PEER_ROLES, message.getPeerRoles());
 		setHeader(WampMessageHeader.AUTH_METHOD, message.getAuthMethod());
 		setHeader(WampMessageHeader.AUTH_PROVIDER, message.getAuthProvider());

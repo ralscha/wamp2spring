@@ -39,8 +39,8 @@ public class WampScramAuthenticationProviderTest {
 					new WampAuthentication("alice", "admin", "static", Map.of("tenant", "demo")));
 		});
 
-		HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("wamp-scram"),
-				"alice", Map.of("nonce", "fyko+d2lbbFgONRv9qkxdawL", "tenant", "demo"));
+		HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("wamp-scram"), "alice",
+				Map.of("nonce", "fyko+d2lbbFgONRv9qkxdawL", "tenant", "demo"));
 
 		WampAuthenticationChallenge challenge = provider.challenge(helloMessage);
 
@@ -70,8 +70,8 @@ public class WampScramAuthenticationProviderTest {
 				(authId, helloAuthExtra) -> WampScramAuthenticationInfo.pbkdf2("secret", "QSXCR+Q6sek8bf92", 4096,
 						new WampAuthentication(authId, "admin")));
 
-		HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("wamp-scram"),
-				"alice", Map.of("nonce", "clientNonce=="));
+		HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("wamp-scram"), "alice",
+				Map.of("nonce", "clientNonce=="));
 		WampAuthenticationChallenge challenge = provider.challenge(helloMessage);
 
 		assertThatThrownBy(() -> provider.authenticate(helloMessage,
@@ -88,8 +88,8 @@ public class WampScramAuthenticationProviderTest {
 				(authId, helloAuthExtra) -> WampScramAuthenticationInfo.pbkdf2("secret", "QSXCR+Q6sek8bf92", 4096,
 						new WampAuthentication(authId, "admin")));
 
-		HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("wamp-scram"),
-				"alice", null);
+		HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("wamp-scram"), "alice",
+				null);
 
 		assertThatThrownBy(() -> provider.challenge(helloMessage)).isInstanceOf(WampAuthenticationException.class)
 			.satisfies(ex -> assertThat(((WampAuthenticationException) ex).getError())

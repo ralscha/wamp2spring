@@ -23,10 +23,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import ch.rasc.wamp2spring.util.WampJson;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;
-
-import ch.rasc.wamp2spring.util.WampJson;
 
 /**
  * JSON parsing helper methods
@@ -66,7 +65,7 @@ public class ParserUtil {
 		Map<String, Object> result = new HashMap<>();
 		JsonToken token = jp.nextToken();
 		while (token != JsonToken.END_OBJECT) {
-			String key = jp.getText();
+			String key = jp.getString();
 			token = jp.nextToken();
 
 			if (token == JsonToken.START_ARRAY) {

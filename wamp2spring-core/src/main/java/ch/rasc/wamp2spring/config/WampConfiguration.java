@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -26,17 +27,12 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.format.support.DefaultFormattingConversionService;
-import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.handler.invocation.HandlerMethodArgumentResolver;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
-
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.dataformat.cbor.CBORMapper;
-import tools.jackson.dataformat.smile.SmileMapper;
 
 import ch.rasc.wamp2spring.WampPublisher;
 import ch.rasc.wamp2spring.pubsub.EventStore;
@@ -53,6 +49,9 @@ import ch.rasc.wamp2spring.rpc.SessionTestamentMetaApi;
 import ch.rasc.wamp2spring.rpc.SubscriptionMetaApi;
 import ch.rasc.wamp2spring.util.HandlerMethodService;
 import ch.rasc.wamp2spring.util.WampJson;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.cbor.CBORMapper;
+import tools.jackson.dataformat.smile.SmileMapper;
 
 public class WampConfiguration {
 

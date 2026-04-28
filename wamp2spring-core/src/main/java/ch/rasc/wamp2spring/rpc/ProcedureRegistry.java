@@ -66,7 +66,7 @@ public class ProcedureRegistry {
 
 	synchronized RegisterResult register(RegisterMessage registerMessage) {
 		Map<ProcedureKey, ProcedureSlot> procedures = proceduresFor(registerMessage.getMatchPolicy());
-		ProcedureKey procedureKey = new ProcedureKey(registerMessage.getRealm(), registerMessage.getProcedure());
+		ProcedureKey procedureKey = new ProcedureKey(registerMessage.getProcedure());
 		ProcedureSlot procedureSlot = procedures.get(procedureKey);
 		if (procedureSlot != null && !procedureSlot.canRegister(registerMessage)) {
 			return RegisterResult.failed();
@@ -76,7 +76,7 @@ public class ProcedureRegistry {
 			long registrationId = IdGenerator.newLinearId(this.lastRegistration);
 			Procedure procedure = new Procedure(registerMessage, registrationId,
 					this.features.isEnabled(Feature.DEALER_CALLER_IDENTIFICATION));
-			procedureSlot = new ProcedureSlot(registerMessage.getRealm(), procedure);
+			procedureSlot = new ProcedureSlot(procedure);
 			procedures.put(procedureKey, procedureSlot);
 			this.registrations.put(registrationId, procedureSlot);
 			return RegisterResult.success(registrationId, true);
@@ -141,8 +141,7 @@ public class ProcedureRegistry {
 			return false;
 		}
 
-		proceduresFor(procedureSlot.getMatchPolicy())
-			.remove(new ProcedureKey(procedureSlot.getRealm(), procedureSlot.getProcedure()));
+		proceduresFor(procedureSlot.getMatchPolicy()).remove(new ProcedureKey(procedureSlot.getProcedure()));
 		this.registrations.remove(procedureSlot.getRegistrationId());
 		return true;
 	}
@@ -173,7 +172,7 @@ public class ProcedureRegistry {
 	}
 
 	synchronized WampMessage createInvocationMessage(CallMessage callMessage) {
-		ProcedureSlot procedureSlot = findProcedureSlot(callMessage.getRealm(), callMessage.getProcedure());
+		ProcedureSlot procedureSlot = findProcedureSlot(callMessage.getProcedure());
 		if (procedureSlot == null) {
 			return new ErrorMessage(callMessage, WampError.NO_SUCH_PROCEDURE);
 		}
@@ -224,17 +223,14 @@ public class ProcedureRegistry {
 		return new ErrorMessage(callMessage, WampError.NO_SUCH_PROCEDURE);
 	}
 
-	@Nullable private ProcedureSlot findProcedureSlot(@Nullable String realm, String procedureUri) {
-		ProcedureSlot exactProcedure = proceduresFor(MatchPolicy.EXACT).get(new ProcedureKey(realm, procedureUri));
+	@Nullable private ProcedureSlot findProcedureSlot(String procedureUri) {
+		ProcedureSlot exactProcedure = proceduresFor(MatchPolicy.EXACT).get(new ProcedureKey(procedureUri));
 		if (exactProcedure != null) {
 			return exactProcedure;
 		}
 
 		ProcedureSlot prefixProcedure = null;
 		for (ProcedureSlot procedure : proceduresFor(MatchPolicy.PREFIX).values()) {
-			if (!Objects.equals(realm, procedure.getRealm())) {
-				continue;
-			}
 			if (procedure.getProcedureMatch().matches(procedureUri) && (prefixProcedure == null
 					|| procedure.getPrefixComponentCount() > prefixProcedure.getPrefixComponentCount())) {
 				prefixProcedure = procedure;
@@ -246,9 +242,6 @@ public class ProcedureRegistry {
 
 		ProcedureSlot wildcardProcedure = null;
 		for (ProcedureSlot procedure : proceduresFor(MatchPolicy.WILDCARD).values()) {
-			if (!Objects.equals(realm, procedure.getRealm())) {
-				continue;
-			}
 			if (!procedure.getProcedureMatch().matches(procedureUri)) {
 				continue;
 			}
@@ -261,16 +254,11 @@ public class ProcedureRegistry {
 	}
 
 	public EnumMap<MatchPolicy, List<Long>> listRegistrations() {
-		return listRegistrations(null);
-	}
-
-	public EnumMap<MatchPolicy, List<Long>> listRegistrations(@Nullable String realm) {
 		EnumMap<MatchPolicy, List<Long>> result = new EnumMap<>(MatchPolicy.class);
 
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			List<Long> registrationIds = proceduresFor(matchPolicy).values()
 				.stream()
-				.filter(procedureSlot -> Objects.equals(realm, procedureSlot.getRealm()))
 				.map(ProcedureSlot::getRegistrationId)
 				.toList();
 			result.put(matchPolicy, registrationIds);
@@ -280,12 +268,8 @@ public class ProcedureRegistry {
 	}
 
 	@Nullable public Long lookupRegistration(String procedure, @Nullable MatchPolicy matchPolicy) {
-		return lookupRegistration(null, procedure, matchPolicy);
-	}
-
-	@Nullable public Long lookupRegistration(@Nullable String realm, String procedure, @Nullable MatchPolicy matchPolicy) {
 		MatchPolicy effectiveMatchPolicy = matchPolicy != null ? matchPolicy : MatchPolicy.EXACT;
-		ProcedureSlot procedureSlot = proceduresFor(effectiveMatchPolicy).get(new ProcedureKey(realm, procedure));
+		ProcedureSlot procedureSlot = proceduresFor(effectiveMatchPolicy).get(new ProcedureKey(procedure));
 		return procedureSlot != null ? procedureSlot.getRegistrationId() : null;
 	}
 
@@ -294,11 +278,7 @@ public class ProcedureRegistry {
 	}
 
 	@Nullable public Long matchRegistration(String procedureUri) {
-		return matchRegistration(null, procedureUri);
-	}
-
-	@Nullable public Long matchRegistration(@Nullable String realm, String procedureUri) {
-		ProcedureSlot procedureSlot = findProcedureSlot(realm, procedureUri);
+		ProcedureSlot procedureSlot = findProcedureSlot(procedureUri);
 		return procedureSlot != null ? procedureSlot.getRegistrationId() : null;
 	}
 
@@ -414,8 +394,7 @@ public class ProcedureRegistry {
 		}
 
 		callProc.procedure.removePendingInvocation(errorMessage.getRequestId());
-		ProcedureSlot procedureSlot = findProcedureSlot(callProc.callMessage.getRealm(),
-				callProc.callMessage.getProcedure());
+		ProcedureSlot procedureSlot = findProcedureSlot(callProc.callMessage.getProcedure());
 		if (procedureSlot == null) {
 			if (callProc.callKey != null) {
 				this.pendingCalls.remove(callProc.callKey);
@@ -554,8 +533,6 @@ public class ProcedureRegistry {
 
 	private static final class ProcedureSlot {
 
-		@Nullable private final String realm;
-
 		private final String procedure;
 
 		private final long registrationId;
@@ -576,8 +553,7 @@ public class ProcedureRegistry {
 
 		private int roundRobinIndex;
 
-		private ProcedureSlot(@Nullable String realm, Procedure procedure) {
-			this.realm = realm;
+		private ProcedureSlot(Procedure procedure) {
 			this.procedure = procedure.getProcedure();
 			this.registrationId = procedure.getRegistrationId();
 			this.created = System.currentTimeMillis();
@@ -622,10 +598,6 @@ public class ProcedureRegistry {
 
 		long getRegistrationId() {
 			return this.registrationId;
-		}
-
-		@Nullable String getRealm() {
-			return this.realm;
 		}
 
 		String getProcedure() {
@@ -743,7 +715,7 @@ public class ProcedureRegistry {
 		}
 
 		ProcedureDetail toDetail() {
-			return new ProcedureDetail(this.registrationId, this.created, this.realm, this.procedure, this.matchPolicy,
+			return new ProcedureDetail(this.registrationId, this.created, this.procedure, this.matchPolicy,
 					this.invocationPolicy);
 		}
 
@@ -755,7 +727,7 @@ public class ProcedureRegistry {
 
 	}
 
-	private record ProcedureKey(@Nullable String realm, String procedure) {
+	private record ProcedureKey(String procedure) {
 		// map key
 	}
 

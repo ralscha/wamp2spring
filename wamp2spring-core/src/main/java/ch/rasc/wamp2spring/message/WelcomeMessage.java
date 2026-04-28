@@ -37,8 +37,6 @@ public class WelcomeMessage extends WampMessage {
 
 	private final List<WampRole> roles;
 
-	@Nullable private final String realm;
-
 	@Nullable private final String authId;
 
 	@Nullable private final String authRole;
@@ -49,17 +47,15 @@ public class WelcomeMessage extends WampMessage {
 
 	@Nullable private final Map<String, Object> authExtra;
 
-	public WelcomeMessage(long sessionId, List<WampRole> roles, @Nullable String realm) {
-		this(sessionId, roles, realm, null, null, null, null, null);
+	public WelcomeMessage(long sessionId, List<WampRole> roles) {
+		this(sessionId, roles, null, null, null, null, null);
 	}
 
-	public WelcomeMessage(long sessionId, List<WampRole> roles, @Nullable String realm, @Nullable String authId,
-			@Nullable String authRole, @Nullable String authMethod, @Nullable String authProvider,
-			@Nullable Map<String, Object> authExtra) {
+	public WelcomeMessage(long sessionId, List<WampRole> roles, @Nullable String authId, @Nullable String authRole,
+			@Nullable String authMethod, @Nullable String authProvider, @Nullable Map<String, Object> authExtra) {
 		super(CODE);
 		this.sessionId = sessionId;
 		this.roles = roles;
-		this.realm = realm;
 		this.authId = authId;
 		this.authRole = authRole;
 		this.authMethod = authMethod;
@@ -68,7 +64,7 @@ public class WelcomeMessage extends WampMessage {
 	}
 
 	public WelcomeMessage(HelloMessage helloMessage, long sessionId, List<WampRole> roles) {
-		this(sessionId, roles, null);
+		this(sessionId, roles);
 		setReceiver(helloMessage);
 		setHeader(WampMessageHeader.WAMP_SESSION_ID, sessionId);
 	}
@@ -79,7 +75,6 @@ public class WelcomeMessage extends WampMessage {
 		long session = jp.getLongValue();
 
 		List<WampRole> roles = new ArrayList<>();
-		String realm = null;
 		String authId = null;
 		String authRole = null;
 		String authMethod = null;
@@ -103,7 +98,6 @@ public class WelcomeMessage extends WampMessage {
 				}
 			}
 
-			realm = (String) details.get("realm");
 			authId = (String) details.get("authid");
 			authRole = (String) details.get("authrole");
 			authMethod = (String) details.get("authmethod");
@@ -111,7 +105,7 @@ public class WelcomeMessage extends WampMessage {
 			authExtra = (Map<String, Object>) details.get("authextra");
 		}
 
-		return new WelcomeMessage(session, roles, realm, authId, authRole, authMethod, authProvider, authExtra);
+		return new WelcomeMessage(session, roles, authId, authRole, authMethod, authProvider, authExtra);
 	}
 
 	@Override
@@ -135,9 +129,6 @@ public class WelcomeMessage extends WampMessage {
 		}
 		generator.writeEndObject();
 
-		if (this.realm != null) {
-			generator.writeStringProperty("realm", this.realm);
-		}
 		if (this.authId != null) {
 			generator.writeStringProperty("authid", this.authId);
 		}
@@ -162,11 +153,6 @@ public class WelcomeMessage extends WampMessage {
 
 	public List<WampRole> getRoles() {
 		return this.roles;
-	}
-
-	@Override
-	@Nullable public String getRealm() {
-		return this.realm;
 	}
 
 	@Override
@@ -207,8 +193,8 @@ public class WelcomeMessage extends WampMessage {
 
 	@Override
 	public String toString() {
-		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles + ", realm=" + this.realm
-				+ ", authId=" + this.authId + ", authRole=" + this.authRole + ", authMethod=" + this.authMethod + "]";
+		return "WelcomeMessage [sessionId=" + this.sessionId + ", roles=" + this.roles + ", authId=" + this.authId
+				+ ", authRole=" + this.authRole + ", authMethod=" + this.authMethod + "]";
 	}
 
 }

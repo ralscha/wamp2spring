@@ -43,9 +43,6 @@ import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.ObjectMapper;
-
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.auth.WampAuthentication;
 import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
@@ -55,7 +52,6 @@ import ch.rasc.wamp2spring.config.Feature;
 import ch.rasc.wamp2spring.config.Features;
 import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampSessionEstablishedEvent;
-import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.message.AbortMessage;
 import ch.rasc.wamp2spring.message.AuthenticateMessage;
 import ch.rasc.wamp2spring.message.ChallengeMessage;
@@ -71,9 +67,10 @@ import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.MessagePackCodec;
 import ch.rasc.wamp2spring.util.PooledByteArrayOutputStream;
-import ch.rasc.wamp2spring.util.WampUriValidator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.ObjectMapper;
 
 public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventPublisherAware, SmartLifecycle {
 
@@ -88,8 +85,6 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 	private static final String WAMP_AUTH_PROVIDER = "wamp2spring.auth.provider";
 
 	private static final String WAMP_PENDING_AUTH = "wamp2spring.pending.auth";
-
-	private static final String WAMP_REALM = "wamp2spring.realm";
 
 	public static final String JSON_PROTOCOL = "wamp.2.json";
 
@@ -190,8 +185,8 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 				Principal principalAttr = currentPrincipal(session);
 
 				if (wampSessionId != null) {
-					getApplicationEventPublisher().publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(),
-							principalAttr, (String) session.getAttributes().get(WAMP_REALM)));
+					getApplicationEventPublisher()
+						.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), principalAttr));
 				}
 			});
 	}
@@ -290,7 +285,6 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 			wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
 			wampMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
 			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, session.getAttributes().get(WAMP_SESSION_ID));
-			wampMessage.setHeader(WampMessageHeader.WAMP_REALM, session.getAttributes().get(WAMP_REALM));
 			wampMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES,
 					session.getAttributes().get(WampMessageHeader.WAMP_PEER_ROLES.name()));
 			wampMessage.setHeader(WampMessageHeader.AUTH_METHOD, session.getAttributes().get(WAMP_AUTH_METHOD));
@@ -339,15 +333,6 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 
 		if (helloMessage.getWampSessionId() != null) {
 			handleProtocolViolation(session, "Received HELLO message after session was established.");
-			return;
-		}
-
-		try {
-			WampUriValidator.validateRealmUri(helloMessage.getRealm());
-		}
-		catch (WampException ex) {
-			handleAuthenticationFailure(session,
-					new WampAuthenticationException(WampError.INVALID_URI, "HELLO realm is not a valid URI."));
 			return;
 		}
 
@@ -410,7 +395,6 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 			.collect(Collectors.toSet()));
 
 		session.getAttributes().put(WAMP_SESSION_ID, newWampSessionId);
-		session.getAttributes().put(WAMP_REALM, helloMessage.getRealm());
 		session.getAttributes().put(WampMessageHeader.WAMP_PEER_ROLES.name(), helloMessage.getRoles());
 		if (principal != null) {
 			session.getAttributes().put(WAMP_PRINCIPAL, principal);
@@ -421,12 +405,11 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 		session.getAttributes().put(WAMP_AUTH_METHOD, authMethod);
 		session.getAttributes().put(WAMP_AUTH_PROVIDER, authProvider);
 
-		WelcomeMessage welcomeMessage = new WelcomeMessage(newWampSessionId, this.roles, null, helloMessage.getAuthId(),
+		WelcomeMessage welcomeMessage = new WelcomeMessage(newWampSessionId, this.roles, helloMessage.getAuthId(),
 				principal != null ? authRole(principal) : null, authMethod, authProvider, authExtra);
 		welcomeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
 		welcomeMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
 		welcomeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, newWampSessionId);
-		welcomeMessage.setHeader(WampMessageHeader.WAMP_REALM, helloMessage.getRealm());
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_METHOD, authMethod);
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_PROVIDER, authProvider);
 		this.clientOutboundChannel.send(welcomeMessage);

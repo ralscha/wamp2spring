@@ -209,7 +209,7 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 
 		}
 		else if (message instanceof PublishMessage publishMessage) {
-			if (!validateUri(() -> WampUriValidator.validatePublishTopic(publishMessage.getTopic()), publishMessage)) {
+			if (!validateUri(() -> validatePublishUri(publishMessage), publishMessage)) {
 				return;
 			}
 			if (!authorize(publishMessage, WampAuthorizationAction.PUBLISH, publishMessage.getTopic(),
@@ -227,7 +227,6 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 				sendMessageToClient(new ErrorMessage(publishMessage, WampError.OPTION_NOT_ALLOWED));
 				return;
 			}
-
 			long publicationId = IdGenerator.newRandomId(null);
 			handlePublishMessage(publishMessage, publicationId);
 
@@ -240,6 +239,15 @@ public class PubSubMessageHandler implements MessageHandler, SmartLifecycle, Ini
 			}
 		}
 
+	}
+
+	private static void validatePublishUri(PublishMessage publishMessage) throws WampException {
+		if (publishMessage.getWebSocketSessionId() == null && publishMessage.getWampSessionId() == null) {
+			WampUriValidator.validateExactUri(publishMessage.getTopic());
+			return;
+		}
+
+		WampUriValidator.validatePublishTopic(publishMessage.getTopic());
 	}
 
 	public int revokeSubscription(long subscriptionId, @Nullable String reason) {

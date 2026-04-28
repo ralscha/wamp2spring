@@ -228,6 +228,25 @@ public class PubSubMessageHandlerTest {
 	}
 
 	@Test
+	public void internalPublishReservedTopicUriIsAllowed() {
+		SubscribeMessage subscribeMessage = new SubscribeMessage(1L, "wamp.topic");
+		subscribeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "ws-1");
+		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 1L);
+
+		this.pubSubMessageHandler.handleMessage(subscribeMessage);
+		Mockito.clearInvocations(this.clientOutboundChannel);
+
+		PublishMessage publishMessage = PublishMessage.builder(10L, "wamp.topic").addArgument("payload").build();
+
+		this.pubSubMessageHandler.handleMessage(publishMessage);
+
+		ArgumentCaptor<WampMessage> messageCaptor = ArgumentCaptor.forClass(WampMessage.class);
+		Mockito.verify(this.clientOutboundChannel, Mockito.times(1)).send(messageCaptor.capture());
+		assertThat(messageCaptor.getValue()).isInstanceOf(EventMessage.class);
+		assertThat(((EventMessage) messageCaptor.getValue()).getWebSocketSessionId()).isEqualTo("ws-1");
+	}
+
+	@Test
 	public void deniedSubscribeReturnsAuthorizationError() {
 		Mockito.when(this.applicationContext.getBeansOfType(WampAuthorizer.class))
 			.thenReturn(Map.of("denySubscribe", context -> WampAuthorizationDecision.deny(WampError.NOT_AUTHORIZED)));

@@ -20,10 +20,9 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import ch.rasc.wamp2spring.WampError;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
-
-import ch.rasc.wamp2spring.WampError;
 
 /**
  * [GOODBYE, Details|dict, Reason|uri]

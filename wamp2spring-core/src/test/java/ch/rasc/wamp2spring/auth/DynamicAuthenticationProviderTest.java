@@ -51,8 +51,8 @@ public class DynamicAuthenticationProviderTest {
 					}
 				});
 
-		HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("signed-token"),
-				"alice", Map.of("tenant", "demo"));
+		HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("signed-token"), "alice",
+				Map.of("tenant", "demo"));
 		WampAuthenticationChallenge challenge = provider.challenge(helloMessage);
 
 		assertThat(provider.getAuthMethod()).isEqualTo("signed-token");
@@ -84,8 +84,8 @@ public class DynamicAuthenticationProviderTest {
 					}
 				});
 
-		HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("dynamic"),
-				"alice", null);
+		HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("dynamic"), "alice",
+				null);
 		WampAuthenticationChallenge challenge = denyingProvider.challenge(helloMessage);
 
 		assertThatThrownBy(

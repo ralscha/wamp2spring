@@ -27,7 +27,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ch.rasc.wamp2spring.WampError;
-import ch.rasc.wamp2spring.WampException;
 import ch.rasc.wamp2spring.auth.WampAuthentication;
 import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
 import ch.rasc.wamp2spring.auth.WampAuthenticationException;
@@ -45,7 +44,6 @@ import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
-import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class WampSessionSupport {
 
@@ -56,8 +54,6 @@ public class WampSessionSupport {
 	public static final String WAMP_AUTH_PROVIDER = "wamp2spring.auth.provider";
 
 	public static final String WAMP_PENDING_AUTH = "wamp2spring.pending.auth";
-
-	public static final String WAMP_REALM = "wamp2spring.realm";
 
 	private final List<WampRole> roles;
 
@@ -99,7 +95,6 @@ public class WampSessionSupport {
 		wampMessage.setHeader(WampMessageHeader.PRINCIPAL, currentPrincipal(transportPrincipal, attributes));
 		wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
 				attributes.get(WampMessageHeader.WAMP_SESSION_ID.name()));
-		wampMessage.setHeader(WampMessageHeader.WAMP_REALM, attributes.get(WAMP_REALM));
 		wampMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES,
 				attributes.get(WampMessageHeader.WAMP_PEER_ROLES.name()));
 		wampMessage.setHeader(WampMessageHeader.AUTH_METHOD, attributes.get(WAMP_AUTH_METHOD));
@@ -114,14 +109,6 @@ public class WampSessionSupport {
 
 		if (helloMessage.getWampSessionId() != null) {
 			return protocolViolation("Received HELLO message after session was established.");
-		}
-
-		try {
-			WampUriValidator.validateRealmUri(helloMessage.getRealm());
-		}
-		catch (WampException ex) {
-			return authenticationFailure(
-					new WampAuthenticationException(WampError.INVALID_URI, "HELLO realm is not a valid URI."));
 		}
 
 		WampAuthenticationProvider authenticationProvider = resolveAuthenticationProvider(helloMessage);
@@ -175,10 +162,9 @@ public class WampSessionSupport {
 		Long wampSessionId = (Long) attributes.get(WampMessageHeader.WAMP_SESSION_ID.name());
 		if (wampSessionId != null) {
 			this.applicationEventPublisher.publishEvent(new WampDisconnectEvent(wampSessionId, sessionId,
-					currentPrincipal(transportPrincipal, attributes), (String) attributes.get(WAMP_REALM)));
+					currentPrincipal(transportPrincipal, attributes)));
 			this.wampSessionIds.remove(wampSessionId);
 			attributes.remove(WampMessageHeader.WAMP_SESSION_ID.name());
-			attributes.remove(WAMP_REALM);
 		}
 		attributes.remove(WAMP_PENDING_AUTH);
 	}
@@ -194,7 +180,6 @@ public class WampSessionSupport {
 		long newWampSessionId = IdGenerator.newRandomId(this.wampSessionIds);
 		this.wampSessionIds.add(newWampSessionId);
 		attributes.put(WampMessageHeader.WAMP_SESSION_ID.name(), newWampSessionId);
-		attributes.put(WAMP_REALM, helloMessage.getRealm());
 		attributes.put(WampMessageHeader.WAMP_PEER_ROLES.name(), helloMessage.getRoles());
 		if (principal != null) {
 			attributes.put(WAMP_PRINCIPAL, principal);
@@ -205,12 +190,11 @@ public class WampSessionSupport {
 		attributes.put(WAMP_AUTH_METHOD, authMethod);
 		attributes.put(WAMP_AUTH_PROVIDER, authProvider);
 
-		WelcomeMessage welcomeMessage = new WelcomeMessage(newWampSessionId, this.roles, null, helloMessage.getAuthId(),
+		WelcomeMessage welcomeMessage = new WelcomeMessage(newWampSessionId, this.roles, helloMessage.getAuthId(),
 				principal != null ? authRole(principal) : null, authMethod, authProvider, authExtra);
 		welcomeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, sessionId);
 		welcomeMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
 		welcomeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, newWampSessionId);
-		welcomeMessage.setHeader(WampMessageHeader.WAMP_REALM, helloMessage.getRealm());
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_METHOD, authMethod);
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_PROVIDER, authProvider);
 		this.applicationEventPublisher.publishEvent(new WampSessionEstablishedEvent(welcomeMessage));

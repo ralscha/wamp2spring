@@ -30,8 +30,6 @@ class Subscription {
 
 	private final DestinationMatch topicMatch;
 
-	@Nullable private final String realm;
-
 	private final long subscriptionId;
 
 	private final Set<Subscriber> subscribers;
@@ -44,11 +42,9 @@ class Subscription {
 
 	@Nullable private volatile List<InvocableHandlerMethod> eventListenerHandlerMethods = null;
 
-	Subscription(@Nullable String realm, String topic, MatchPolicy matchPolicy, long subscriptionId,
-			@Nullable Map<String, Object> options) {
+	Subscription(String topic, MatchPolicy matchPolicy, long subscriptionId, @Nullable Map<String, Object> options) {
 		this.createdTimeMillis = System.currentTimeMillis();
 
-		this.realm = realm;
 		this.topicMatch = new DestinationMatch(topic, matchPolicy);
 
 		this.subscriptionId = subscriptionId;
@@ -82,10 +78,6 @@ class Subscription {
 
 	String getTopic() {
 		return this.topicMatch.getDestination();
-	}
-
-	@Nullable String getRealm() {
-		return this.realm;
 	}
 
 	@Nullable String getNkey() {

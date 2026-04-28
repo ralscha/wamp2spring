@@ -95,37 +95,28 @@ public class ReflectionMetaApiTest {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void scopesProcedureAndTopicReflectionToRealm() {
+	public void ignoresRealmWhenReflectingProceduresAndTopics() {
 		ProcedureRegistry procedureRegistry = new ProcedureRegistry(new Features());
 		SubscriptionRegistry subscriptionRegistry = new SubscriptionRegistry();
 
 		RegisterMessage realmOneProcedure = registerMessage(1L, 101L, "callee-1", "com.myapp.realm.one");
-		realmOneProcedure.setHeader(WampMessageHeader.WAMP_REALM, "realm.one");
 		register(procedureRegistry, realmOneProcedure);
 
 		RegisterMessage realmTwoProcedure = registerMessage(2L, 202L, "callee-2", "com.myapp.realm.two");
-		realmTwoProcedure.setHeader(WampMessageHeader.WAMP_REALM, "realm.two");
 		register(procedureRegistry, realmTwoProcedure);
 
 		SubscribeMessage realmOneTopic = subscribeMessage(3L, 303L, "subscriber-1", "com.myapp.topic.one");
-		realmOneTopic.setHeader(WampMessageHeader.WAMP_REALM, "realm.one");
 		subscribe(subscriptionRegistry, realmOneTopic);
 
 		SubscribeMessage realmTwoTopic = subscribeMessage(4L, 404L, "subscriber-2", "com.myapp.topic.two");
-		realmTwoTopic.setHeader(WampMessageHeader.WAMP_REALM, "realm.two");
 		subscribe(subscriptionRegistry, realmTwoTopic);
 
 		ReflectionMetaApi api = new ReflectionMetaApi(procedureRegistry, subscriptionRegistry);
 
-		CallMessage procedureList = new CallMessage(20L, ReflectionMetaApi.PROCEDURE_LIST, List.of());
-		procedureList.setHeader(WampMessageHeader.WAMP_REALM, "realm.one");
-		CallMessage topicList = new CallMessage(21L, ReflectionMetaApi.TOPIC_LIST, List.of());
-		topicList.setHeader(WampMessageHeader.WAMP_REALM, "realm.two");
-
-		assertThat((List<String>) Objects.requireNonNull(api.listProcedures(procedureList).getResults()).get(0))
-			.containsExactly("com.myapp.realm.one");
-		assertThat((List<String>) Objects.requireNonNull(api.listTopics(topicList).getResults()).get(0))
-			.containsExactly("com.myapp.topic.two");
+		assertThat((List<String>) Objects.requireNonNull(api.listProcedures().getResults()).get(0))
+			.containsExactly("com.myapp.realm.one", "com.myapp.realm.two");
+		assertThat((List<String>) Objects.requireNonNull(api.listTopics().getResults()).get(0))
+			.containsExactlyInAnyOrder("com.myapp.topic.one", "com.myapp.topic.two");
 	}
 
 	private static void register(ProcedureRegistry procedureRegistry, RegisterMessage message) {

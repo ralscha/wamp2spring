@@ -28,10 +28,4 @@ public class WampDisconnectEvent extends WampEvent {
 		super(wampSessionId, webSocketSessionId, principal);
 	}
 
-	public WampDisconnectEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal,
-			@Nullable String realm) {
-		super(wampSessionId, webSocketSessionId, principal, principal == null ? "anonymous" : "transport",
-				principal == null ? "static" : "transport", realm);
-	}
-
 }

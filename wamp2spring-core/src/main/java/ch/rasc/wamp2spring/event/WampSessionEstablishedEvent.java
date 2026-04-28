@@ -27,7 +27,7 @@ public class WampSessionEstablishedEvent extends WampEvent {
 	public WampSessionEstablishedEvent(WampMessage wampMessage) {
 		super(Objects.requireNonNull(wampMessage.getWampSessionId()),
 				Objects.requireNonNull(wampMessage.getWebSocketSessionId()), wampMessage.getPrincipal(),
-				wampMessage.getAuthMethod(), wampMessage.getAuthProvider(), wampMessage.getRealm());
+				wampMessage.getAuthMethod(), wampMessage.getAuthProvider());
 	}
 
 }

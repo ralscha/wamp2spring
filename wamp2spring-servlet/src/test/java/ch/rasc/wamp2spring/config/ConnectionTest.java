@@ -15,9 +15,6 @@
  */
 package ch.rasc.wamp2spring.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
-
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -26,14 +23,17 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.crypto.SecretKeyFactory;
+
 import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -46,9 +46,9 @@ import ch.rasc.wamp2spring.auth.DynamicAuthenticationProcedure;
 import ch.rasc.wamp2spring.auth.DynamicAuthenticationProvider;
 import ch.rasc.wamp2spring.auth.TicketWampAuthenticationProvider;
 import ch.rasc.wamp2spring.auth.WampAuthentication;
+import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
 import ch.rasc.wamp2spring.auth.WampCraAuthenticationInfo;
 import ch.rasc.wamp2spring.auth.WampCraAuthenticationProvider;
-import ch.rasc.wamp2spring.auth.WampAuthenticationChallenge;
 import ch.rasc.wamp2spring.auth.WampScramAuthenticationInfo;
 import ch.rasc.wamp2spring.auth.WampScramAuthenticationProvider;
 import ch.rasc.wamp2spring.message.AbortMessage;
@@ -75,7 +75,7 @@ public class ConnectionTest extends BaseWampTest {
 
 			// send hello message after session is established — server must reply
 			// with ABORT (protocol_violation) and close the connection
-			AbortMessage abortMessage = wc.sendMessageWithResult(new HelloMessage("theRealm", List.of()));
+			AbortMessage abortMessage = wc.sendMessageWithResult(new HelloMessage(List.of()));
 			assertThat(abortMessage.getReason()).isEqualTo(WampError.PROTOCOL_VIOLATION.getExternalValue());
 			// wait for the server to finish closing the connection
 			wc.waitForNothing();
@@ -109,14 +109,13 @@ public class ConnectionTest extends BaseWampTest {
 	}
 
 	@Test
-	public void invalidRealmHelloIsRejected() throws Exception {
+	public void invalidRealmHelloIsAccepted() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			sendMessage(DataFormat.JSON, wsSession,
-					new HelloMessage("realm with space", List.of(new WampRole("publisher"))));
+			sendMessage(DataFormat.JSON, wsSession, new HelloMessage(List.of(new WampRole("publisher"))));
 
-			AbortMessage abortMessage = (AbortMessage) result.getWampMessage();
-			assertThat(abortMessage.getReason()).isEqualTo(WampError.INVALID_URI.getExternalValue());
+			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
+			assertThat(welcomeMessage.getSessionId()).isPositive();
 		}
 	}
 
@@ -129,8 +128,7 @@ public class ConnectionTest extends BaseWampTest {
 			roles.add(new WampRole("subscriber"));
 			roles.add(new WampRole("caller"));
 
-			HelloMessage helloMessage = new HelloMessage("realm", roles, List.of("ticket"), "alice",
-					Map.of("tenant", "demo"));
+			HelloMessage helloMessage = new HelloMessage(roles, List.of("ticket"), "alice", Map.of("tenant", "demo"));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 
 			ChallengeMessage challengeMessage = (ChallengeMessage) result.getWampMessage();
@@ -153,7 +151,7 @@ public class ConnectionTest extends BaseWampTest {
 	public void ticketAuthenticationFailureTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			HelloMessage helloMessage = new HelloMessage("realm",
+			HelloMessage helloMessage = new HelloMessage(
 					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
 					List.of("ticket"), "alice", null);
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
@@ -173,7 +171,7 @@ public class ConnectionTest extends BaseWampTest {
 	public void wampCraAuthenticationSuccessTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			HelloMessage helloMessage = new HelloMessage("realm",
+			HelloMessage helloMessage = new HelloMessage(
 					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
 					List.of("wampcra"), "alice", Map.of("tenant", "demo"));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
@@ -199,7 +197,7 @@ public class ConnectionTest extends BaseWampTest {
 	public void wampCraAuthenticationFailureTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			HelloMessage helloMessage = new HelloMessage("realm",
+			HelloMessage helloMessage = new HelloMessage(
 					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
 					List.of("wampcra"), "alice", null);
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
@@ -222,7 +220,7 @@ public class ConnectionTest extends BaseWampTest {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			String clientNonce = "fyko+d2lbbFgONRv9qkxdawL";
-			HelloMessage helloMessage = new HelloMessage("realm",
+			HelloMessage helloMessage = new HelloMessage(
 					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
 					List.of("wamp-scram"), "alice", Map.of("tenant", "demo", "nonce", clientNonce));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
@@ -252,7 +250,7 @@ public class ConnectionTest extends BaseWampTest {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			String clientNonce = "fyko+d2lbbFgONRv9qkxdawL";
-			HelloMessage helloMessage = new HelloMessage("realm",
+			HelloMessage helloMessage = new HelloMessage(
 					List.of(new WampRole("publisher"), new WampRole("subscriber"), new WampRole("caller")),
 					List.of("wamp-scram"), "alice", Map.of("tenant", "demo", "nonce", clientNonce));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
@@ -274,9 +272,8 @@ public class ConnectionTest extends BaseWampTest {
 	public void dynamicAuthenticationSuccessTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			HelloMessage helloMessage = new HelloMessage("realm",
-					List.of(new WampRole("publisher"), new WampRole("caller")), List.of("dynamic"), "alice",
-					Map.of("tenant", "demo"));
+			HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("publisher"), new WampRole("caller")),
+					List.of("dynamic"), "alice", Map.of("tenant", "demo"));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 
 			ChallengeMessage challengeMessage = (ChallengeMessage) result.getWampMessage();
@@ -302,8 +299,8 @@ public class ConnectionTest extends BaseWampTest {
 	public void dynamicAuthenticationFailureTest() throws Exception {
 		CompletableFutureWebSocketHandler result = new CompletableFutureWebSocketHandler();
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
-			HelloMessage helloMessage = new HelloMessage("realm", List.of(new WampRole("caller")), List.of("dynamic"),
-					"alice", Map.of("tenant", "demo"));
+			HelloMessage helloMessage = new HelloMessage(List.of(new WampRole("caller")), List.of("dynamic"), "alice",
+					Map.of("tenant", "demo"));
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 
 			ChallengeMessage challengeMessage = (ChallengeMessage) result.getWampMessage();

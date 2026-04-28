@@ -4,8 +4,8 @@
 WAMP is a WebSocket subprotocol that provides two application messaging patterns: Remote Procedure Calls and Publish / Subscribe. 
 
 ## Implementation
-*wamp2spring* implements the Basic Profile with realm-aware routing. Connections, registrations, subscriptions,
-and meta APIs are scoped to the negotiated realm, and invalid HELLO realms are rejected during session establishment.
+*wamp2spring* implements the Basic Profile with a single shared routing scope. Connections, registrations,
+subscriptions, and meta APIs are handled without realm-based partitioning during session establishment or routing.
 
 Additionally *wamp2spring* implements a few features from the Advanced Profile:
 

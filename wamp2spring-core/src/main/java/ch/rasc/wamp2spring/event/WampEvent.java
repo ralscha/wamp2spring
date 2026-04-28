@@ -36,26 +36,18 @@ public abstract class WampEvent {
 
 	private final String webSocketSessionId;
 
-	@Nullable private final String realm;
-
 	public WampEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal) {
 		this(wampSessionId, webSocketSessionId, principal, principal == null ? "anonymous" : "transport",
-				principal == null ? "static" : "transport", null);
+				principal == null ? "static" : "transport");
 	}
 
 	public WampEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal, String authMethod,
 			String authProvider) {
-		this(wampSessionId, webSocketSessionId, principal, authMethod, authProvider, null);
-	}
-
-	public WampEvent(Long wampSessionId, String webSocketSessionId, @Nullable Principal principal, String authMethod,
-			String authProvider, @Nullable String realm) {
 		this.wampSessionId = wampSessionId;
 		this.principal = principal;
 		this.webSocketSessionId = webSocketSessionId;
 		this.authMethod = authMethod;
 		this.authProvider = authProvider;
-		this.realm = realm;
 	}
 
 	/**
@@ -81,10 +73,6 @@ public abstract class WampEvent {
 	 */
 	public Long getWampSessionId() {
 		return this.wampSessionId;
-	}
-
-	@Nullable public String getRealm() {
-		return this.realm;
 	}
 
 	@Nullable public String getAuthId() {

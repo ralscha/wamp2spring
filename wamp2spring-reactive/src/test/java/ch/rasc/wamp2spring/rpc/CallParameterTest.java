@@ -75,7 +75,7 @@ public class CallParameterTest extends BaseWampTest {
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.SMILE)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(DataFormat.SMILE, wsSession, helloMessage);
 
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();

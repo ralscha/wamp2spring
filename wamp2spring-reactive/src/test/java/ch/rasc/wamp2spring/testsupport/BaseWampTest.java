@@ -90,7 +90,7 @@ public class BaseWampTest {
 			roles.add(new WampRole("publisher"));
 			roles.add(new WampRole("subscriber"));
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(dataFormat, webSocketSession, helloMessage);
 
 			result.getWelcomeMessage();

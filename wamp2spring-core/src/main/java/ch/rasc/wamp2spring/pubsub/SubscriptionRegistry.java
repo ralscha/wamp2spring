@@ -65,8 +65,7 @@ public class SubscriptionRegistry {
 
 	SubscribeResult subscribe(SubscribeMessage subscribeMessage) {
 		Map<SubscriptionKey, Subscription> subscriptionMap = subscriptionsFor(subscribeMessage.getMatchPolicy());
-		SubscriptionKey subscriptionKey = new SubscriptionKey(subscribeMessage.getRealm(), subscribeMessage.getTopic(),
-				subscribeMessage.getNkey());
+		SubscriptionKey subscriptionKey = new SubscriptionKey(subscribeMessage.getTopic(), subscribeMessage.getNkey());
 
 		boolean created = false;
 
@@ -76,8 +75,8 @@ public class SubscriptionRegistry {
 				subscription = subscriptionMap.get(subscriptionKey);
 				if (subscription == null) {
 					long subscriptionId = IdGenerator.newLinearId(this.lastSubscriptionId);
-					subscription = new Subscription(subscribeMessage.getRealm(), subscribeMessage.getTopic(),
-							subscribeMessage.getMatchPolicy(), subscriptionId, subscribeMessage.getOptions());
+					subscription = new Subscription(subscribeMessage.getTopic(), subscribeMessage.getMatchPolicy(),
+							subscriptionId, subscribeMessage.getOptions());
 					subscriptionMap.put(subscriptionKey, subscription);
 					this.subscriptionsById.put(subscriptionId, subscription);
 					created = true;
@@ -97,12 +96,12 @@ public class SubscriptionRegistry {
 		for (EventListenerInfo eventListener : eventListeners) {
 			Map<SubscriptionKey, Subscription> subscriptionMap = subscriptionsFor(eventListener.getMatch());
 			for (String topic : eventListener.getTopic()) {
-				SubscriptionKey subscriptionKey = new SubscriptionKey(null, topic, null);
+				SubscriptionKey subscriptionKey = new SubscriptionKey(topic, null);
 				synchronized (this.monitor) {
 					Subscription subscription = subscriptionMap.get(subscriptionKey);
 					if (subscription == null) {
 						long subscriptionId = IdGenerator.newLinearId(this.lastSubscriptionId);
-						subscription = new Subscription(null, topic, eventListener.getMatch(), subscriptionId, null);
+						subscription = new Subscription(topic, eventListener.getMatch(), subscriptionId, null);
 						subscriptionMap.put(subscriptionKey, subscription);
 						this.subscriptionsById.put(subscriptionId, subscription);
 						invalidateCacheEntries(subscription);
@@ -123,8 +122,8 @@ public class SubscriptionRegistry {
 				if (subscription.removeSubscriber(subscriber)) {
 					boolean deleted = false;
 					if (!subscription.hasSubscribers()) {
-						subscriptionsFor(subscription.getMatchPolicy()).remove(new SubscriptionKey(
-								subscription.getRealm(), subscription.getTopic(), subscription.getNkey()));
+						subscriptionsFor(subscription.getMatchPolicy())
+							.remove(new SubscriptionKey(subscription.getTopic(), subscription.getNkey()));
 						this.subscriptionsById.remove(subscription.getSubscriptionId());
 						deleted = true;
 						invalidateCacheEntries(subscription);
@@ -155,8 +154,8 @@ public class SubscriptionRegistry {
 
 			boolean deleted = false;
 			if (!subscription.hasSubscribers()) {
-				subscriptionsFor(subscription.getMatchPolicy()).remove(
-						new SubscriptionKey(subscription.getRealm(), subscription.getTopic(), subscription.getNkey()));
+				subscriptionsFor(subscription.getMatchPolicy())
+					.remove(new SubscriptionKey(subscription.getTopic(), subscription.getNkey()));
 				this.subscriptionsById.remove(subscription.getSubscriptionId());
 				invalidateCacheEntries(subscription);
 				deleted = true;
@@ -202,27 +201,16 @@ public class SubscriptionRegistry {
 	}
 
 	Set<Subscription> findSubscriptions(String topic) {
-		return findSubscriptions((String) null, topic);
+		return this.subscriptionsCache.get(new SubscriptionCacheKey(topic));
 	}
 
 	Set<Subscription> findSubscriptions(WampMessage message, String topic) {
-		String realm = message.getRealm();
-		Set<Subscription> subscriptions;
-		if (realm == null) {
-			subscriptions = internalFindSubscriptionsForAnyRealm(topic);
-		}
-		else {
-			subscriptions = new HashSet<>(findSubscriptions(realm, topic));
-			subscriptions.addAll(internalFindGlobalEventHandlerSubscriptions(topic));
-		}
+		Set<Subscription> subscriptions = new HashSet<>(internalFindSubscriptionsForAnyRealm(topic));
+		subscriptions.addAll(internalFindGlobalEventHandlerSubscriptions(topic));
 		if (message instanceof ch.rasc.wamp2spring.message.PublishMessage publishMessage) {
 			return filterShardedSubscriptions(subscriptions, publishMessage.getRkey());
 		}
 		return subscriptions;
-	}
-
-	Set<Subscription> findSubscriptions(@Nullable String realm, String topic) {
-		return this.subscriptionsCache.get(new SubscriptionCacheKey(realm, topic));
 	}
 
 	private Set<Subscription> internalFindSubscriptions(SubscriptionCacheKey cacheKey) {
@@ -230,9 +218,6 @@ public class SubscriptionRegistry {
 		String topic = cacheKey.topic();
 
 		for (Subscription exactSubscription : subscriptionsFor(MatchPolicy.EXACT).values()) {
-			if (!Objects.equals(cacheKey.realm(), exactSubscription.getRealm())) {
-				continue;
-			}
 			if (exactSubscription.getTopic().equals(topic)) {
 				subscriptions.add(exactSubscription);
 			}
@@ -240,9 +225,6 @@ public class SubscriptionRegistry {
 
 		Map<SubscriptionKey, Subscription> prefixSubscriptionMap = subscriptionsFor(MatchPolicy.PREFIX);
 		for (Subscription prefixSubscription : prefixSubscriptionMap.values()) {
-			if (!Objects.equals(cacheKey.realm(), prefixSubscription.getRealm())) {
-				continue;
-			}
 			if (prefixSubscription.getTopicMatch().matches(topic)) {
 				subscriptions.add(prefixSubscription);
 			}
@@ -251,9 +233,6 @@ public class SubscriptionRegistry {
 		Map<SubscriptionKey, Subscription> wildcardSubscriptionMap = subscriptionsFor(MatchPolicy.WILDCARD);
 		String[] components = topic.split("\\.");
 		for (Subscription wildcardSubscription : wildcardSubscriptionMap.values()) {
-			if (!Objects.equals(cacheKey.realm(), wildcardSubscription.getRealm())) {
-				continue;
-			}
 			if (wildcardSubscription.getTopicMatch().matchesWildcard(components)) {
 				subscriptions.add(wildcardSubscription);
 			}
@@ -278,8 +257,7 @@ public class SubscriptionRegistry {
 		Set<Subscription> subscriptions = new HashSet<>();
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			for (Subscription subscription : subscriptionsFor(matchPolicy).values()) {
-				if (subscription.getRealm() == null && subscription.getEventListenerHandlerMethods() != null
-						&& matches(subscription, topic)) {
+				if (subscription.getEventListenerHandlerMethods() != null && matches(subscription, topic)) {
 					subscriptions.add(subscription);
 				}
 			}
@@ -299,15 +277,11 @@ public class SubscriptionRegistry {
 
 	private void invalidateCacheEntries(Subscription subscription) {
 		if (subscription.getMatchPolicy() == MatchPolicy.EXACT) {
-			this.subscriptionsCache
-				.invalidate(new SubscriptionCacheKey(subscription.getRealm(), subscription.getTopic()));
+			this.subscriptionsCache.invalidate(new SubscriptionCacheKey(subscription.getTopic()));
 		}
 		else {
 			DestinationMatch topicMatch = subscription.getTopicMatch();
-			this.subscriptionsCache.asMap()
-				.keySet()
-				.removeIf(cacheKey -> Objects.equals(cacheKey.realm(), subscription.getRealm())
-						&& topicMatch.matches(cacheKey.topic()));
+			this.subscriptionsCache.asMap().keySet().removeIf(cacheKey -> topicMatch.matches(cacheKey.topic()));
 		}
 	}
 
@@ -327,16 +301,11 @@ public class SubscriptionRegistry {
 	 * @return subscription IDs grouped by matching policies
 	 */
 	public EnumMap<MatchPolicy, List<Long>> listSubscriptions() {
-		return listSubscriptions(null);
-	}
-
-	public EnumMap<MatchPolicy, List<Long>> listSubscriptions(@Nullable String realm) {
 		EnumMap<MatchPolicy, List<Long>> result = new EnumMap<>(MatchPolicy.class);
 
 		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
 			List<Long> subscriptionIds = subscriptionsFor(matchPolicy).values()
 				.stream()
-				.filter(subscription -> Objects.equals(realm, subscription.getRealm()))
 				.map(Subscription::getSubscriptionId)
 				.toList();
 			result.put(matchPolicy, subscriptionIds);
@@ -353,21 +322,16 @@ public class SubscriptionRegistry {
 	 * @return the subscription id or null if no matching subscription exist
 	 */
 	@Nullable public Long lookupSubscription(String topic, @Nullable MatchPolicy matchPolicy) {
-		return lookupSubscription(null, topic, matchPolicy, null);
+		return lookupSubscription(topic, matchPolicy, null);
 	}
 
-	@Nullable public Long lookupSubscription(@Nullable String realm, String topic, @Nullable MatchPolicy matchPolicy) {
-		return lookupSubscription(realm, topic, matchPolicy, null);
-	}
-
-	@Nullable public Long lookupSubscription(@Nullable String realm, String topic, @Nullable MatchPolicy matchPolicy,
-			@Nullable String nkey) {
+	@Nullable public Long lookupSubscription(String topic, @Nullable MatchPolicy matchPolicy, @Nullable String nkey) {
 		MatchPolicy me = matchPolicy;
 		if (me == null) {
 			me = MatchPolicy.EXACT;
 		}
 
-		Subscription subscription = subscriptionsFor(me).get(new SubscriptionKey(realm, topic, nkey));
+		Subscription subscription = subscriptionsFor(me).get(new SubscriptionKey(topic, nkey));
 		if (subscription != null) {
 			return subscription.getSubscriptionId();
 		}
@@ -393,11 +357,7 @@ public class SubscriptionRegistry {
 	 * @return the list of session IDs subscribed to the topic
 	 */
 	public List<Long> getMatchSubscriptions(String topic) {
-		return getMatchSubscriptions(null, topic);
-	}
-
-	public List<Long> getMatchSubscriptions(@Nullable String realm, String topic) {
-		return findSubscriptions(realm, topic).stream().map(Subscription::getSubscriptionId).toList();
+		return findSubscriptions(topic).stream().map(Subscription::getSubscriptionId).toList();
 	}
 
 	/**
@@ -443,13 +403,14 @@ public class SubscriptionRegistry {
 	/**
 	 * Checks if a particular topic currently has attached subscriptions
 	 * @param topic the topic
-	 * @return true if currently sessions are attached to the topic
+	 * @return true if currently sessions are attached to the topic in the realm
 	 */
 	public boolean hasSubscribers(String topic) {
 		return !getMatchSubscriptions(topic).isEmpty();
 	}
 
-	private Set<Subscription> filterShardedSubscriptions(Set<Subscription> subscriptions, @Nullable String rkey) {
+	private static Set<Subscription> filterShardedSubscriptions(Set<Subscription> subscriptions,
+			@Nullable String rkey) {
 		List<String> shardKeys = subscriptions.stream()
 			.map(Subscription::getNkey)
 			.filter(Objects::nonNull)
@@ -481,11 +442,11 @@ public class SubscriptionRegistry {
 		return filtered;
 	}
 
-	private record SubscriptionKey(@Nullable String realm, String topic, @Nullable String nkey) {
+	private record SubscriptionKey(String topic, @Nullable String nkey) {
 		// map key
 	}
 
-	private record SubscriptionCacheKey(@Nullable String realm, String topic) {
+	private record SubscriptionCacheKey(String topic) {
 		// cache key
 	}
 

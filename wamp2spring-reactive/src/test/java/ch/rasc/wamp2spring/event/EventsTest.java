@@ -66,7 +66,7 @@ public class EventsTest extends BaseWampTest {
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.CBOR)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(DataFormat.CBOR, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
@@ -93,7 +93,7 @@ public class EventsTest extends BaseWampTest {
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.MSGPACK)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(DataFormat.MSGPACK, wsSession, helloMessage);
 			welcomeMessage = result.getWelcomeMessage();
 		}
@@ -127,7 +127,7 @@ public class EventsTest extends BaseWampTest {
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 
@@ -187,7 +187,7 @@ public class EventsTest extends BaseWampTest {
 		try (WebSocketSession wsSession = startWebSocketSession(result, DataFormat.JSON)) {
 			List<WampRole> roles = new ArrayList<>();
 			roles.add(new WampRole("caller"));
-			HelloMessage helloMessage = new HelloMessage("realm", roles);
+			HelloMessage helloMessage = new HelloMessage(roles);
 			sendMessage(DataFormat.JSON, wsSession, helloMessage);
 			WelcomeMessage welcomeMessage = result.getWelcomeMessage();
 

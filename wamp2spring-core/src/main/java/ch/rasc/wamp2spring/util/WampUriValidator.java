@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.util;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.regex.Pattern;
 
 import ch.rasc.wamp2spring.WampError;
@@ -44,11 +42,8 @@ public final class WampUriValidator {
 		validateStrictUri(procedure);
 	}
 
-	public static void validateRealmUri(@Nullable String realm) throws WampException {
-		if (realm == null) {
-			throw invalidUri();
-		}
-		validateStrictUri(realm);
+	public static void validateExactUri(String uri) throws WampException {
+		validateStrictUri(uri);
 	}
 
 	public static void validatePublishTopic(String topic) throws WampException {

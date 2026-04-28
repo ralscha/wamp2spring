@@ -27,16 +27,13 @@ public class SubscriptionDetail {
 
 	private final String topic;
 
-	@Nullable private final String realm;
-
 	private final MatchPolicy matchPolicy;
 
 	@Nullable private final Map<String, Object> options;
 
-	public SubscriptionDetail(Subscription subscription) {
+	SubscriptionDetail(Subscription subscription) {
 		this.id = subscription.getSubscriptionId();
 		this.createdTimeMillis = subscription.getCreatedTimeMillis();
-		this.realm = subscription.getRealm();
 		this.topic = subscription.getTopic();
 		this.matchPolicy = subscription.getMatchPolicy();
 		this.options = subscription.getOptions();
@@ -54,10 +51,6 @@ public class SubscriptionDetail {
 		return this.topic;
 	}
 
-	@Nullable public String getRealm() {
-		return this.realm;
-	}
-
 	public MatchPolicy getMatchPolicy() {
 		return this.matchPolicy;
 	}
@@ -68,9 +61,8 @@ public class SubscriptionDetail {
 
 	@Override
 	public String toString() {
-		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis + ", realm="
-				+ this.realm + ", topic=" + this.topic + ", matchPolicy=" + this.matchPolicy + ", options="
-				+ this.options + "]";
+		return "SubscriptionDetail [id=" + this.id + ", createdTimeMillis=" + this.createdTimeMillis + ", topic="
+				+ this.topic + ", matchPolicy=" + this.matchPolicy + ", options=" + this.options + "]";
 	}
 
 }

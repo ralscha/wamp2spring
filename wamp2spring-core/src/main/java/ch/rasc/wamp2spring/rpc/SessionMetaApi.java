@@ -33,8 +33,6 @@ import ch.rasc.wamp2spring.event.WampDisconnectEvent;
 import ch.rasc.wamp2spring.event.WampSessionEstablishedEvent;
 import ch.rasc.wamp2spring.message.CallMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
-import ch.rasc.wamp2spring.message.PublishMessage;
-import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.util.WampUriValidator;
 
 public class SessionMetaApi {
@@ -72,19 +70,19 @@ public class SessionMetaApi {
 
 	@WampProcedure(COUNT)
 	public WampResult count(CallMessage callMessage) {
-		return WampResult.create(this.sessionRegistry.count(callMessage.getRealm(), authRoleFilter(callMessage)));
+		return WampResult.create(this.sessionRegistry.count(authRoleFilter(callMessage)));
 	}
 
 	@WampProcedure(LIST)
 	public WampResult list(CallMessage callMessage) {
-		return WampResult.create(this.sessionRegistry.list(callMessage.getRealm(), authRoleFilter(callMessage)));
+		return WampResult.create(this.sessionRegistry.list(authRoleFilter(callMessage)));
 	}
 
 	@WampProcedure(GET)
 	public WampResult get(CallMessage callMessage) throws WampException {
 		long sessionId = longArgument(callMessage, 0);
 		SessionDetail detail = this.sessionRegistry.get(sessionId);
-		if (detail == null || !sameRealm(callMessage, detail)) {
+		if (detail == null) {
 			throw noSuchSession();
 		}
 		return WampResult.create(toMetaDetail(detail));
@@ -99,7 +97,7 @@ public class SessionMetaApi {
 		}
 
 		SessionDetail detail = this.sessionRegistry.get(sessionId);
-		if (detail == null || !sameRealm(callMessage, detail)) {
+		if (detail == null) {
 			throw noSuchSession();
 		}
 
@@ -115,7 +113,7 @@ public class SessionMetaApi {
 		CloseDetails closeDetails = closeDetails(callMessage);
 
 		List<Long> killedSessions = new ArrayList<>();
-		for (SessionDetail detail : this.sessionRegistry.findByAuthId(callMessage.getRealm(), authId)) {
+		for (SessionDetail detail : this.sessionRegistry.findByAuthId(authId)) {
 			if (detail.getSessionId() == callerSessionId) {
 				continue;
 			}
@@ -132,7 +130,7 @@ public class SessionMetaApi {
 		CloseDetails closeDetails = closeDetails(callMessage);
 
 		int count = 0;
-		for (SessionDetail detail : this.sessionRegistry.findByAuthRole(callMessage.getRealm(), authRole)) {
+		for (SessionDetail detail : this.sessionRegistry.findByAuthRole(authRole)) {
 			if (detail.getSessionId() == callerSessionId) {
 				continue;
 			}
@@ -148,7 +146,7 @@ public class SessionMetaApi {
 		CloseDetails closeDetails = closeDetails(callMessage);
 
 		int count = 0;
-		for (SessionDetail detail : this.sessionRegistry.listDetails(callMessage.getRealm())) {
+		for (SessionDetail detail : this.sessionRegistry.listDetails()) {
 			if (detail.getSessionId() == callerSessionId) {
 				continue;
 			}
@@ -165,11 +163,10 @@ public class SessionMetaApi {
 			return;
 		}
 
-		SessionDetail detail = new SessionDetail(sessionId, event.getWebSocketSessionId(), event.getRealm(),
-				event.getAuthId(), event.getAuthRole(), event.getAuthMethod(), event.getAuthProvider(),
-				System.currentTimeMillis());
+		SessionDetail detail = new SessionDetail(sessionId, event.getWebSocketSessionId(), event.getAuthId(),
+				event.getAuthRole(), event.getAuthMethod(), event.getAuthProvider(), System.currentTimeMillis());
 		this.sessionRegistry.add(detail);
-		publishEvent(detail.getRealm(), ON_JOIN, toMetaDetail(detail));
+		publishEvent(ON_JOIN, toMetaDetail(detail));
 	}
 
 	@EventListener
@@ -181,30 +178,24 @@ public class SessionMetaApi {
 
 		SessionDetail detail = this.sessionRegistry.remove(sessionId);
 		if (detail == null) {
-			detail = new SessionDetail(sessionId, event.getWebSocketSessionId(), event.getRealm(), event.getAuthId(),
-					event.getAuthRole(), event.getAuthMethod(), event.getAuthProvider(), System.currentTimeMillis());
+			detail = new SessionDetail(sessionId, event.getWebSocketSessionId(), event.getAuthId(), event.getAuthRole(),
+					event.getAuthMethod(), event.getAuthProvider(), System.currentTimeMillis());
 		}
-		publishEvent(detail.getRealm(), ON_LEAVE, detail.getSessionId(), detail.getAuthId(), detail.getAuthRole());
+		publishEvent(ON_LEAVE, detail.getSessionId(), detail.getAuthId(), detail.getAuthRole());
 	}
 
-	private void publishEvent(@Nullable String realm, String topic, @Nullable Object... arguments) {
+	private void publishEvent(String topic, @Nullable Object... arguments) {
 		List<Object> payload = new ArrayList<>(arguments.length);
 		Collections.addAll(payload, arguments);
-		PublishMessage publishMessage = this.wampPublisher.publishMessageBuilder(topic).arguments(payload).build();
-		publishMessage.setHeader(WampMessageHeader.WAMP_REALM, realm);
-		this.wampPublisher.publish(publishMessage);
+		this.wampPublisher.publish(this.wampPublisher.publishMessageBuilder(topic).arguments(payload).build());
 	}
 
 	private void terminate(SessionDetail detail, String reason, @Nullable String message) {
 		GoodbyeMessage goodbyeMessage = new GoodbyeMessage(reason, message);
-		goodbyeMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, detail.getWebSocketSessionId());
-		goodbyeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, detail.getSessionId());
-		goodbyeMessage.setHeader(WampMessageHeader.WAMP_REALM, detail.getRealm());
+		goodbyeMessage.setHeader(ch.rasc.wamp2spring.message.WampMessageHeader.WEBSOCKET_SESSION_ID,
+				detail.getWebSocketSessionId());
+		goodbyeMessage.setHeader(ch.rasc.wamp2spring.message.WampMessageHeader.WAMP_SESSION_ID, detail.getSessionId());
 		this.clientOutboundChannel.send(goodbyeMessage);
-	}
-
-	private static boolean sameRealm(CallMessage callMessage, SessionDetail detail) {
-		return java.util.Objects.equals(callMessage.getRealm(), detail.getRealm());
 	}
 
 	@Nullable
@@ -281,7 +272,6 @@ public class SessionMetaApi {
 	private static Map<String, Object> toMetaDetail(SessionDetail detail) {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("session", detail.getSessionId());
-		result.put("realm", detail.getRealm());
 		result.put("authid", detail.getAuthId());
 		result.put("authrole", detail.getAuthRole());
 		result.put("authmethod", detail.getAuthMethod());

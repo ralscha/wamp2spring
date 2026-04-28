@@ -339,6 +339,35 @@ public class SubscriptionRegistryTest {
 	}
 
 	@Test
+	public void subscriptionsIgnoreRealm() {
+		SubscribeMessage firstRealm = new SubscribeMessage(1, "topic");
+		firstRealm.setHeader(WampMessageHeader.WAMP_SESSION_ID, 123L);
+		firstRealm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "one");
+		SubscribeResult firstResult = this.subscriptionRegistry.subscribe(firstRealm);
+
+		SubscribeMessage secondRealm = new SubscribeMessage(2, "topic");
+		secondRealm.setHeader(WampMessageHeader.WAMP_SESSION_ID, 321L);
+		secondRealm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, "two");
+		SubscribeResult secondResult = this.subscriptionRegistry.subscribe(secondRealm);
+
+		assertThat(firstResult.isCreated()).isTrue();
+		assertThat(secondResult.isCreated()).isFalse();
+		assertThat(secondResult.getSubscription().getSubscriptionId())
+			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.lookupSubscription("topic", MatchPolicy.EXACT))
+			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.lookupSubscription("topic", MatchPolicy.EXACT))
+			.isEqualTo(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.getMatchSubscriptions("topic"))
+			.containsExactly(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.getMatchSubscriptions("topic"))
+			.containsExactly(firstResult.getSubscription().getSubscriptionId());
+		assertThat(this.subscriptionRegistry.hasSubscribers("topic")).isTrue();
+		assertThat(this.subscriptionRegistry.hasSubscribers("topic")).isTrue();
+		assertThat(this.subscriptionRegistry.hasSubscribers("topic")).isTrue();
+	}
+
+	@Test
 	public void testSubscribePrefix() {
 		SubscribeMessage subscribeMessage = new SubscribeMessage(1, "com.myapp.topic.emergency", MatchPolicy.PREFIX);
 		subscribeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, 123L);

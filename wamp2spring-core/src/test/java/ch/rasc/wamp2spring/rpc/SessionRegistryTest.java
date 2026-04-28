@@ -44,18 +44,17 @@ public class SessionRegistryTest {
 	}
 
 	@Test
-	public void filtersSessionsByRealm() {
+	public void ignoresRealmWhenFilteringSessions() {
 		SessionRegistry registry = new SessionRegistry();
-		registry.add(new SessionDetail(101L, "ws-1", "realm-one", "anna", "admin", "ticket", "static", 1L));
-		registry.add(new SessionDetail(202L, "ws-2", "realm-two", "bob", "user", "ticket", "static", 2L));
-		registry.add(new SessionDetail(303L, "ws-3", "realm-one", "carl", "user", "ticket", "static", 3L));
+		registry.add(new SessionDetail(101L, "ws-1", "anna", "admin", "ticket", "static", 1L));
+		registry.add(new SessionDetail(202L, "ws-2", "bob", "user", "ticket", "static", 2L));
+		registry.add(new SessionDetail(303L, "ws-3", "carl", "user", "ticket", "static", 3L));
 
-		assertThat(registry.count("realm-one", null)).isEqualTo(2);
-		assertThat(registry.list("realm-one", null)).containsExactly(101L, 303L);
-		assertThat(registry.list("realm-two", List.of("user"))).containsExactly(202L);
-		assertThat(registry.findByAuthId("realm-one", "bob")).isEmpty();
-		assertThat(registry.findByAuthRole("realm-one", "user")).extracting(SessionDetail::getSessionId)
-			.containsExactly(303L);
+		assertThat(registry.count(null)).isEqualTo(3);
+		assertThat(registry.list(null)).containsExactly(101L, 202L, 303L);
+		assertThat(registry.list(List.of("user"))).containsExactly(202L, 303L);
+		assertThat(registry.findByAuthId("bob")).extracting(SessionDetail::getSessionId).containsExactly(202L);
+		assertThat(registry.findByAuthRole("user")).extracting(SessionDetail::getSessionId).containsExactly(202L, 303L);
 	}
 
 }

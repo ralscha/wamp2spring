@@ -92,7 +92,7 @@ public class WampClient implements AutoCloseable {
 		roles.add(new WampRole("publisher"));
 		roles.add(new WampRole("subscriber"));
 		roles.add(new WampRole("caller"));
-		HelloMessage helloMessage = new HelloMessage("realm", roles);
+		HelloMessage helloMessage = new HelloMessage(roles);
 
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		this.webSocketSession = webSocketClient.execute(this.result, this.headers, wampEndpointUrl).get();

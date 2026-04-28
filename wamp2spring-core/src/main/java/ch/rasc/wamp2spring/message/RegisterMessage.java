@@ -18,11 +18,10 @@ package ch.rasc.wamp2spring.message;
 import java.io.IOException;
 import java.util.Map;
 
-import tools.jackson.core.JsonGenerator;
-import tools.jackson.core.JsonParser;
-
 import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 import ch.rasc.wamp2spring.rpc.InvocationPolicy;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
 
 /**
  * [REGISTER, Request|id, Options|dict, Procedure|uri]
