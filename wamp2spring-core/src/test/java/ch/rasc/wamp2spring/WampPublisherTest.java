@@ -208,13 +208,13 @@ public class WampPublisherTest {
 			assertThat(publishMessage.getEligible()).isNull();
 		}
 		else {
-			assertThat(publishMessage.getEligible()).containsOnlyElementsOf(eligible);
+			assertThat(publishMessage.getEligible()).containsExactlyInAnyOrderElementsOf(eligible);
 		}
 		if (exclude == null) {
 			assertThat(publishMessage.getExclude()).isNull();
 		}
 		else {
-			assertThat(publishMessage.getExclude()).containsOnlyElementsOf(exclude);
+			assertThat(publishMessage.getExclude()).containsExactlyInAnyOrderElementsOf(exclude);
 		}
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();
@@ -232,13 +232,13 @@ public class WampPublisherTest {
 			assertThat(publishMessage.getEligible()).isNull();
 		}
 		else {
-			assertThat(publishMessage.getEligible()).containsOnlyElementsOf(eligible);
+			assertThat(publishMessage.getEligible()).containsExactlyInAnyOrderElementsOf(eligible);
 		}
 		if (exclude == null) {
 			assertThat(publishMessage.getExclude()).isNull();
 		}
 		else {
-			assertThat(publishMessage.getExclude()).containsOnlyElementsOf(exclude);
+			assertThat(publishMessage.getExclude()).containsExactlyInAnyOrderElementsOf(exclude);
 		}
 		assertThat(publishMessage.isAcknowledge()).isFalse();
 		assertThat(publishMessage.isDiscloseMe()).isFalse();

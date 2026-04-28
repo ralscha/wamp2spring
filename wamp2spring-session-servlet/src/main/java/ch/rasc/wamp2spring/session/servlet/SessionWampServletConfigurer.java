@@ -18,6 +18,7 @@ package ch.rasc.wamp2spring.session.servlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.support.AbstractMessageChannel;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
@@ -28,6 +29,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistra
 
 import ch.rasc.wamp2spring.servlet.WampServletConfigurer;
 
+@Configuration
 public class SessionWampServletConfigurer<S extends Session> implements WampServletConfigurer {
 
 	@Autowired

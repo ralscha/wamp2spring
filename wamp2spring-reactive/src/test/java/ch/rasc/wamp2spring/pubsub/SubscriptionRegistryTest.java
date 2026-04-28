@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,9 +28,11 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
 
 import ch.rasc.wamp2spring.WampError;
@@ -722,12 +722,12 @@ public class SubscriptionRegistryTest {
 
 		for (MatchPolicy policy : MatchPolicy.values()) {
 			List<Long> subscriptionsId = ra.subscriptions(policy);
-			assertThat(subscriptions.get(policy)).containsOnlyElementsOf(subscriptionsId);
+			assertThat(subscriptions.get(policy)).containsExactlyInAnyOrderElementsOf(subscriptionsId);
 
 			for (Long subscriptionId : subscriptionsId) {
 				Collection<Long> subscribers = ra.subscribers(subscriptionId);
 				assertThat(this.subscriptionRegistry.listSubscribers(subscriptionId))
-					.containsOnlyElementsOf(subscribers);
+					.containsExactlyInAnyOrderElementsOf(subscribers);
 				assertThat(this.subscriptionRegistry.countSubscribers(subscriptionId)).isEqualTo(subscribers.size());
 
 				SubscriptionDetail detail = this.subscriptionRegistry.getSubscription(subscriptionId);

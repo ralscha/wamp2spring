@@ -57,7 +57,7 @@ public class HelloMessageTest extends BaseMessageTest {
 		helloMessage = WampMessage.deserialize(getJsonFactory(), json.getBytes(StandardCharsets.UTF_8));
 		assertThat(helloMessage.getCode()).isEqualTo(1);
 		assertThat(helloMessage.getRealm()).isEqualTo("aRealm");
-		assertThat(helloMessage.getRoles()).containsOnlyElementsOf(createRoles());
+		assertThat(helloMessage.getRoles()).containsExactlyInAnyOrderElementsOf(createRoles());
 		assertThat(helloMessage.getAuthMethods()).containsExactly("ticket");
 		assertThat(helloMessage.getAuthId()).isEqualTo("alice");
 		assertThat(helloMessage.getAuthExtra()).containsEntry("ticket", "demo-token");
