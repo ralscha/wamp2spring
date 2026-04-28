@@ -34,7 +34,7 @@ final class LongpollMessageCodec {
 
 	static WampMessage deserialize(String protocol, ObjectMapper objectMapper, byte[] payload) throws IOException {
 		if (WampSubProtocolHandler.MSGPACK_PROTOCOL.equals(protocol)) {
-			return WampMessage.deserialize(objectMapper, MessagePackCodec.toJson(payload, objectMapper));
+			return MessagePackCodec.deserializeWampMessage(payload, objectMapper);
 		}
 		return WampMessage.deserialize(objectMapper, payload);
 	}

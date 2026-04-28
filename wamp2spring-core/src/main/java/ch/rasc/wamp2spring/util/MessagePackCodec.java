@@ -32,6 +32,9 @@ import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
 
+import ch.rasc.wamp2spring.message.WampMessage;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -48,6 +51,16 @@ public final class MessagePackCodec {
 		try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(messagePack)) {
 			Object value = unpackValue(unpacker);
 			return jsonObjectMapper.writeValueAsBytes(value);
+		}
+	}
+
+	public static WampMessage deserializeWampMessage(byte[] messagePack, ObjectMapper jsonObjectMapper)
+			throws IOException {
+		try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(messagePack)) {
+			JsonNode root = jsonObjectMapper.valueToTree(unpackValue(unpacker));
+			try (JsonParser parser = jsonObjectMapper.treeAsTokens(root)) {
+				return WampMessage.deserialize(parser);
+			}
 		}
 	}
 

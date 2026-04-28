@@ -119,7 +119,14 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 		this.procedureRegistry = procedureRegistry;
 		this.handlerMethodService = handlerMethodService;
 		this.features = features;
-		this.callTimeoutExecutor = new ScheduledThreadPoolExecutor(1, new CallTimeoutThreadFactory());
+		// Multiple threads so that long-running timeout callbacks (which need to send
+		// INTERRUPT
+		// to the callee and ERROR to the caller through the outbound channel) cannot
+		// starve
+		// each other under load. The ScheduledThreadPoolExecutor only spins up additional
+		// threads when concurrent timeouts overlap, so the default cost stays minimal.
+		int timeoutPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+		this.callTimeoutExecutor = new ScheduledThreadPoolExecutor(timeoutPoolSize, new CallTimeoutThreadFactory());
 		this.callTimeoutExecutor.setRemoveOnCancelPolicy(true);
 	}
 

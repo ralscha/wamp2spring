@@ -228,45 +228,50 @@ public abstract class WampMessage implements Message<Object> {
 	public static <T extends WampMessage> T deserialize(ObjectMapper objectMapper, byte[] json) throws IOException {
 
 		try (JsonParser jp = objectMapper.createParser(json)) {
-			if (jp.nextToken() != JsonToken.START_ARRAY) {
-				throw new IOException("Not a JSON array");
-			}
-			if (jp.nextToken() != JsonToken.VALUE_NUMBER_INT) {
-				throw new IOException("Wrong message format");
-			}
-
-			int code = jp.getValueAsInt();
-
-			return switch (code) {
-				case HelloMessage.CODE -> (T) HelloMessage.deserialize(jp);
-				case WelcomeMessage.CODE -> (T) WelcomeMessage.deserialize(jp);
-				case AbortMessage.CODE -> (T) AbortMessage.deserialize(jp);
-				case ChallengeMessage.CODE -> (T) ChallengeMessage.deserialize(jp);
-				case AuthenticateMessage.CODE -> (T) AuthenticateMessage.deserialize(jp);
-				case CancelMessage.CODE -> (T) CancelMessage.deserialize(jp);
-				case GoodbyeMessage.CODE -> (T) GoodbyeMessage.deserialize(jp);
-				case ErrorMessage.CODE -> (T) ErrorMessage.deserialize(jp);
-				case PublishMessage.CODE -> (T) PublishMessage.deserialize(jp);
-				case PublishedMessage.CODE -> (T) PublishedMessage.deserialize(jp);
-				case SubscribeMessage.CODE -> (T) SubscribeMessage.deserialize(jp);
-				case SubscribedMessage.CODE -> (T) SubscribedMessage.deserialize(jp);
-				case UnsubscribeMessage.CODE -> (T) UnsubscribeMessage.deserialize(jp);
-				case UnsubscribedMessage.CODE -> (T) UnsubscribedMessage.deserialize(jp);
-				case EventMessage.CODE -> (T) EventMessage.deserialize(jp);
-				case CallMessage.CODE -> (T) CallMessage.deserialize(jp);
-				case ResultMessage.CODE -> (T) ResultMessage.deserialize(jp);
-				case RegisterMessage.CODE -> (T) RegisterMessage.deserialize(jp);
-				case RegisteredMessage.CODE -> (T) RegisteredMessage.deserialize(jp);
-				case UnregisterMessage.CODE -> (T) UnregisterMessage.deserialize(jp);
-				case UnregisteredMessage.CODE -> (T) UnregisteredMessage.deserialize(jp);
-				case InterruptMessage.CODE -> (T) InterruptMessage.deserialize(jp);
-				case YieldMessage.CODE -> (T) YieldMessage.deserialize(jp);
-				case InvocationMessage.CODE -> (T) InvocationMessage.deserialize(jp);
-				default -> throw new IOException("Unknown message code: " + code);
-			};
+			return deserialize(jp);
 
 		}
 
+	}
+
+	@SuppressWarnings({ "unchecked", "TypeParameterUnusedInFormals" })
+	public static <T extends WampMessage> T deserialize(JsonParser jp) throws IOException {
+		if (jp.nextToken() != JsonToken.START_ARRAY) {
+			throw new IOException("Not a JSON array");
+		}
+		if (jp.nextToken() != JsonToken.VALUE_NUMBER_INT) {
+			throw new IOException("Wrong message format");
+		}
+
+		int code = jp.getValueAsInt();
+
+		return switch (code) {
+			case HelloMessage.CODE -> (T) HelloMessage.deserialize(jp);
+			case WelcomeMessage.CODE -> (T) WelcomeMessage.deserialize(jp);
+			case AbortMessage.CODE -> (T) AbortMessage.deserialize(jp);
+			case ChallengeMessage.CODE -> (T) ChallengeMessage.deserialize(jp);
+			case AuthenticateMessage.CODE -> (T) AuthenticateMessage.deserialize(jp);
+			case CancelMessage.CODE -> (T) CancelMessage.deserialize(jp);
+			case GoodbyeMessage.CODE -> (T) GoodbyeMessage.deserialize(jp);
+			case ErrorMessage.CODE -> (T) ErrorMessage.deserialize(jp);
+			case PublishMessage.CODE -> (T) PublishMessage.deserialize(jp);
+			case PublishedMessage.CODE -> (T) PublishedMessage.deserialize(jp);
+			case SubscribeMessage.CODE -> (T) SubscribeMessage.deserialize(jp);
+			case SubscribedMessage.CODE -> (T) SubscribedMessage.deserialize(jp);
+			case UnsubscribeMessage.CODE -> (T) UnsubscribeMessage.deserialize(jp);
+			case UnsubscribedMessage.CODE -> (T) UnsubscribedMessage.deserialize(jp);
+			case EventMessage.CODE -> (T) EventMessage.deserialize(jp);
+			case CallMessage.CODE -> (T) CallMessage.deserialize(jp);
+			case ResultMessage.CODE -> (T) ResultMessage.deserialize(jp);
+			case RegisterMessage.CODE -> (T) RegisterMessage.deserialize(jp);
+			case RegisteredMessage.CODE -> (T) RegisteredMessage.deserialize(jp);
+			case UnregisterMessage.CODE -> (T) UnregisterMessage.deserialize(jp);
+			case UnregisteredMessage.CODE -> (T) UnregisteredMessage.deserialize(jp);
+			case InterruptMessage.CODE -> (T) InterruptMessage.deserialize(jp);
+			case YieldMessage.CODE -> (T) YieldMessage.deserialize(jp);
+			case InvocationMessage.CODE -> (T) InvocationMessage.deserialize(jp);
+			default -> throw new IOException("Unknown message code: " + code);
+		};
 	}
 
 	@SuppressWarnings("serial")

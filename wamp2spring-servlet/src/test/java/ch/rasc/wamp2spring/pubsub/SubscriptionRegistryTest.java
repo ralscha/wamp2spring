@@ -34,7 +34,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.handler.HandlerMethod;
-import org.springframework.util.StopWatch;
 
 import ch.rasc.wamp2spring.WampError;
 import ch.rasc.wamp2spring.message.SubscribeMessage;
@@ -526,8 +525,6 @@ public class SubscriptionRegistryTest {
 			unsubs.add(unsubscribeMessage);
 		}
 
-		StopWatch sw = new StopWatch();
-		sw.start();
 		for (int i = 0; i < 100_000; i++) {
 			assertThat(this.subscriptionRegistry.getMatchSubscriptions("help"))
 				.containsExactly(ra.subscriptionId(topics[0], matchPolicy[0]));
@@ -554,8 +551,6 @@ public class SubscriptionRegistryTest {
 
 			assertThat(this.subscriptionRegistry.getMatchSubscriptions("com.myapp.topic.emerge")).isEmpty();
 		}
-		sw.stop();
-		System.out.println(sw.prettyPrint());
 
 		int c = 0;
 		for (Integer ix : ixs) {

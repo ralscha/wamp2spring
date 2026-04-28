@@ -70,6 +70,7 @@ import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.util.IdGenerator;
 import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.PooledByteArrayOutputStream;
 import ch.rasc.wamp2spring.util.WampUriValidator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -223,37 +224,53 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 		try {
 			WampMessage wampMessage = null;
 
-			if (inMsg.getType() == WebSocketMessage.Type.TEXT) {
-				byte[] bytes = new byte[inMsg.getPayload().readableByteCount()];
-				inMsg.getPayload().read(bytes);
+			// Per WAMP spec, the frame type MUST match the negotiated subprotocol:
+			// wamp.2.json -> text frames only
+			// wamp.2.msgpack -> binary frames only
+			// wamp.2.cbor -> binary frames only
+			// wamp.2.smile -> binary frames only (wamp2spring-specific)
+			String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
+			boolean expectsText = JSON_PROTOCOL.equals(acceptedProtocol);
 
-				wampMessage = WampMessage.deserialize(this.jsonObjectMapper, bytes);
+			if (inMsg.getType() == WebSocketMessage.Type.TEXT) {
+				if (acceptedProtocol == null || !expectsText) {
+					if (logger.isErrorEnabled()) {
+						logger.error("Received text frame on unexpected subprotocol " + acceptedProtocol
+								+ " in session " + session.getId());
+					}
+				}
+				else {
+					byte[] bytes = new byte[inMsg.getPayload().readableByteCount()];
+					inMsg.getPayload().read(bytes);
+
+					wampMessage = WampMessage.deserialize(this.jsonObjectMapper, bytes);
+				}
 			}
 			else if (inMsg.getType() == WebSocketMessage.Type.BINARY) {
-				ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
-				byte[] bytes = new byte[byteBuffer.remaining()];
-				byteBuffer.get(bytes);
-
-				String acceptedProtocol = session.getHandshakeInfo().getSubProtocol();
-				if (acceptedProtocol == null) {
+				if (acceptedProtocol == null || expectsText) {
 					if (logger.isErrorEnabled()) {
-						logger.error("Deserialization failed because no accepted protocol " + inMsg + " in session "
-								+ session.getId());
+						logger.error("Received binary frame on unexpected subprotocol " + acceptedProtocol
+								+ " in session " + session.getId());
 					}
-					return;
 				}
-				if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackObjectMapper,
-							MessagePackCodec.toJson(bytes, this.msgpackObjectMapper));
-				}
-				else if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.smileObjectMapper, bytes);
-				}
-				else if (CBOR_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.cborObjectMapper, bytes);
+				else {
+					ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
+					byte[] bytes = new byte[byteBuffer.remaining()];
+					byteBuffer.get(bytes);
+
+					if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
+						wampMessage = MessagePackCodec.deserializeWampMessage(bytes, this.msgpackObjectMapper);
+					}
+					else if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
+						wampMessage = WampMessage.deserialize(this.smileObjectMapper, bytes);
+					}
+					else if (CBOR_PROTOCOL.equals(acceptedProtocol)) {
+						wampMessage = WampMessage.deserialize(this.cborObjectMapper, bytes);
+					}
 				}
 			}
 			else {
+				// Ignore unknown frame types (e.g. PING/PONG handled at transport layer).
 				return;
 			}
 
@@ -516,14 +533,21 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 		return null;
 	}
 
-	private byte[] serializeMessage(WampMessage wampMessage, ObjectMapper objectMapper) throws IOException {
-		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				JsonGenerator generator = objectMapper.createGenerator(bos)) {
+	private static byte[] serializeMessage(WampMessage wampMessage, ObjectMapper objectMapper) throws IOException {
+		// Reuse the calling thread's pooled buffer to avoid a fresh allocation per
+		// outbound
+		// message. The buffer is always reset on acquire and dropped if it grew unusually
+		// large.
+		ByteArrayOutputStream bos = PooledByteArrayOutputStream.acquire();
+		try (JsonGenerator generator = objectMapper.createGenerator(bos)) {
 			generator.writeStartArray();
 			wampMessage.serialize(generator);
 			generator.writeEndArray();
 			generator.close();
 			return bos.toByteArray();
+		}
+		finally {
+			PooledByteArrayOutputStream.release(bos);
 		}
 	}
 

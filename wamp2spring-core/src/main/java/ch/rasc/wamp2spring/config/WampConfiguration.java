@@ -120,7 +120,12 @@ public class WampConfiguration {
 
 	@Bean
 	public SubscribableChannel clientInboundChannel() {
-		ExecutorSubscribableChannel executorSubscribableChannel = new ExecutorSubscribableChannel(
+		// Use a per-WAMP-session ordered channel so that messages from a single client
+		// (which carry sequential, session-scoped request IDs) are observed by
+		// subscribers in the order they were sent. The plain ExecutorSubscribableChannel
+		// hands each subscriber's handleMessage to a shared executor, which can run
+		// two messages from the same session concurrently on different threads.
+		ExecutorSubscribableChannel executorSubscribableChannel = new OrderedSessionExecutorSubscribableChannel(
 				clientInboundChannelExecutor());
 
 		configureClientInboundChannel(executorSubscribableChannel);

@@ -144,8 +144,7 @@ public class CompletableFutureWebSocketHandler extends AbstractWebSocketHandler 
 			String acceptedProtocol = session.getAcceptedProtocol();
 			if (acceptedProtocol != null) {
 				if (WampSubProtocolHandler.MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-					wampMessage = WampMessage.deserialize(this.msgpackObjectMapper,
-							MessagePackCodec.toJson(payloadBytes, this.msgpackObjectMapper));
+					wampMessage = MessagePackCodec.deserializeWampMessage(payloadBytes, this.msgpackObjectMapper);
 				}
 				else if (WampSubProtocolHandler.SMILE_PROTOCOL.equals(acceptedProtocol)) {
 					wampMessage = WampMessage.deserialize(this.smileObjectMapper, payloadBytes);

@@ -53,6 +53,7 @@ import ch.rasc.wamp2spring.message.InvocationMessage;
 import ch.rasc.wamp2spring.message.WampMessage;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 import ch.rasc.wamp2spring.util.MessagePackCodec;
+import ch.rasc.wamp2spring.util.PooledByteArrayOutputStream;
 
 /**
  * A WebSocket {@link SubProtocolHandler} implementation for the WAMP v2 protocol.
@@ -160,25 +161,47 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 
 	@Nullable private WampMessage deserializeIncomingMessage(WebSocketSession session, WebSocketMessage<?> webSocketMessage)
 			throws IOException {
+
+		// Per WAMP spec, the frame type MUST match the negotiated subprotocol:
+		// wamp.2.json -> text frames only
+		// wamp.2.msgpack -> binary frames only
+		// wamp.2.cbor -> binary frames only
+		// wamp.2.smile -> binary frames only (wamp2spring-specific)
+		String acceptedProtocol = session.getAcceptedProtocol();
+		if (acceptedProtocol == null) {
+			if (logger.isErrorEnabled()) {
+				logger.error("Deserialization failed because no accepted protocol " + webSocketMessage + " in session "
+						+ session.getId());
+			}
+			return null;
+		}
+
+		boolean expectsText = JSON_PROTOCOL.equals(acceptedProtocol);
 		if (webSocketMessage instanceof TextMessage textMessage) {
+			if (!expectsText) {
+				if (logger.isErrorEnabled()) {
+					logger.error("Received text frame on binary subprotocol " + acceptedProtocol + " in session "
+							+ session.getId());
+				}
+				return null;
+			}
 			return WampMessage.deserialize(this.jsonObjectMapper, textMessage.asBytes());
 		}
 		if (webSocketMessage instanceof BinaryMessage binaryMessage) {
+			if (expectsText) {
+				if (logger.isErrorEnabled()) {
+					logger.error("Received binary frame on text subprotocol " + acceptedProtocol + " in session "
+							+ session.getId());
+				}
+				return null;
+			}
+
 			ByteBuffer duplicate = binaryMessage.getPayload().duplicate();
 			byte[] payloadBytes = new byte[duplicate.remaining()];
 			duplicate.get(payloadBytes);
 
-			String acceptedProtocol = session.getAcceptedProtocol();
-			if (acceptedProtocol == null) {
-				if (logger.isErrorEnabled()) {
-					logger.error("Deserialization failed because no accepted protocol " + webSocketMessage
-							+ " in session " + session.getId());
-				}
-				return null;
-			}
 			if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
-				return WampMessage.deserialize(this.msgpackObjectMapper,
-						MessagePackCodec.toJson(payloadBytes, this.msgpackObjectMapper));
+				return MessagePackCodec.deserializeWampMessage(payloadBytes, this.msgpackObjectMapper);
 			}
 			if (SMILE_PROTOCOL.equals(acceptedProtocol)) {
 				return WampMessage.deserialize(this.smileObjectMapper, payloadBytes);
@@ -292,14 +315,21 @@ public class WampSubProtocolHandler implements SubProtocolHandler, ApplicationEv
 		}
 	}
 
-	private byte[] serializeMessage(WampMessage wampMessage, ObjectMapper objectMapper) throws IOException {
-		try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-				JsonGenerator generator = objectMapper.createGenerator(bos)) {
+	private static byte[] serializeMessage(WampMessage wampMessage, ObjectMapper objectMapper) throws IOException {
+		// Reuse the calling thread's pooled buffer to avoid a fresh allocation per
+		// outbound
+		// message. The buffer is always reset on acquire and dropped if it grew unusually
+		// large.
+		ByteArrayOutputStream bos = PooledByteArrayOutputStream.acquire();
+		try (JsonGenerator generator = objectMapper.createGenerator(bos)) {
 			generator.writeStartArray();
 			wampMessage.serialize(generator);
 			generator.writeEndArray();
 			generator.close();
 			return bos.toByteArray();
+		}
+		finally {
+			PooledByteArrayOutputStream.release(bos);
 		}
 	}
 
