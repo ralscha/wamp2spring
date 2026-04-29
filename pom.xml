@@ -10,7 +10,7 @@
 
   <groupId>ch.rasc</groupId>
   <artifactId>wamp2spring-parent</artifactId>
-  <version>4.0.0</version>
+  <version>4.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>wamp2spring-parent</name>
 
