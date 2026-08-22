@@ -34,14 +34,14 @@
     <dependency>
       <groupId>net.bytebuddy</groupId>
       <artifactId>byte-buddy</artifactId>
-      <version>1.18.11</version>
+      <version>1.18.12</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>4.5</version>
+      <version>4.5.1</version>
       <scope>test</scope>
     </dependency>
 
