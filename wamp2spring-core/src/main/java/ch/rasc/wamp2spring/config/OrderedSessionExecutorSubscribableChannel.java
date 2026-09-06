@@ -21,6 +21,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -196,7 +197,14 @@ public class OrderedSessionExecutorSubscribableChannel extends ExecutorSubscriba
 				}
 			}
 			if (shouldStart) {
-				executor.execute(this::drain);
+				try {
+					executor.execute(this::drain);
+				}
+				catch (RejectedExecutionException ex) {
+					// Match ExecutorSubscribableChannel's caller-thread fallback. The
+					// queue must still drain when the executor is saturated or stopping.
+					drain();
+				}
 			}
 		}
 

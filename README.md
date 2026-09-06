@@ -36,12 +36,26 @@ and authorizers can deny an operation with `wamp.error.not_authorized` or `wamp.
 supports [CBOR](http://cbor.io/) (wamp.2.cbor) and [SMILE](https://en.wikipedia.org/wiki/Smile_(data_interchange_format)) (wamp.2.smile).
 
 
-**Fallback**   
-Currently *wamp2spring* does not support a fallback solution when peers cannot establish 
-WebSocket connections. [autobahn-js](https://github.com/crossbario/autobahn-js) implements a fallback with long polling. 
-You find the description about the protocol in the specification ([Section 14.5.3.3](http://wamp-proto.org/static/rfc/draft-oberstet-hybi-crossbar-wamp.html#rfc.section.14.5.3.3)).
-So far I don't have a need for a fallback solution because WebSocket works fine especially when it's sent over TLS connections.
-But when there is a need I will try to add this fallback solution. Pull requests are always welcome.
+**Fallback**
+The servlet module also provides an HTTP long-poll transport. Enable it on a Spring configuration class with
+`@EnableServletWampLongpoll` (`ch.rasc.wamp2spring.servlet.longpoll`). This registers these POST endpoints:
+
+|Endpoint|Request / response|
+|:-------|:-----------------|
+|`/wamp/open`|Send `{"protocols":["wamp.2.json"]}` as JSON. The response contains the selected `protocol` and a `transport` ID. The original singular `protocol` request field is also accepted.|
+|`/wamp/{transport}/send`|Send one serialized WAMP message. Successful requests return HTTP 204; malformed messages return HTTP 400.|
+|`/wamp/{transport}/receive`|Receive one serialized WAMP message, or HTTP 204 when the receive timeout expires. Only one receive may be pending per transport; overlapping receives return HTTP 409.|
+|`/wamp/{transport}/close`|Close the transport and release its WAMP session, subscriptions, and registrations. Successful requests return HTTP 204.|
+
+After opening a transport, send `HELLO` and receive `WELCOME` (or complete WAMP authentication) before sending
+application messages. JSON, MessagePack, CBOR, and SMILE are supported; batched protocols are not supported.
+The opening handshake accepts the `protocols` list described in the
+[WAMP HTTP Longpoll Transport specification](https://wamp-proto.org/wamp_latest_ietf.html#name-http-longpoll-transport).
+
+Implement `WampServletLongpollConfigurer` to change `getReceiveTimeout()` (default 30 seconds),
+`getTransportIdleTimeout()` (default 60 seconds), or `getMaxQueueSize()` (default 100 messages).
+Idle transports are checked automatically at the idle-timeout interval. Active receives are preserved;
+outbound traffic alone does not keep an abandoned transport alive. Queue overflow closes the transport.
 
 
 ## Quickstart

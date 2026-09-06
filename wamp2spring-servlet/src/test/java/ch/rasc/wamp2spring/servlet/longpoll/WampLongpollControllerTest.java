@@ -19,12 +19,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -55,6 +59,7 @@ import ch.rasc.wamp2spring.message.WampRole;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
 import ch.rasc.wamp2spring.servlet.WampSubProtocolHandler;
 import ch.rasc.wamp2spring.util.WampJson;
+import ch.rasc.wamp2spring.rpc.SessionRegistry;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, classes = WampLongpollControllerTest.Config.class)
 public class WampLongpollControllerTest {
@@ -68,6 +73,9 @@ public class WampLongpollControllerTest {
 	@Autowired
 	private WampPublisher wampPublisher;
 
+	@Autowired
+	private SessionRegistry sessionRegistry;
+
 	private RestClient restClient;
 
 	private final ObjectMapper objectMapper = WampJson.createJsonObjectMapper();
@@ -75,6 +83,65 @@ public class WampLongpollControllerTest {
 	@BeforeEach
 	public void setup() {
 		this.restClient = RestClient.builder().baseUrl("http://localhost:" + this.port).build();
+	}
+
+	@AfterEach
+	public void closeTransports() {
+		for (LongpollTransport transport : this.transportRegistry.getTransports()) {
+			this.transportRegistry.remove(transport.getTransportId());
+		}
+		assertThat(this.sessionRegistry.list(null)).isEmpty();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "wamp.2.json", "wamp.2.msgpack", "wamp.2.cbor", "wamp.2.smile" })
+	@SuppressWarnings("unchecked")
+	public void negotiatesProtocolAndRoundTripsWelcome(String protocol) throws IOException {
+		Map<String, String> opened = this.restClient.post()
+			.uri("/wamp/open")
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(Map.of("protocols", List.of("wamp.2.unsupported", protocol)))
+			.retrieve()
+			.body(Map.class);
+		assertThat(opened).containsEntry("protocol", protocol);
+		String transportId = opened.get("transport");
+		ObjectMapper mapper = this.transportRegistry.resolveObjectMapper(protocol);
+		HelloMessage hello = new HelloMessage(List.of(new WampRole("caller")));
+		this.restClient.post()
+			.uri("/wamp/{transportId}/send", transportId)
+			.contentType(LongpollMessageCodec.mediaType(protocol))
+			.body(LongpollMessageCodec.serialize(protocol, mapper, hello))
+			.retrieve()
+			.toBodilessEntity();
+		WelcomeMessage welcome = (WelcomeMessage) LongpollMessageCodec.deserialize(protocol, mapper,
+				receive(transportId).getBody());
+		assertThat(welcome.getSessionId()).isPositive();
+		assertThat(this.sessionRegistry.get(welcome.getSessionId())).isNotNull();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "{}", "{\"protocols\":[]}", "{\"protocols\":null}", "{\"protocols\":[\"wamp.2.json\",1]}",
+			"{\"protocols\":[\"wamp.2.unsupported\"]}" })
+	public void rejectsInvalidProtocolOffers(String body) {
+		int status = this.restClient.post()
+			.uri("/wamp/open")
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(body.getBytes(StandardCharsets.UTF_8))
+			.exchange((request, responseMessage) -> responseMessage.getStatusCode().value());
+		assertThat(status).isEqualTo(400);
+		assertThat(this.transportRegistry.getTransports()).isEmpty();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "{", "{}", "[999]", "[1,", "garbage" })
+	public void malformedMessagesReturnBadRequest(String payload) {
+		String transportId = openJsonTransport();
+		int status = this.restClient.post()
+			.uri("/wamp/{transportId}/send", transportId)
+			.contentType(MediaType.APPLICATION_JSON)
+			.body(payload.getBytes(StandardCharsets.UTF_8))
+			.exchange((request, responseMessage) -> responseMessage.getStatusCode().value());
+		assertThat(status).isEqualTo(400);
 	}
 
 	@Test
@@ -185,7 +252,8 @@ public class WampLongpollControllerTest {
 			.body(serialize(helloMessage))
 			.retrieve()
 			.toBodilessEntity();
-		receive(transportId);
+		WelcomeMessage welcome = (WelcomeMessage) deserialize(receive(transportId).getBody());
+		assertThat(this.sessionRegistry.get(welcome.getSessionId())).isNotNull();
 
 		int sendStatus = this.restClient.post()
 			.uri("/wamp/{transportId}/send", transportId)
@@ -199,6 +267,7 @@ public class WampLongpollControllerTest {
 		GoodbyeMessage goodbyeMessage = (GoodbyeMessage) deserialize(receiveResponse.getBody());
 		assertThat(goodbyeMessage.getReason()).isEqualTo(WampError.GOODBYE_AND_OUT.getExternalValue());
 		assertThat(this.transportRegistry.get(transportId)).isNull();
+		assertThat(this.sessionRegistry.get(welcome.getSessionId())).isNull();
 	}
 
 	@Test

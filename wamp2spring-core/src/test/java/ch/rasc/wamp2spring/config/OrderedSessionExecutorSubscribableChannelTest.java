@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,6 +32,29 @@ import org.springframework.messaging.support.MessageBuilder;
 import ch.rasc.wamp2spring.message.WampMessageHeader;
 
 public class OrderedSessionExecutorSubscribableChannelTest {
+
+	@Test
+	public void rejectedExecutionFallsBackWithoutStallingSession() {
+		AtomicInteger attempts = new AtomicInteger();
+		OrderedSessionExecutorSubscribableChannel channel = new OrderedSessionExecutorSubscribableChannel(task -> {
+			if (attempts.getAndIncrement() == 0) {
+				throw new RejectedExecutionException("executor saturated");
+			}
+			task.run();
+		});
+		List<Integer> handled = new CopyOnWriteArrayList<>();
+		channel.subscribe(message -> handled.add((Integer) message.getPayload()));
+
+		assertThat(channel
+			.send(MessageBuilder.withPayload(1).setHeader(WampMessageHeader.WAMP_SESSION_ID.name(), 1L).build()))
+			.isTrue();
+		assertThat(channel
+			.send(MessageBuilder.withPayload(2).setHeader(WampMessageHeader.WAMP_SESSION_ID.name(), 1L).build()))
+			.isTrue();
+
+		assertThat(handled).containsExactly(1, 2);
+		assertThat(attempts).hasValue(2);
+	}
 
 	@Test
 	public void sameSessionMessagesAreHandledSequentially() throws Exception {

@@ -48,12 +48,15 @@ public class WampServletLongpollConfiguration extends WampConfiguration implemen
 	}
 
 	@Bean
-	public LongpollTransportRegistry longpollTransportRegistry(SubscribableChannel clientOutboundChannel) {
+	public LongpollTransportRegistry longpollTransportRegistry(SubscribableChannel clientOutboundChannel,
+			WampSessionSupport sessionSupport) {
 		return new LongpollTransportRegistry(
 				Map.of(WampSubProtocolHandler.JSON_PROTOCOL, jsonJsonFactory(), WampSubProtocolHandler.MSGPACK_PROTOCOL,
 						msgpackJsonFactory(), WampSubProtocolHandler.CBOR_PROTOCOL, cborJsonFactory(),
 						WampSubProtocolHandler.SMILE_PROTOCOL, smileJsonFactory()),
-				resolveMaxQueueSize(), resolveReceiveTimeout(), resolveTransportIdleTimeout());
+				resolveMaxQueueSize(), resolveReceiveTimeout(), resolveTransportIdleTimeout(),
+				transport -> sessionSupport.afterSessionEnded(transport.getTransportId(), transport.getPrincipal(),
+						transport.getAttributes()));
 	}
 
 	@Bean

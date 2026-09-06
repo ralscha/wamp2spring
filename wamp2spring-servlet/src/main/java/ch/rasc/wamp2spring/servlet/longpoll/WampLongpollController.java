@@ -16,9 +16,10 @@
 package ch.rasc.wamp2spring.servlet.longpoll;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
@@ -60,13 +61,29 @@ public class WampLongpollController {
 	@PostMapping(path = "/open", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	public Map<String, String> open(@RequestBody Map<String, Object> requestBody, @Nullable Principal principal) {
-		Object protocolValue = requestBody.get("protocol");
-		if (!(protocolValue instanceof String protocol) || protocol.isBlank()) {
-			throw new IllegalArgumentException("protocol is required");
-		}
-
-		LongpollTransport transport = this.transportRegistry.create(protocol, principal);
+		LongpollTransport transport = this.transportRegistry.create(selectProtocol(requestBody), principal);
 		return Map.of("transport", transport.getTransportId(), "protocol", transport.getProtocol());
+	}
+
+	private String selectProtocol(Map<String, Object> requestBody) {
+		if (requestBody.containsKey("protocols")) {
+			Object value = requestBody.get("protocols");
+			if (!(value instanceof List<?> protocols) || protocols.isEmpty()
+					|| protocols.stream().anyMatch(protocol -> !(protocol instanceof String text) || text.isBlank())) {
+				throw new IllegalArgumentException("protocols must be a nonempty list of protocol names");
+			}
+			for (Object protocol : protocols) {
+				if (this.transportRegistry.supportsProtocol((String) protocol)) {
+					return (String) protocol;
+				}
+			}
+			throw new IllegalArgumentException("No supported longpoll protocol was offered");
+		}
+		// Preserve the original single-protocol request format.
+		if (requestBody.get("protocol") instanceof String protocol && !protocol.isBlank()) {
+			return protocol;
+		}
+		throw new IllegalArgumentException("protocols is required");
 	}
 
 	@PostMapping(path = "/{transportId}/close")
@@ -75,24 +92,24 @@ public class WampLongpollController {
 		if (removedTransport == null) {
 			return ResponseEntity.notFound().build();
 		}
-		DeferredResult<ResponseEntity<byte[]>> pendingReceive = removedTransport.getPendingReceive().getAndSet(null);
-		if (pendingReceive != null) {
-			pendingReceive.setResult(ResponseEntity.noContent().build());
-		}
-		this.sessionSupport.afterSessionEnded(removedTransport.getTransportId(), removedTransport.getPrincipal(),
-				removedTransport.getAttributes());
 		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping(path = "/{transportId}/send")
 	public ResponseEntity<Void> send(@PathVariable String transportId, @RequestBody byte[] payload) throws IOException {
 		LongpollTransport transport = this.transportRegistry.get(transportId);
-		if (transport == null) {
+		if (transport == null || transport.getCloseAfterDrain().get()) {
 			throw new TransportNotFoundException();
 		}
 
-		WampMessage wampMessage = LongpollMessageCodec.deserialize(transport.getProtocol(), transport.getObjectMapper(),
-				payload);
+		WampMessage wampMessage;
+		try {
+			wampMessage = LongpollMessageCodec.deserialize(transport.getProtocol(), transport.getObjectMapper(),
+					payload);
+		}
+		catch (IOException | tools.jackson.core.JacksonException ex) {
+			throw new IllegalArgumentException("Invalid WAMP payload", ex);
+		}
 		if (wampMessage == null) {
 			throw new IllegalArgumentException("payload did not contain a WAMP message");
 		}
@@ -113,8 +130,6 @@ public class WampLongpollController {
 
 		if (wampMessage instanceof AbortMessage) {
 			this.transportRegistry.remove(transportId);
-			this.sessionSupport.afterSessionEnded(transport.getTransportId(), transport.getPrincipal(),
-					transport.getAttributes());
 			return ResponseEntity.noContent().build();
 		}
 
@@ -144,26 +159,13 @@ public class WampLongpollController {
 		if (transport == null) {
 			throw new TransportNotFoundException();
 		}
-		if (!transport.getOutboundMessages().isEmpty()) {
-			return completedResult(this.transportRegistry.dequeueResponse(transport));
-		}
-
-		DeferredResult<ResponseEntity<byte[]>> deferredResult = new DeferredResult<>(
-				this.transportRegistry.getReceiveTimeout().toMillis(), ResponseEntity.noContent().build());
-		if (!transport.getPendingReceive().compareAndSet(null, deferredResult)) {
-			return completedResult(ResponseEntity.status(HttpStatus.CONFLICT)
-				.contentType(MediaType.APPLICATION_JSON)
-				.body("{\"error\":\"receive already pending for transport\"}".getBytes(StandardCharsets.UTF_8)));
-		}
-
-		deferredResult.onCompletion(() -> transport.getPendingReceive().compareAndSet(deferredResult, null));
-		deferredResult.onTimeout(() -> transport.getPendingReceive().compareAndSet(deferredResult, null));
-		return deferredResult;
+		return this.transportRegistry.receive(transport);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException exception) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", exception.getMessage()));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(Map.of("error", Objects.requireNonNullElse(exception.getMessage(), "Invalid request")));
 	}
 
 	@ExceptionHandler(TransportNotFoundException.class)
@@ -174,12 +176,6 @@ public class WampLongpollController {
 	private void handleSessionResponse(LongpollTransport transport,
 			WampSessionSupport.SessionResponse sessionResponse) {
 		this.transportRegistry.queue(transport, sessionResponse.message(), sessionResponse.closeTransport());
-	}
-
-	private static DeferredResult<ResponseEntity<byte[]>> completedResult(ResponseEntity<byte[]> responseEntity) {
-		DeferredResult<ResponseEntity<byte[]>> deferredResult = new DeferredResult<>();
-		deferredResult.setResult(responseEntity);
-		return deferredResult;
 	}
 
 	private static final class TransportNotFoundException extends RuntimeException {
