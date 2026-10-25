@@ -68,6 +68,22 @@ import ch.rasc.wamp2spring.testsupport.WampClient;
 public class ConnectionTest extends BaseWampTest {
 
 	@Test
+	public void reconnectStartsANewWampSession() throws Exception {
+		for (DataFormat dataFormat : DataFormat.values()) {
+			try (WampClient wc = new WampClient(dataFormat)) {
+				wc.connect(wampEndpointUrl());
+				long previousSessionId = wc.getWampSessionId();
+				wc.close();
+
+				wc.connect(wampEndpointUrl());
+				assertThat(wc.getWampSessionId()).as("Reconnected %s session", dataFormat)
+					.isPositive()
+					.isNotEqualTo(previousSessionId);
+			}
+		}
+	}
+
+	@Test
 	public void secondHelloMessageTest() throws Exception {
 		try (WampClient wc = new WampClient(DataFormat.JSON)) {
 

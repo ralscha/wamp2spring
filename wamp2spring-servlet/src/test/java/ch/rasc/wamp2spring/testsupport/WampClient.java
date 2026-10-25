@@ -50,7 +50,7 @@ import ch.rasc.wamp2spring.util.WampJson;
 
 public class WampClient implements AutoCloseable {
 
-	private final CompletableFutureWebSocketHandler result;
+	private CompletableFutureWebSocketHandler result;
 
 	private WebSocketSession webSocketSession;
 
@@ -94,6 +94,9 @@ public class WampClient implements AutoCloseable {
 		roles.add(new WampRole("caller"));
 		HelloMessage helloMessage = new HelloMessage(roles);
 
+		// Each connection needs its own handshake and message buffer. Late callbacks
+		// from a closed socket must not complete results for the new connection.
+		this.result = new CompletableFutureWebSocketHandler();
 		WebSocketClient webSocketClient = new StandardWebSocketClient();
 		this.webSocketSession = webSocketClient.execute(this.result, this.headers, wampEndpointUrl).get();
 
