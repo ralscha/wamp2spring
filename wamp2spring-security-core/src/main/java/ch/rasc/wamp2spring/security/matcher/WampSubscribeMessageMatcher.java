@@ -38,7 +38,12 @@ public class WampSubscribeMessageMatcher implements MessageMatcher<Object> {
 				return subscribeMessage.getMatchPolicy() == this.topicMatch.getMatchPolicy()
 						&& topic.equals(this.topicMatch.getDestination());
 			}
-			return topic.startsWith(this.topicMatch.getDestination());
+			String prefix = this.topicMatch.getDestination();
+			if (subscribeMessage.getMatchPolicy() == MatchPolicy.WILDCARD
+					&& (prefix.startsWith(".") || prefix.contains(".."))) {
+				return false;
+			}
+			return topic.startsWith(prefix);
 		}
 		return false;
 	}

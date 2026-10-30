@@ -31,9 +31,17 @@ WAMP-level authorization can be extended with one or more Spring beans implement
 The dealer and broker consult these authorizers for `REGISTER`, `CALL`, `SUBSCRIBE`, and `PUBLISH` before routing,
 and authorizers can deny an operation with `wamp.error.not_authorized` or `wamp.error.authorization_failed`.
 
+The Spring Security `topicMatchers()` shortcut covers both publishing and subscribing;
+`procedureMatchers()` covers both calling and registering. Registration permissions respect the requested
+matching policy, so an exact procedure permission cannot grant a broader prefix or wildcard registration.
+The Spring Session servlet integration refreshes the associated HTTP session on application messages.
+
 **Dataformats**   
 *wamp2spring* supports JSON (wamp.2.json) and MessagePack (wamp.2.msgpack) required by the Basic Profile. In addition it
 supports [CBOR](http://cbor.io/) (wamp.2.cbor) and [SMILE](https://en.wikipedia.org/wiki/Smile_(data_interchange_format)) (wamp.2.smile).
+
+MessagePack frames must contain exactly one value, use string dictionary keys, and nest no more than
+256 containers. Declared lengths are checked against the frame size before allocating payload buffers.
 
 
 **Fallback**
@@ -57,6 +65,18 @@ Implement `WampServletLongpollConfigurer` to change `getReceiveTimeout()` (defau
 Idle transports are checked automatically at the idle-timeout interval. Active receives are preserved;
 outbound traffic alone does not keep an abandoned transport alive. Queue overflow closes the transport.
 
+
+## Development
+
+JDK 17 or newer is required. The Maven Wrapper provides Maven:
+
+```shell
+./mvnw clean verify
+./mvnw spring-javaformat:apply
+```
+
+Use `mvnw.cmd` on Windows. JDK 21 and newer also enable Error Prone and NullAway during compilation.
+`task --list-all` lists the optional [Task](https://taskfile.dev/) shortcuts.
 
 ## Quickstart
 See [Wiki](https://github.com/ralscha/wamp2spring/wiki/Quickstart)

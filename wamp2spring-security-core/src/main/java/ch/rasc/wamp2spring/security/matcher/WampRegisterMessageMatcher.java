@@ -20,6 +20,7 @@ import org.springframework.security.messaging.util.matcher.MessageMatcher;
 
 import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.message.RegisterMessage;
+import ch.rasc.wamp2spring.pubsub.MatchPolicy;
 
 public class WampRegisterMessageMatcher implements MessageMatcher<Object> {
 
@@ -32,7 +33,19 @@ public class WampRegisterMessageMatcher implements MessageMatcher<Object> {
 	@Override
 	public boolean matches(Message<? extends Object> message) {
 		if (message instanceof RegisterMessage registerMessage) {
-			return this.procedureMatch.matches(registerMessage.getProcedure());
+			if (this.procedureMatch.getMatchPolicy() == MatchPolicy.PREFIX
+					&& registerMessage.getMatchPolicy() == MatchPolicy.WILDCARD) {
+				String prefix = this.procedureMatch.getDestination();
+				// Empty URI components in a prefix are literals, not wildcard grants.
+				return !prefix.startsWith(".") && !prefix.contains("..")
+						&& registerMessage.getProcedure().startsWith(prefix);
+			}
+			if (registerMessage.getMatchPolicy() == MatchPolicy.EXACT
+					|| this.procedureMatch.getMatchPolicy() == MatchPolicy.PREFIX) {
+				return this.procedureMatch.matches(registerMessage.getProcedure());
+			}
+			return registerMessage.getMatchPolicy() == this.procedureMatch.getMatchPolicy()
+					&& registerMessage.getProcedure().equals(this.procedureMatch.getDestination());
 		}
 		return false;
 	}

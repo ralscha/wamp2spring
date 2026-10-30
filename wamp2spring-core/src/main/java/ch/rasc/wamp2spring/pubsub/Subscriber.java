@@ -15,8 +15,6 @@
  */
 package ch.rasc.wamp2spring.pubsub;
 
-import java.util.Objects;
-
 import org.jspecify.annotations.Nullable;
 
 final class Subscriber {
@@ -70,7 +68,7 @@ final class Subscriber {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.wampSessionId);
+		return Long.hashCode(this.wampSessionId);
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessageFormat;
 import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessagePackException;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.ValueType;
@@ -43,24 +45,34 @@ import tools.jackson.databind.ObjectMapper;
  */
 public final class MessagePackCodec {
 
+	private static final int MAX_NESTING_DEPTH = 256;
+
 	private MessagePackCodec() {
 		// utility class
 	}
 
 	public static byte[] toJson(byte[] messagePack, ObjectMapper jsonObjectMapper) throws IOException {
-		try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(messagePack)) {
-			Object value = unpackValue(unpacker);
-			return jsonObjectMapper.writeValueAsBytes(value);
-		}
+		return jsonObjectMapper.writeValueAsBytes(unpackMessage(messagePack));
 	}
 
 	public static WampMessage deserializeWampMessage(byte[] messagePack, ObjectMapper jsonObjectMapper)
 			throws IOException {
+		JsonNode root = jsonObjectMapper.valueToTree(unpackMessage(messagePack));
+		try (JsonParser parser = jsonObjectMapper.treeAsTokens(root)) {
+			return WampMessage.deserialize(parser);
+		}
+	}
+
+	@Nullable private static Object unpackMessage(byte[] messagePack) throws IOException {
 		try (MessageUnpacker unpacker = MessagePack.newDefaultUnpacker(messagePack)) {
-			JsonNode root = jsonObjectMapper.valueToTree(unpackValue(unpacker));
-			try (JsonParser parser = jsonObjectMapper.treeAsTokens(root)) {
-				return WampMessage.deserialize(parser);
+			Object value = unpackValue(unpacker, messagePack.length, 0);
+			if (unpacker.hasNext()) {
+				throw new IOException("A MessagePack frame must contain exactly one value.");
 			}
+			return value;
+		}
+		catch (MessagePackException ex) {
+			throw new IOException("Invalid MessagePack payload.", ex);
 		}
 	}
 
@@ -164,9 +176,12 @@ public final class MessagePackCodec {
 		throw new IOException("Unsupported MessagePack value type: " + value.getClass().getName());
 	}
 
-	@Nullable private static Object unpackValue(MessageUnpacker unpacker) throws IOException {
+	@Nullable private static Object unpackValue(MessageUnpacker unpacker, int frameLength, int depth) throws IOException {
 		MessageFormat format = unpacker.getNextFormat();
 		ValueType valueType = format.getValueType();
+		if (depth >= MAX_NESTING_DEPTH && (valueType == ValueType.ARRAY || valueType == ValueType.MAP)) {
+			throw new IOException("MessagePack nesting exceeds " + MAX_NESTING_DEPTH + " containers.");
+		}
 		return switch (valueType) {
 			case NIL -> {
 				unpacker.unpackNil();
@@ -175,10 +190,10 @@ public final class MessagePackCodec {
 			case BOOLEAN -> unpacker.unpackBoolean();
 			case INTEGER -> unpackInteger(unpacker);
 			case FLOAT -> unpacker.unpackDouble();
-			case STRING -> unpacker.unpackString();
-			case BINARY -> unpackBinary(unpacker);
-			case ARRAY -> unpackArray(unpacker);
-			case MAP -> unpackMap(unpacker);
+			case STRING -> unpackString(unpacker, frameLength);
+			case BINARY -> unpackBinary(unpacker, frameLength);
+			case ARRAY -> unpackArray(unpacker, frameLength, depth + 1);
+			case MAP -> unpackMap(unpacker, frameLength, depth + 1);
 			case EXTENSION -> throw new IOException("MessagePack extension types are not supported.");
 		};
 	}
@@ -194,28 +209,46 @@ public final class MessagePackCodec {
 		return integerValue;
 	}
 
-	private static byte[] unpackBinary(MessageUnpacker unpacker) throws IOException {
-		int length = unpacker.unpackBinaryHeader();
-		byte[] value = new byte[length];
-		unpacker.readPayload(value);
-		return value;
+	private static void requireRemaining(MessageUnpacker unpacker, int frameLength, long minimumBytes)
+			throws IOException {
+		if (minimumBytes < 0 || minimumBytes > frameLength - unpacker.getTotalReadBytes()) {
+			throw new IOException("MessagePack value length exceeds the remaining frame payload.");
+		}
 	}
 
-	private static List<Object> unpackArray(MessageUnpacker unpacker) throws IOException {
+	private static String unpackString(MessageUnpacker unpacker, int frameLength) throws IOException {
+		int length = unpacker.unpackRawStringHeader();
+		requireRemaining(unpacker, frameLength, length);
+		return new String(unpacker.readPayload(length), StandardCharsets.UTF_8);
+	}
+
+	private static byte[] unpackBinary(MessageUnpacker unpacker, int frameLength) throws IOException {
+		int length = unpacker.unpackBinaryHeader();
+		requireRemaining(unpacker, frameLength, length);
+		return unpacker.readPayload(length);
+	}
+
+	private static List<Object> unpackArray(MessageUnpacker unpacker, int frameLength, int depth) throws IOException {
 		int length = unpacker.unpackArrayHeader();
+		requireRemaining(unpacker, frameLength, length);
 		List<Object> values = new ArrayList<>(length);
 		for (int i = 0; i < length; i++) {
-			values.add(unpackValue(unpacker));
+			values.add(unpackValue(unpacker, frameLength, depth));
 		}
 		return values;
 	}
 
-	private static Map<String, Object> unpackMap(MessageUnpacker unpacker) throws IOException {
+	private static Map<String, Object> unpackMap(MessageUnpacker unpacker, int frameLength, int depth)
+			throws IOException {
 		int length = unpacker.unpackMapHeader();
+		requireRemaining(unpacker, frameLength, length * 2L);
 		Map<String, Object> values = new LinkedHashMap<>(length);
 		for (int i = 0; i < length; i++) {
-			Object key = unpackValue(unpacker);
-			values.put(String.valueOf(key), unpackValue(unpacker));
+			if (unpacker.getNextFormat().getValueType() != ValueType.STRING) {
+				throw new IOException("WAMP dictionary keys must be strings.");
+			}
+			String key = unpackString(unpacker, frameLength);
+			values.put(key, unpackValue(unpacker, frameLength, depth));
 		}
 		return values;
 	}

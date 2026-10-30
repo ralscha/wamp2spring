@@ -26,36 +26,36 @@ tasks:
       - task --list-all
 
   clean:
-    descr: Clean the project
+    desc: Clean the project
     cmds:
       - '{{.MVNW}} clean'
 
   lint:
-    descr: Run PMD 
+    desc: Run PMD
     cmds:
       - '{{.MVNW}} -DskipTests pmd:check'
 
   test:
-    descr: Run tests
+    desc: Run tests
     cmds:
       - '{{.MVNW}} test'
 
   verify:
-    descr: Run Maven verify phase
+    desc: Run Maven verify phase
     cmds:
       - '{{.MVNW}} verify'
 
   format:
-    descr: Format code using Spring Java Format
+    desc: Format code using Spring Java Format
     cmds:
       - '{{.MVNW}} spring-javaformat:apply'
 
   sortpom:
-    descr: Sort pom.xml using sortpom
+    desc: Sort pom.xml using sortpom
     cmds:
       - '{{.MVNW}} sortpom:sort'
 
   license:
-    descr: Format license headers using the license-maven-plugin
+    desc: Format license headers using the license-maven-plugin
     cmds:
       - '{{.MVNW}} license:format'

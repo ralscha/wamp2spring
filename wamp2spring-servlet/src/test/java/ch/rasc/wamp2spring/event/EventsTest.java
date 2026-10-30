@@ -16,11 +16,14 @@
 package ch.rasc.wamp2spring.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +57,12 @@ public class EventsTest extends BaseWampTest {
 	@BeforeEach
 	public void setup() {
 		this.eventsBean.resetCounter();
+	}
+
+	@AfterEach
+	public void awaitSessionClosure() {
+		await().atMost(Duration.ofSeconds(5))
+			.untilAsserted(() -> assertThat(this.eventsBean.getActiveSessionIds()).isEmpty());
 	}
 
 	@Test

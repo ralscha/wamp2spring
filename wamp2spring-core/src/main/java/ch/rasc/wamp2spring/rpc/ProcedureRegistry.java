@@ -378,6 +378,22 @@ public class ProcedureRegistry {
 		return removedPendingCalls;
 	}
 
+	@Nullable synchronized PendingCall receiveYield(YieldMessage yieldMessage) {
+		CallProc callProc = this.pendingInvocations.get(yieldMessage.getRequestId());
+		if (callProc == null || !callProc.procedure.getWebSocketSessionId().equals(yieldMessage.getWebSocketSessionId())
+				|| (yieldMessage.isProgress() && !callProc.callMessage.isReceiveProgress())) {
+			return null;
+		}
+		return yieldMessage.isProgress() ? getPendingInvocation(yieldMessage.getRequestId())
+				: removePendingInvocation(yieldMessage.getRequestId());
+	}
+
+	synchronized boolean isInvocationErrorFromCallee(ErrorMessage errorMessage) {
+		CallProc callProc = this.pendingInvocations.get(errorMessage.getRequestId());
+		return errorMessage.getType() == InvocationMessage.CODE && callProc != null
+				&& callProc.procedure.getWebSocketSessionId().equals(errorMessage.getWebSocketSessionId());
+	}
+
 	@Nullable synchronized PendingCall getPendingInvocation(long invocationRequestId) {
 		CallProc callProc = this.pendingInvocations.get(invocationRequestId);
 		if (callProc == null) {
@@ -453,7 +469,7 @@ public class ProcedureRegistry {
 
 		final boolean progressiveCallInvocation;
 
-		@Nullable final CallKey callKey;
+		@Nullable private final CallKey callKey;
 
 		final java.util.Set<String> attemptedCalleeSessionIds = new java.util.HashSet<>();
 

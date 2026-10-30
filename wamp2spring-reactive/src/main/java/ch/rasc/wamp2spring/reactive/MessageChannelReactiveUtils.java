@@ -15,6 +15,8 @@
  */
 package ch.rasc.wamp2spring.reactive;
 
+import java.util.function.Predicate;
+
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.springframework.messaging.Message;
@@ -38,23 +40,29 @@ public final class MessageChannelReactiveUtils {
 	private MessageChannelReactiveUtils() {
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> Publisher<Message<T>> toPublisher(MessageChannel messageChannel) {
+		return toPublisher(messageChannel, message -> true);
+	}
+
+	@SuppressWarnings("unchecked")
+	static <T> Publisher<Message<T>> toPublisher(MessageChannel messageChannel, Predicate<Message<?>> messageFilter) {
 		if (messageChannel instanceof Publisher) {
-			return (Publisher<Message<T>>) messageChannel;
+			return Flux.from((Publisher<Message<T>>) messageChannel).filter(messageFilter);
 		}
 		if (messageChannel instanceof SubscribableChannel subscribableChannel) {
-			return adaptSubscribableChannelToPublisher(subscribableChannel);
+			return adaptSubscribableChannelToPublisher(subscribableChannel, messageFilter);
 		}
 		if (messageChannel instanceof PollableChannel pollableChannel) {
-			return adaptPollableChannelToPublisher(pollableChannel);
+			return Flux.from(MessageChannelReactiveUtils.<T>adaptPollableChannelToPublisher(pollableChannel))
+				.filter(messageFilter);
 		}
 		throw new IllegalArgumentException("The 'messageChannel' must be an instance of Publisher, "
 				+ "SubscribableChannel or PollableChannel, not: " + messageChannel);
 	}
 
-	private static <T> Publisher<Message<T>> adaptSubscribableChannelToPublisher(SubscribableChannel inputChannel) {
-		return new SubscribableChannelPublisherAdapter<>(inputChannel);
+	private static <T> Publisher<Message<T>> adaptSubscribableChannelToPublisher(SubscribableChannel inputChannel,
+			Predicate<Message<?>> messageFilter) {
+		return new SubscribableChannelPublisherAdapter<>(inputChannel, messageFilter);
 	}
 
 	private static <T> Publisher<Message<T>> adaptPollableChannelToPublisher(PollableChannel inputChannel) {
@@ -65,18 +73,25 @@ public final class MessageChannelReactiveUtils {
 
 		private final SubscribableChannel channel;
 
-		SubscribableChannelPublisherAdapter(SubscribableChannel channel) {
+		private final Predicate<Message<?>> messageFilter;
+
+		SubscribableChannelPublisherAdapter(SubscribableChannel channel, Predicate<Message<?>> messageFilter) {
 			this.channel = channel;
+			this.messageFilter = messageFilter;
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public void subscribe(Subscriber<? super Message<T>> subscriber) {
 			Flux.<Message<?>>create(emitter -> {
-				MessageHandler messageHandler = emitter::next;
+				MessageHandler messageHandler = message -> {
+					if (this.messageFilter.test(message)) {
+						emitter.next(message);
+					}
+				};
 				this.channel.subscribe(messageHandler);
-				emitter.onCancel(() -> this.channel.unsubscribe(messageHandler));
-			}, FluxSink.OverflowStrategy.IGNORE).subscribe((Subscriber<? super Message<?>>) subscriber);
+				emitter.onDispose(() -> this.channel.unsubscribe(messageHandler));
+			}, FluxSink.OverflowStrategy.ERROR).subscribe((Subscriber<? super Message<?>>) subscriber);
 		}
 
 	}

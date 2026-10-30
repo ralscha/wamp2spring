@@ -102,55 +102,61 @@ public class WampLongpollController {
 			throw new TransportNotFoundException();
 		}
 
-		WampMessage wampMessage;
-		try {
-			wampMessage = LongpollMessageCodec.deserialize(transport.getProtocol(), transport.getObjectMapper(),
-					payload);
-		}
-		catch (IOException | tools.jackson.core.JacksonException ex) {
-			throw new IllegalArgumentException("Invalid WAMP payload", ex);
-		}
-		if (wampMessage == null) {
-			throw new IllegalArgumentException("payload did not contain a WAMP message");
-		}
-		this.sessionSupport.populateHeaders(transport.getTransportId(), transport.getPrincipal(),
-				transport.getAttributes(), wampMessage);
+		synchronized (transport) {
+			if (this.transportRegistry.get(transportId) != transport || transport.getCloseAfterDrain().get()) {
+				throw new TransportNotFoundException();
+			}
+			WampMessage wampMessage;
+			try {
+				wampMessage = LongpollMessageCodec.deserialize(transport.getProtocol(), transport.getObjectMapper(),
+						payload);
+			}
+			catch (IOException | tools.jackson.core.JacksonException ex) {
+				throw new IllegalArgumentException("Invalid WAMP payload", ex);
+			}
+			if (wampMessage == null) {
+				throw new IllegalArgumentException("payload did not contain a WAMP message");
+			}
+			this.sessionSupport.populateHeaders(transport.getTransportId(), transport.getPrincipal(),
+					transport.getAttributes(), wampMessage);
 
-		if (wampMessage instanceof HelloMessage helloMessage) {
-			handleSessionResponse(transport, this.sessionSupport.handleHelloMessage(transport.getTransportId(),
-					transport.getPrincipal(), transport.getAttributes(), helloMessage));
+			if (wampMessage instanceof HelloMessage helloMessage) {
+				handleSessionResponse(transport, this.sessionSupport.handleHelloMessage(transport.getTransportId(),
+						transport.getPrincipal(), transport.getAttributes(), helloMessage));
+				return ResponseEntity.noContent().build();
+			}
+
+			if (wampMessage instanceof AuthenticateMessage authenticateMessage) {
+				handleSessionResponse(transport,
+						this.sessionSupport.handleAuthenticateMessage(transport.getTransportId(),
+								transport.getPrincipal(), transport.getAttributes(), authenticateMessage));
+				return ResponseEntity.noContent().build();
+			}
+
+			if (wampMessage instanceof AbortMessage) {
+				this.transportRegistry.remove(transportId);
+				return ResponseEntity.noContent().build();
+			}
+
+			if (wampMessage instanceof GoodbyeMessage) {
+				this.transportRegistry.queue(transport, new GoodbyeMessage(WampError.GOODBYE_AND_OUT), true);
+				return ResponseEntity.noContent().build();
+			}
+
+			Long wampSessionId = wampMessage.getWampSessionId();
+			if (wampSessionId == null) {
+				this.transportRegistry.queue(transport,
+						new AbortMessage(WampError.PROTOCOL_VIOLATION,
+								transport.getAttributes().get(WampSessionSupport.WAMP_PENDING_AUTH) != null
+										? "Expected AUTHENTICATE while authentication was in progress."
+										: "Received message before session was established."),
+						true);
+				return ResponseEntity.noContent().build();
+			}
+
+			this.clientInboundChannel.send(wampMessage);
 			return ResponseEntity.noContent().build();
 		}
-
-		if (wampMessage instanceof AuthenticateMessage authenticateMessage) {
-			handleSessionResponse(transport, this.sessionSupport.handleAuthenticateMessage(transport.getTransportId(),
-					transport.getPrincipal(), transport.getAttributes(), authenticateMessage));
-			return ResponseEntity.noContent().build();
-		}
-
-		if (wampMessage instanceof AbortMessage) {
-			this.transportRegistry.remove(transportId);
-			return ResponseEntity.noContent().build();
-		}
-
-		if (wampMessage instanceof GoodbyeMessage) {
-			this.transportRegistry.queue(transport, new GoodbyeMessage(WampError.GOODBYE_AND_OUT), true);
-			return ResponseEntity.noContent().build();
-		}
-
-		Long wampSessionId = wampMessage.getWampSessionId();
-		if (wampSessionId == null) {
-			this.transportRegistry.queue(transport,
-					new AbortMessage(WampError.PROTOCOL_VIOLATION,
-							transport.getAttributes().get(WampSessionSupport.WAMP_PENDING_AUTH) != null
-									? "Expected AUTHENTICATE while authentication was in progress."
-									: "Received message before session was established."),
-					true);
-			return ResponseEntity.noContent().build();
-		}
-
-		this.clientInboundChannel.send(wampMessage);
-		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping(path = "/{transportId}/receive")

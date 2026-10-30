@@ -37,7 +37,7 @@ public class DestinationMatch {
 		this.matchPolicy = matchPolicy;
 
 		if (matchPolicy == MatchPolicy.WILDCARD) {
-			this.wildcardComponents = destination.split("\\.");
+			this.wildcardComponents = destination.split("\\.", -1);
 		}
 		else {
 			this.wildcardComponents = null;
@@ -66,7 +66,7 @@ public class DestinationMatch {
 			return queryDestination.startsWith(this.destination);
 		}
 
-		String[] components = queryDestination.split("\\.");
+		String[] components = queryDestination.split("\\.", -1);
 		return matchesWildcard(components);
 	}
 

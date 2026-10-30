@@ -31,28 +31,10 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>3.0.2</version>
-      <scope>provided</scope>
-    </dependency>
-
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.16.0</version>
-        <configuration>
-          <release>17</release>
-          <testRelease>17</testRelease>
-          <encoding>UTF-8</encoding>
-          <parameters>true</parameters>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>

@@ -17,7 +17,6 @@ package ch.rasc.wamp2spring.reactive;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -160,35 +159,49 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 
 	@Override
 	public Mono<Void> handle(WebSocketSession session) {
-		if (!this.isRunning) {
-			return session.close(CloseStatus.GOING_AWAY);
-		}
-
-		this.webSocketSessions.add(session);
-
-		return Mono.when(
-				session.getHandshakeInfo().getPrincipal().doOnNext(p -> session.getAttributes().put(WAMP_PRINCIPAL, p)),
-				session.send(Flux.from(MessageChannelReactiveUtils.toPublisher(this.clientOutboundChannel))
-					.filter(msg -> session.getId().equals(resolveSessionId(msg)))
-					.<WebSocketMessage>handle((msg, sink) -> {
-						WebSocketMessage outgoingMessage = handleOutgoingMessage(msg, session);
-						if (outgoingMessage != null) {
-							sink.next(outgoingMessage);
+		return Mono.defer(() -> {
+			if (!this.isRunning) {
+				return session.close(CloseStatus.GOING_AWAY);
+			}
+			this.webSocketSessions.add(session);
+			return session.getHandshakeInfo()
+				.getPrincipal()
+				.doOnNext(principal -> session.getAttributes().put(WAMP_PRINCIPAL, principal))
+				.then(Mono.defer(() -> {
+					Mono<Void> output = session.send(Flux
+						.from(MessageChannelReactiveUtils.<Object>toPublisher(this.clientOutboundChannel,
+								msg -> session.getId().equals(resolveSessionId(msg))))
+						.takeUntil(msg -> msg instanceof GoodbyeMessage || msg instanceof AbortMessage
+								|| msg instanceof InternalCloseMessage)
+						.<WebSocketMessage>handle((msg, sink) -> {
+							WebSocketMessage outgoingMessage = handleOutgoingMessage(msg, session);
+							if (outgoingMessage != null) {
+								sink.next(outgoingMessage);
+							}
+						})).then(Mono.defer(() -> session.close(CloseStatus.GOING_AWAY)));
+					Mono<Void> input = session.receive().doOnNext(inMsg -> {
+						synchronized (session) {
+							if (this.webSocketSessions.contains(session)) {
+								handleIncomingMessage(inMsg, session);
+							}
 						}
-					})),
-				session.receive().doOnNext(inMsg -> handleIncomingMessage(inMsg, session)))
-			.doFinally(sig -> {
-				this.webSocketSessions.remove(session);
-				session.getAttributes().remove(WAMP_PENDING_AUTH);
-
-				Long wampSessionId = (Long) session.getAttributes().get(WAMP_SESSION_ID);
-				Principal principalAttr = currentPrincipal(session);
-
-				if (wampSessionId != null) {
-					getApplicationEventPublisher()
-						.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), principalAttr));
-				}
-			});
+					}).then();
+					// The outbound channel stays open beyond this socket's lifetime.
+					return Mono.firstWithSignal(output, input);
+				}))
+				.doFinally(sig -> {
+					synchronized (session) {
+						this.webSocketSessions.remove(session);
+						session.getAttributes().remove(WAMP_PENDING_AUTH);
+						Long wampSessionId = (Long) session.getAttributes().remove(WAMP_SESSION_ID);
+						Principal principalAttr = currentPrincipal(session);
+						if (wampSessionId != null) {
+							getApplicationEventPublisher()
+								.publishEvent(new WampDisconnectEvent(wampSessionId, session.getId(), principalAttr));
+						}
+					}
+				});
+		});
 	}
 
 	@Override
@@ -249,9 +262,8 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 					}
 				}
 				else {
-					ByteBuffer byteBuffer = inMsg.getPayload().asByteBuffer();
-					byte[] bytes = new byte[byteBuffer.remaining()];
-					byteBuffer.get(bytes);
+					byte[] bytes = new byte[inMsg.getPayload().readableByteCount()];
+					inMsg.getPayload().read(bytes);
 
 					if (MSGPACK_PROTOCOL.equals(acceptedProtocol)) {
 						wampMessage = MessagePackCodec.deserializeWampMessage(bytes, this.msgpackObjectMapper);
@@ -283,6 +295,7 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 			Principal principal = currentPrincipal(session);
 
 			wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
+			wampMessage.setHeader(WampMessageHeader.SESSION_ATTRIBUTES, session.getAttributes());
 			wampMessage.setHeader(WampMessageHeader.PRINCIPAL, principal);
 			wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, session.getAttributes().get(WAMP_SESSION_ID));
 			wampMessage.setHeader(WampMessageHeader.WAMP_PEER_ROLES,
@@ -412,9 +425,8 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 		welcomeMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID, newWampSessionId);
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_METHOD, authMethod);
 		welcomeMessage.setHeader(WampMessageHeader.AUTH_PROVIDER, authProvider);
-		this.clientOutboundChannel.send(welcomeMessage);
-
 		getApplicationEventPublisher().publishEvent(new WampSessionEstablishedEvent(welcomeMessage));
+		this.clientOutboundChannel.send(welcomeMessage);
 	}
 
 	private void handleProtocolViolation(WebSocketSession session, String message) {
@@ -483,12 +495,6 @@ public class WampWebSocketHandler implements WebSocketHandler, ApplicationEventP
 					payload = MessagePackCodec.fromJson(payload, this.msgpackObjectMapper);
 				}
 				byte[] payloadToSend = payload;
-
-				if (wampMessage instanceof GoodbyeMessage || wampMessage instanceof AbortMessage) {
-					InternalCloseMessage cm = new InternalCloseMessage();
-					cm.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, session.getId());
-					this.clientOutboundChannel.send(cm);
-				}
 
 				if (isBinary) {
 					return session.binaryMessage(factory -> factory.wrap(payloadToSend));

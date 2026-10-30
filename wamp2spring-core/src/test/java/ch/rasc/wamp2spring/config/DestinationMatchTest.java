@@ -47,6 +47,17 @@ public class DestinationMatchTest {
 	}
 
 	@Test
+	public void wildcardMatchingPreservesTrailingComponents() {
+		DestinationMatch single = new DestinationMatch("com.myapp.", MatchPolicy.WILDCARD);
+		assertThat(single.matches("com.myapp.created")).isTrue();
+		assertThat(single.matches("com.myapp")).isFalse();
+		assertThat(single.matches("com.myapp.created.extra")).isFalse();
+		DestinationMatch multiple = new DestinationMatch("com.myapp..", MatchPolicy.WILDCARD);
+		assertThat(multiple.matches("com.myapp.user.created")).isTrue();
+		assertThat(multiple.matches("com.myapp.user")).isFalse();
+	}
+
+	@Test
 	public void testWildcardMatch() {
 		DestinationMatch dm = new DestinationMatch("crud..update", MatchPolicy.WILDCARD);
 		assertThat(dm.getDestination()).isEqualTo("crud..update");

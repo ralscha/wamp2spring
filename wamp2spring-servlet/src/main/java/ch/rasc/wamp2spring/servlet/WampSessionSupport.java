@@ -92,6 +92,7 @@ public class WampSessionSupport {
 	public void populateHeaders(String sessionId, @Nullable Principal transportPrincipal,
 			Map<String, Object> attributes, WampMessage wampMessage) {
 		wampMessage.setHeader(WampMessageHeader.WEBSOCKET_SESSION_ID, sessionId);
+		wampMessage.setHeader(WampMessageHeader.SESSION_ATTRIBUTES, attributes);
 		wampMessage.setHeader(WampMessageHeader.PRINCIPAL, currentPrincipal(transportPrincipal, attributes));
 		wampMessage.setHeader(WampMessageHeader.WAMP_SESSION_ID,
 				attributes.get(WampMessageHeader.WAMP_SESSION_ID.name()));

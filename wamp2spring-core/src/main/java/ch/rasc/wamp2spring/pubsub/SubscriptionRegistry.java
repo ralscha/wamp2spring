@@ -205,8 +205,7 @@ public class SubscriptionRegistry {
 	}
 
 	Set<Subscription> findSubscriptions(WampMessage message, String topic) {
-		Set<Subscription> subscriptions = new HashSet<>(internalFindSubscriptionsForAnyRealm(topic));
-		subscriptions.addAll(internalFindGlobalEventHandlerSubscriptions(topic));
+		Set<Subscription> subscriptions = internalFindSubscriptions(new SubscriptionCacheKey(topic));
 		if (message instanceof ch.rasc.wamp2spring.message.PublishMessage publishMessage) {
 			return filterShardedSubscriptions(subscriptions, publishMessage.getRkey());
 		}
@@ -239,40 +238,6 @@ public class SubscriptionRegistry {
 		}
 
 		return subscriptions;
-	}
-
-	private Set<Subscription> internalFindSubscriptionsForAnyRealm(String topic) {
-		Set<Subscription> subscriptions = new HashSet<>();
-		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
-			for (Subscription subscription : subscriptionsFor(matchPolicy).values()) {
-				if (matches(subscription, topic)) {
-					subscriptions.add(subscription);
-				}
-			}
-		}
-		return subscriptions;
-	}
-
-	private Set<Subscription> internalFindGlobalEventHandlerSubscriptions(String topic) {
-		Set<Subscription> subscriptions = new HashSet<>();
-		for (MatchPolicy matchPolicy : MatchPolicy.values()) {
-			for (Subscription subscription : subscriptionsFor(matchPolicy).values()) {
-				if (subscription.getEventListenerHandlerMethods() != null && matches(subscription, topic)) {
-					subscriptions.add(subscription);
-				}
-			}
-		}
-		return subscriptions;
-	}
-
-	private static boolean matches(Subscription subscription, String topic) {
-		if (subscription.getMatchPolicy() == MatchPolicy.EXACT) {
-			return subscription.getTopic().equals(topic);
-		}
-		if (subscription.getMatchPolicy() == MatchPolicy.PREFIX) {
-			return subscription.getTopicMatch().matches(topic);
-		}
-		return subscription.getTopicMatch().matchesWildcard(topic.split("\\."));
 	}
 
 	private void invalidateCacheEntries(Subscription subscription) {

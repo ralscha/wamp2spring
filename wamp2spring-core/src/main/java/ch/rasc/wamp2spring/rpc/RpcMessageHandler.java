@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -110,24 +111,33 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 
 	private final Set<Long> cancelOnTimeoutInvocations = ConcurrentHashMap.newKeySet();
 
-	private final ScheduledThreadPoolExecutor callTimeoutExecutor;
+	private final ScheduledExecutorService callTimeoutExecutor;
 
 	public RpcMessageHandler(SubscribableChannel clientInboundChannel, MessageChannel clientOutboundChannel,
 			ProcedureRegistry procedureRegistry, HandlerMethodService handlerMethodService, Features features) {
+		this(clientInboundChannel, clientOutboundChannel, procedureRegistry, handlerMethodService, features,
+				createCallTimeoutExecutor());
+	}
+
+	RpcMessageHandler(SubscribableChannel clientInboundChannel, MessageChannel clientOutboundChannel,
+			ProcedureRegistry procedureRegistry, HandlerMethodService handlerMethodService, Features features,
+			ScheduledExecutorService callTimeoutExecutor) {
 		this.clientInboundChannel = clientInboundChannel;
 		this.clientOutboundChannel = clientOutboundChannel;
 		this.procedureRegistry = procedureRegistry;
 		this.handlerMethodService = handlerMethodService;
 		this.features = features;
-		// Multiple threads so that long-running timeout callbacks (which need to send
-		// INTERRUPT
-		// to the callee and ERROR to the caller through the outbound channel) cannot
-		// starve
-		// each other under load. The ScheduledThreadPoolExecutor only spins up additional
-		// threads when concurrent timeouts overlap, so the default cost stays minimal.
+		this.callTimeoutExecutor = callTimeoutExecutor;
+	}
+
+	private static ScheduledThreadPoolExecutor createCallTimeoutExecutor() {
+		// Multiple threads keep slow outbound timeout notifications from blocking each
+		// other. Canceled timeouts are removed promptly to avoid retaining calls.
 		int timeoutPoolSize = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
-		this.callTimeoutExecutor = new ScheduledThreadPoolExecutor(timeoutPoolSize, new CallTimeoutThreadFactory());
-		this.callTimeoutExecutor.setRemoveOnCancelPolicy(true);
+		ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(timeoutPoolSize,
+				new CallTimeoutThreadFactory());
+		executor.setRemoveOnCancelPolicy(true);
+		return executor;
 	}
 
 	public void setAutoStartup(boolean autoStartup) {
@@ -299,16 +309,11 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			else {
 				WampMessage errorOrInvocationMessage = this.procedureRegistry.createInvocationMessage(callMessage);
 
-				try {
-					this.clientOutboundChannel.send(errorOrInvocationMessage);
-					if (errorOrInvocationMessage instanceof InvocationMessage invocationMessage) {
-						scheduleCallTimeout(callMessage, invocationMessage);
-					}
+				if (errorOrInvocationMessage instanceof InvocationMessage invocationMessage) {
+					sendInvocation(callMessage, invocationMessage);
 				}
-				catch (Throwable ex) {
-					if (errorOrInvocationMessage instanceof InvocationMessage) {
-						sendMessageToClient(new ErrorMessage(callMessage, WampError.NETWORK_FAILURE));
-					}
+				else {
+					sendMessageToClient(errorOrInvocationMessage);
 				}
 			}
 		}
@@ -316,9 +321,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 			handleCancelMessage(cancelMessage);
 		}
 		else if (message instanceof YieldMessage yieldMessage) {
-			ProcedureRegistry.PendingCall pendingCall = yieldMessage.isProgress()
-					? this.procedureRegistry.getPendingInvocation(yieldMessage.getRequestId())
-					: this.procedureRegistry.removePendingInvocation(yieldMessage.getRequestId());
+			ProcedureRegistry.PendingCall pendingCall = this.procedureRegistry.receiveYield(yieldMessage);
 			if (pendingCall != null) {
 				if (yieldMessage.isProgress()) {
 					scheduleCallTimeout(pendingCall.getCallMessage(), pendingCall.getInvocationRequestId());
@@ -330,7 +333,8 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				sendMessageToClient(resultMessage);
 			}
 		}
-		else if (message instanceof ErrorMessage errorMessage) {
+		else if (message instanceof ErrorMessage errorMessage
+				&& this.procedureRegistry.isInvocationErrorFromCallee(errorMessage)) {
 			handleErrorMessage(errorMessage);
 		}
 
@@ -473,14 +477,7 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 					&& pendingCall.getProcedure().isCallRerouteSupported()) {
 				InvocationMessage reroutedInvocation = this.procedureRegistry.rerouteInvocation(errorMessage);
 				if (reroutedInvocation != null) {
-					try {
-						this.clientOutboundChannel.send(reroutedInvocation);
-						scheduleCallTimeout(pendingCall.getCallMessage(), reroutedInvocation);
-					}
-					catch (Throwable ex) {
-						this.procedureRegistry.removePendingInvocation(reroutedInvocation.getRequestId());
-						sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.NETWORK_FAILURE));
-					}
+					sendInvocation(pendingCall.getCallMessage(), reroutedInvocation);
 				}
 				else {
 					sendMessageToClient(new ErrorMessage(pendingCall.getCallMessage(), WampError.NO_AVAILABLE_CALLEE));
@@ -539,6 +536,21 @@ public class RpcMessageHandler implements MessageHandler, SmartLifecycle, Initia
 				this.logger.error("Error while invoking the handlerMethod " + handlerMethod, e);
 			}
 		}
+	}
+
+	private void sendInvocation(CallMessage callMessage, InvocationMessage invocationMessage) {
+		try {
+			if (this.clientOutboundChannel.send(invocationMessage)) {
+				scheduleCallTimeout(callMessage, invocationMessage);
+				return;
+			}
+		}
+		catch (Throwable ex) {
+			this.logger.error("Failed to send " + invocationMessage, ex);
+		}
+		this.procedureRegistry.removePendingInvocation(invocationMessage.getRequestId());
+		cancelTimeoutTask(invocationMessage.getRequestId());
+		sendMessageToClient(new ErrorMessage(callMessage, WampError.NETWORK_FAILURE));
 	}
 
 	private void scheduleCallTimeout(CallMessage callMessage, InvocationMessage invocationMessage) {

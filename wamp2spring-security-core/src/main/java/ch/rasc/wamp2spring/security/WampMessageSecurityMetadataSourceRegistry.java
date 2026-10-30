@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Supplier;
 
 import org.springframework.messaging.Message;
@@ -27,6 +28,7 @@ import org.springframework.expression.Expression;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.authorization.AuthorizationResult;
+import org.springframework.security.authorization.SingleResultAuthorizationManager;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
@@ -34,7 +36,6 @@ import org.springframework.security.messaging.access.intercept.MessageAuthorizat
 import org.springframework.security.messaging.access.intercept.MessageMatcherDelegatingAuthorizationManager;
 import org.springframework.security.messaging.util.matcher.MessageMatcher;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import ch.rasc.wamp2spring.config.DestinationMatch;
 import ch.rasc.wamp2spring.message.CallMessage;
@@ -171,7 +172,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			}
 			return new Constraint(messageMatchers);
 		}
-		return publishMessage();
+		return matchers(new WampMessageMatcher(SubscribeMessage.CODE), new WampMessageMatcher(PublishMessage.CODE));
 	}
 
 	public Constraint procedureMatchers(DestinationMatch... procedureMatches) {
@@ -183,7 +184,7 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			}
 			return new Constraint(messageMatchers);
 		}
-		return callMessage();
+		return matchers(new WampMessageMatcher(RegisterMessage.CODE), new WampMessageMatcher(CallMessage.CODE));
 	}
 
 	public Constraint matchers(MessageMatcher<?>... matchers) {
@@ -195,6 +196,9 @@ public class WampMessageSecurityMetadataSourceRegistry {
 	}
 
 	public AuthorizationManager<Message<?>> createAuthorizationManager() {
+		if (!containsMapping()) {
+			return SingleResultAuthorizationManager.permitAll();
+		}
 		MessageMatcherDelegatingAuthorizationManager.Builder builder = MessageMatcherDelegatingAuthorizationManager
 			.builder();
 		for (var entry : this.matcherToExpression.entrySet()) {
@@ -288,27 +292,43 @@ public class WampMessageSecurityMetadataSourceRegistry {
 			return WampMessageSecurityMetadataSourceRegistry.this;
 		}
 
-		private String hasAnyRoleBuilder(String... authorities) {
-			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities, "','ROLE_");
-			return "hasAnyRole('ROLE_" + anyAuthorities + "')";
+		private String hasAnyRoleBuilder(String... roles) {
+			Assert.notEmpty(roles, "roles cannot be empty");
+			for (String role : roles) {
+				validateRole(role);
+			}
+			return "hasAnyRole(" + authorityArguments(roles, "ROLE_") + ")";
 		}
 
 		private String hasRoleBuilder(String role) {
+			validateRole(role);
+			return "hasRole(" + authorityArguments(new String[] { role }, "ROLE_") + ")";
+		}
+
+		private void validateRole(String role) {
 			Assert.notNull(role, "role cannot be null");
 			if (role.startsWith("ROLE_")) {
 				throw new IllegalArgumentException(
 						"role should not start with 'ROLE_' since it is automatically inserted. Got '" + role + "'");
 			}
-			return "hasRole('ROLE_" + role + "')";
 		}
 
 		private String hasAuthorityBuilder(String authority) {
-			return "hasAuthority('" + authority + "')";
+			return "hasAuthority(" + authorityArguments(new String[] { authority }, "") + ")";
 		}
 
 		private String hasAnyAuthorityBuilder(String... authorities) {
-			String anyAuthorities = StringUtils.arrayToDelimitedString(authorities, "','");
-			return "hasAnyAuthority('" + anyAuthorities + "')";
+			return "hasAnyAuthority(" + authorityArguments(authorities, "") + ")";
+		}
+
+		private String authorityArguments(String[] authorities, String prefix) {
+			Assert.notEmpty(authorities, "authorities cannot be empty");
+			Assert.noNullElements(authorities, "authorities cannot contain null");
+			StringJoiner arguments = new StringJoiner(",");
+			for (String authority : authorities) {
+				arguments.add("'" + prefix + authority.replace("'", "''") + "'");
+			}
+			return arguments.toString();
 		}
 
 	}

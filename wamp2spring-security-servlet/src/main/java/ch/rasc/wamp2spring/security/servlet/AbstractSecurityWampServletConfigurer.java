@@ -17,7 +17,7 @@ package ch.rasc.wamp2spring.security.servlet;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -40,8 +40,7 @@ public abstract class AbstractSecurityWampServletConfigurer implements WampServl
 
 	private SecurityExpressionHandler<Message<Object>> defaultExpressionHandler = new DefaultMessageSecurityExpressionHandler<>();
 
-	@Nullable
-	private SecurityExpressionHandler<Message<Object>> expressionHandler;
+	@Nullable private SecurityExpressionHandler<Message<Object>> expressionHandler;
 
 	private final WampMessageSecurityMetadataSourceRegistry inboundRegistry = new WampMessageSecurityMetadataSourceRegistry();
 

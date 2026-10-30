@@ -37,6 +37,7 @@ import ch.rasc.wamp2spring.message.ErrorMessage;
 import ch.rasc.wamp2spring.message.GoodbyeMessage;
 import ch.rasc.wamp2spring.message.HelloMessage;
 import ch.rasc.wamp2spring.message.WelcomeMessage;
+import ch.rasc.wamp2spring.message.WampMessageHeader;
 import jakarta.servlet.http.HttpSession;
 
 public final class SessionRepositoryMessageInterceptor<S extends Session>
@@ -53,7 +54,13 @@ public final class SessionRepositoryMessageInterceptor<S extends Session>
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
 		if (messageMatches(message)) {
-			String sessionId = (String) message.getHeaders().get(SPRING_SESSION_ID_ATTR_NAME);
+			Object sessionIdValue = message.getHeaders().get(SPRING_SESSION_ID_ATTR_NAME);
+			Object attributes = message.getHeaders().get(WampMessageHeader.SESSION_ATTRIBUTES.name());
+			if (attributes instanceof Map<?, ?> sessionAttributes
+					&& sessionAttributes.get(SPRING_SESSION_ID_ATTR_NAME) instanceof String sessionAttributeId) {
+				sessionIdValue = sessionAttributeId;
+			}
+			String sessionId = sessionIdValue instanceof String value ? value : null;
 			if (sessionId != null) {
 				S session = this.sessionRepository.findById(sessionId);
 				if (session != null) {

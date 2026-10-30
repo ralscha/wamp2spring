@@ -1,12 +1,16 @@
 name: test
 
-on: [push]
+on: [push, pull_request]
+
+permissions:
+  contents: read
 
 jobs:
   test:
+    timeout-minutes: 20
     strategy:
        matrix:
-         java: [17, 21, 25, 26]	
+         java: [17, 21, 25, 26]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -15,5 +19,5 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: ${{ matrix.java }}
-    - name: Maven Test
-      run: ./mvnw clean test
+    - name: Maven Verify
+      run: ./mvnw --batch-mode --no-transfer-progress clean verify
